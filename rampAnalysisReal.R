@@ -4,6 +4,7 @@ library(mosaic)
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
+#Up until August 2018, used ramp69.csv for data
 
 #d<-read.csv(file="C:/Users/gpagnier/Documents/Ramping data/ramp.csv",sep=",")
 d0<-read.csv(file.choose(),header=TRUE)
@@ -15,7 +16,14 @@ d$binsTime=0;
 #Getting rid of any trial which gamble interrupted too early
 d<-filter(d,gambleDelay<5.6)
 histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
-histogram(d$gambleDelay,breaks=50,xlim=c(.5,7),ylim=c(0,6),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
+histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
+
+colnames(d)[1]<-"Trialid"
+#bins=8
+##Splitting into number of bins you want
+#quantile(d$gambleDelay[!0])
+#split(d$gambleDelay[!0], ceiling(seq_along(d$gambleDelay[!0])/bins))
+
 
 binTimeCalc<-function(row){
   if(d[row,3]==0){
@@ -34,7 +42,7 @@ binTimeCalc<-function(row){
     return(5.1) 
   } else if (d[row,3]>5.25&d[row,3]<5.6){
     return(5.5) 
-    } else{
+  } else{
     return(5.5)
   }
 }
@@ -44,21 +52,25 @@ binTimeCalc<-function(d,row){
   if(d[row,3]==0){
     return(0)
   } else if (d[row,3]>0&d[row,3]<1){
-    return(.75)
-  } else if (d[row,3]>1&d[row,3]<2.5){
-    return(1.35)
+    return(.8)
+  } else if (d[row,3]>1&d[row,3]<1.5){
+    return(1.2)
+  } else if (d[row,3]>1.5&d[row,3]<2.5){
+    return(3)  
   } else if (d[row,3]>2.5&d[row,3]<3){
-    return(2.9)  
-  } else if (d[row,3]>3&d[row,3]<4.5){
-    return(3.2)
+    return(2.8)
+  } else if (d[row,3]>3&d[row,3]<3.5){
+    return(3.2) 
+  } else if (d[row,3]>3.5&d[row,3]<4.5){
+    return(4)
   } else if (d[row,3]>4.5&d[row,3]<4.8){
-    return(4.65) 
-  } else if (d[row,3]>4.8&d[row,3]<5.0){
-    return(4.9)
-  } else if (d[row,3]>5.0&d[row,3]<5.2){
-    return(5.1) 
-  } else if (d[row,3]>5.2&d[row,3]<5.5){
-    return(5.4) 
+    return(4.7) 
+  } else if (d[row,3]>4.8&d[row,3]<5){
+    return(4.9) 
+  } else if (d[row,3]>5&d[row,3]<5.2){
+    return(5.1)
+  } else if (d[row,3]>5.2&d[row,3]<5.8){
+    return(5.3) 
   } else{
     return(999)
   }
@@ -90,6 +102,42 @@ binTimeCalc<-function(d,row){
 for(i in 1:nrow(d)){
   d[i,10]=binTimeCalc(d,i)
 }
+#Adding which condition trial was in
+#For new data set
+magCondCalc<-function(d,row){
+  if(d[row,7]==1|d[row,7]==2){
+    return("low")
+  } else if (d[row,7]==3|d[row,7]==4){
+    return("mid")
+  } else if (d[row,7]==5|d[row,7]==6){
+    return("high")
+  } else{
+    return("null")
+  }
+}
+
+for(i in 1:nrow(d)){
+  d[i,11]=magCondCalc(d,i)
+}
+colnames(d)[11]<-"magCond"
+
+oddsCondCalc<-function(d,row){
+  if(d[row,1]==21|d[row,1]==22|d[row,1]==23|d[row,1]==24|d[row,1]==25|d[row,1]==26){
+    return("lowp")
+  } else if (d[row,1]==1|d[row,1]==2|d[row,1]==3|d[row,1]==4|d[row,1]==5|d[row,1]==6){
+    return("midp")
+  } else if (d[row,1]==31|d[row,1]==32|d[row,1]==33|d[row,1]==34|d[row,1]==35|d[row,1]==36){
+    return("highp")
+  } else{
+    return("catch")
+  }
+}
+
+for(i in 1:nrow(d)){
+  d[i,12]=oddsCondCalc(d,i)
+}
+colnames(d)[12]<-"oddsCond"
+
 
 
 head(d)
@@ -98,21 +146,21 @@ nParticipants<- length(unique(d$uniqueid))
 nParticipants
 
 #Check for catch trials
-#dcatch<-filter(d,Trialid==75|Trialid==85)[,c(1,6,9)]
-#dcatch[order(dcatch$Trialid),]
+dcatch<-filter(d,Trialid==75|Trialid==86)[,c(1,6,9)]
+dcatch[order(dcatch$Trialid),]
 #This prints off the trial ids of anyone who made a mistake
-#75 should gamble; 85 should success/fail; HOW MANY CATCH TRIALS ARE THERE?
-removeIds<-NULL
+#75 should gamble; 86 should success/fail; 2 catch trials?
 
-#catch<-for(i in 1:nrow(dcatch)){
-#  if(dcatch[i,1]==85&dcatch[i,2]=="gamble"){
-#    removeIds<-c(removeIds,dcatch[i,3])
-#  }else if(dcatch[i,1]==75&dcatch[i,2]=="success"){
-#    removeIds<-c(removeIds,dcatch[i,3])
-#  }else if(dcatch[i,1]==75&dcatch[i,2]=="fail"){
-#    removeIds<-c(removeIds,dcatch[i,3])
-#  }
-#}
+
+catch<-for(i in 1:nrow(dcatch)){
+  if(dcatch[i,1]==85&dcatch[i,2]=="gamble"){
+    noCatch<-c(noCatch,dcatch[i,3])
+  }else if(dcatch[i,1]==75&dcatch[i,2]=="success"){
+    noCatch<-c(noCatch,dcatch[i,3])
+  }else if(dcatch[i,1]==75&dcatch[i,2]=="fail"){
+    noCatch<-c(noCatch,dcatch[i,3])
+  }
+}
 
 
 #Removing any subjects from dataset if needed, using unique ids in vector removeIds
@@ -129,14 +177,14 @@ nParticipants
 ##Reaction time
 #Whenever they gambled
 gambleRTs<-d$gambleRT[d$gambleRT!=0]
-histogram(gambleRTs,main="Aggregated gamble RTs",breaks=50)
+histogram(gambleRTs,main="Aggregated gamble RTs",breaks=70)
 #Whenever they claimed 'boring' reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
-histogram(outcomeRTs,main="Aggregated outcome RTs",breaks=50)
+histogram(outcomeRTs,main="Aggregated outcome RTs",breaks=70)
 #Printing experiment times in minutes CONFIRM PSITURK TRACKS IN MILLISECONDS
 expTimes<-((unique(d$expTime,na.rm=TRUE)/1000)/60)
 histogram(expTimes,main="Experiment Time (in minutes)",breaks=50)
-histogram(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,50))
+histogram(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,60))
 
 
 #Always run the following block
@@ -170,6 +218,12 @@ for(i in removeIds){
 nParticipants<- length(unique(d$uniqueid))
 Participants<-unique(d$uniqueid)
 nParticipants
+
+##Removing 4 since there aren't enough trials in the block to consider
+d<-filter(d,binsTime!=4|binsTime!=2)
+
+
+
 #Always run the following block2
 
 dgamble<-filter(d,gambleDelay!=0)
@@ -181,6 +235,14 @@ dBehavioral<-dgamble %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
+
+histogram(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+
+
+
+
+
+
 
 #Preference for low gambles 
 dlow<-filter(dgamble,standardGamble==1|standardGamble==2)
@@ -209,22 +271,30 @@ plot(dlow2$seconds,dlow2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 dlow2
 #Plotting RTs with sd
-plot(dlow2$seconds,dlow2$medianRT,xlim = c(0,8),ylim=c(200,1500),main=paste("Low mag; median RT with sd; n =",toString(sum(dlow2$trials)),"trials;"),
+dlowRT<-filter(dlow,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+dlowRT$seconds<-dlowRT$binsTime
+
+
+
+plot(dlowRT$seconds,dlowRT$medianRT,xlim = c(0,8),ylim=c(200,2500),main=paste("Low mag; median RT with sd; n =",toString(sum(dlow2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 #arrows(dlow2$seconds[1],dlow2[1,6]+dlow2[1,7],dlow2$seconds[1],dlow[1,6]-dlow2[1,7])
-for(i in 1:length(dlow2$seconds)){
-  arrows(as.numeric(dlow2$seconds[i]),as.numeric(dlow2[i,6]+(as.numeric(dlow2[i,7])/5)),as.numeric(dlow2$seconds[i]),as.numeric(dlow2[i,6]-(as.numeric(dlow2[i,7])/5)),length=0.05, angle=90, code=3)
-  
-}
+#for(i in 1:length(dlow2$seconds)){
+#  arrows(as.numeric(dlow2$seconds[i]),as.numeric(dlow2[i,6]+(as.numeric(dlow2[i,7])/5)),as.numeric(dlow2$seconds[i]),as.numeric(dlow2[i,6]-(as.numeric(dlow2[i,7])/5)),length=0.05, angle=90, code=3)
+
+#}
 
 #Printing off Reaction time histograms by bin
-a<-filter(dlow,binsTime<5.75)
-for(i in sort(unique(dlow$binsTime))){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("Low mag: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
-  print(i)
-}
+#a<-filter(dlow,binsTime<5.75)
+#for(i in sort(unique(dlow$binsTime))){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("Low mag: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
+#  print(i)
+#}
 
 
 
@@ -256,21 +326,30 @@ plot(dmid2$seconds,dmid2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 dmid2
 #Plotting RTs with sd
-plot(dmid2$seconds,dmid2$medianRT,xlim = c(0,8),ylim=c(0,1500),main=paste("Mid mag; median RT with sd; n =",toString(sum(dmid2$trials)),"trials;"),
+dmidRT<-filter(dmid,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+dmidRT$seconds<-dmidRT$binsTime
+
+
+
+
+plot(dmidRT$seconds,dmidRT$medianRT,xlim = c(0,8),ylim=c(0,2500),main=paste("Mid mag; median RT with sd; n =",toString(sum(dmid2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-for(i in 1:length(dmid2$seconds)){
-  arrows(as.numeric(dmid2$seconds[i]),as.numeric(dmid2[i,6]+(as.numeric(dmid2[i,7])/5)),as.numeric(dmid2$seconds[i]),as.numeric(dmid2[i,6]-(as.numeric(dmid2[i,7])/5)),length=0.05, angle=90, code=3)
-  
-}
+#for(i in 1:length(dmid2$seconds)){
+#  arrows(as.numeric(dmid2$seconds[i]),as.numeric(dmid2[i,6]+(as.numeric(dmid2[i,7])/5)),as.numeric(dmid2$seconds[i]),as.numeric(dmid2[i,6]-(as.numeric(dmid2[i,7])/5)),length=0.05, angle=90, code=3)
+
+#}
 
 #Printing off Reaction time histograms by bin
-a<-filter(dmid,binsTime<5.75)
-for(i in sort(unique(dmid$binsTime))){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("Mid mag: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
-  print(i)
-}
+#a<-filter(dmid,binsTime<5.75)
+#for(i in sort(unique(dmid$binsTime))){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("Mid mag: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
+#  print(i)
+#}
 
 
 
@@ -303,21 +382,29 @@ plot(dhigh2$seconds,dhigh2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 dhigh2
 #Plotting RTs with sd
-plot(dhigh2$seconds,dhigh2$medianRT,xlim = c(0,8),ylim=c(0,1000),main=paste("High mag; median RT with sd; n =",toString(sum(dhigh2$trials)),"trials;"),
+dhighRT<-filter(dhigh,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+dhighRT$seconds<-dhighRT$binsTime
+
+
+
+plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(0,2500),main=paste("High mag; median RT with sd; n =",toString(sum(dhigh2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-for(i in 1:length(dhigh2$seconds)){
-  arrows(as.numeric(dhigh2$seconds[i]),as.numeric(dhigh2[i,6]+(as.numeric(dhigh2[i,7])/5)),as.numeric(dhigh2$seconds[i]),as.numeric(dhigh2[i,6]-(as.numeric(dhigh2[i,7])/5)),length=0.05, angle=90, code=3)
-  
-}
+#for(i in 1:length(dhigh2$seconds)){
+#  arrows(as.numeric(dhigh2$seconds[i]),as.numeric(dhigh2[i,6]+(as.numeric(dhigh2[i,7])/5)),as.numeric(dhigh2$seconds[i]),as.numeric(dhigh2[i,6]-(as.numeric(dhigh2[i,7])/5)),length=0.05, angle=90, code=3)
+
+#}
 
 #Printing off Reaction time histograms by bin
-a<-filter(dhigh,binsTime<5.75)
-for(i in sort(unique(dhigh$binsTime))){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("High mag: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
-  print(i)
-}
+#a<-filter(dhigh,binsTime<5.75)
+#for(i in sort(unique(dhigh$binsTime))){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("High mag: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
+#  print(i)
+#}
 
 
 
@@ -351,32 +438,38 @@ dlowp2<-dlowp %>%
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
-            percentageGambled=round(gambleCount/trials*100),
-            medianRT=mean(gambleRT),
-            sdRT=sd(gambleRT))
+            percentageGambled=round(gambleCount/trials*100)
+  )
 dlowp2$seconds<-dlowp2$binsTime
 plot(dlowp2$seconds,dlowp2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Low odds; Gamble propensity; n =",toString(sum(dlowp2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 dlowp2
 #Plotting RTs with sd
-plot(dlowp2$seconds,dlowp2$medianRT,xlim = c(0,8),ylim=c(0,1000),main=paste("Low Odds; median RT with sd; n =",toString(sum(dlowp2$trials)),"trials;"),
+dlowRT<-filter(dlowp,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+dlowRT$seconds<-dlowRT$binsTime
+
+
+plot(dlowRT$seconds,dlowRT$medianRT,xlim = c(0,8),ylim=c(0,2500),main=paste("Low Odds; median RT with sd; n =",toString(sum(dlowp2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-for(i in 1:length(dlowp2$seconds)){
-  arrows(as.numeric(dlowp2$seconds[i]),as.numeric(dlowp2[i,6]+(as.numeric(dlowp2[i,7])/5)),as.numeric(dlowp2$seconds[i]),as.numeric(dlowp2[i,6]-(as.numeric(dlowp2[i,7])/5)),length=0.05, angle=90, code=3)
-  
-}
+#for(i in 1:length(dlowp2$seconds)){
+#  arrows(as.numeric(dlowp2$seconds[i]),as.numeric(dlowp2[i,6]+(as.numeric(dlowp2[i,7])/5)),as.numeric(dlowp2$seconds[i]),as.numeric(dlowp2[i,6]-(as.numeric(dlowp2[i,7])/5)),length=0.05, angle=90, code=3)
+#  
+#}
 
 #Printing off Reaction time histograms by bin
-a<-filter(dlowp,binsTime<5.75)
-c<-sort(unique(dlowp$binsTime))[c(TRUE, FALSE)]
+#a<-filter(dlowp,binsTime<5.75)
+#c<-sort(unique(dlowp$binsTime))[c(TRUE, FALSE)]
 
-for(i in c){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("Low odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
-  print(i)
-}
+#for(i in c){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("Low odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
+#  print(i)
+#}
 
 
 
@@ -401,29 +494,34 @@ dmidp2<-dmidp %>%
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
-            percentageGambled=round(gambleCount/trials*100),
-            medianRT=mean(gambleRT),
-            sdRT=sd(gambleRT))
+            percentageGambled=round(gambleCount/trials*100)
+  )
 dmidp2$seconds<-dmidp2$binsTime
 plot(dmidp2$seconds,dmidp2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Mid odds; Gamble propensity; n =",toString(sum(dmidp2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 dmidp2
 #Plotting RTs with sd
-plot(dmidp2$seconds,dmidp2$medianRT,xlim = c(0,8),ylim=c(0,1000),main=paste("Mid Odds; median RT with sd; n =",toString(sum(dmidp2$trials)),"trials;"),
+dmidRT<-filter(dmidp,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+dmidRT$seconds<-dmidRT$binsTime
+
+plot(dmidRT$seconds,dmidRT$medianRT,xlim = c(0,8),ylim=c(0,2500),main=paste("Mid Odds; median RT with sd; n =",toString(sum(dmidp2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-for(i in 1:length(dmidp2$seconds)){
-  arrows(as.numeric(dmidp2$seconds[i]),as.numeric(dmidp2[i,6]+(as.numeric(dmidp2[i,7])/5)),as.numeric(dmidp2$seconds[i]),as.numeric(dmidp2[i,6]-(as.numeric(dmidp2[i,7])/5)),length=0.05, angle=90, code=3)
-  
-}
+#for(i in 1:length(dmidp2$seconds)){
+#  arrows(as.numeric(dmidp2$seconds[i]),as.numeric(dmidp2[i,6]+(as.numeric(dmidp2[i,7])/5)),as.numeric(dmidp2$seconds[i]),as.numeric(dmidp2[i,6]-(as.numeric(dmidp2[i,7])/5)),length=0.05, angle=90, code=3)
+
+#}
 #Printing off Reaction time histograms by bin
-a<-filter(dmidp,binsTime<5.75)
-for(i in sort(unique(dmidp$binsTime))){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("Mid odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
-  print(i)
-}
+#a<-filter(dmidp,binsTime<5.75)
+#for(i in sort(unique(dmidp$binsTime))){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("Mid odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
+#  print(i)
+#}
 
 
 
@@ -439,7 +537,7 @@ dhighp<-filter(dgamble,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==
 
 dBehavioral<-dhighp %>% 
   group_by(uniqueid) %>% 
-  summarise(experimentTime=unique(expTime),
+  summarise(experimentTime=unique(expTime)[1],
             trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
@@ -462,23 +560,32 @@ plot(dhighp2$seconds,dhighp2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 dhighp2
 #Plotting RTs with sd
-plot(dhighp2$seconds,dhighp2$medianRT,xlim = c(0,8),ylim=c(200,1500),main=paste("High Odds; Reaction time with sd; n =",toString(sum(dhighp2$trials)),"trials;"),
+dhighRT<-filter(dhighp,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+dhighRT$seconds<-dhighRT$binsTime
+
+
+
+
+plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(200,2500),main=paste("High Odds; Reaction time with sd; n =",toString(sum(dhighp2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-for(i in 1:length(dhighp2$seconds)){
-  arrows(as.numeric(dhighp2$seconds[i]),as.numeric(dhighp2[i,6]+(as.numeric(dhighp2[i,7])/5)),as.numeric(dhighp2$seconds[i]),as.numeric(dhighp2[i,6]-(as.numeric(dhighp2[i,7])/5)),length=0.05, angle=90, code=3)
-  
-}
+#for(i in 1:length(dhighp2$seconds)){
+#  arrows(as.numeric(dhighp2$seconds[i]),as.numeric(dhighp2[i,6]+(as.numeric(dhighp2[i,7])/5)),as.numeric(dhighp2$seconds[i]),as.numeric(dhighp2[i,6]-(as.numeric(dhighp2[i,7])/5)),length=0.05, angle=90, code=3)
+#  
+#}
 
 #Printing off Reaction time histograms by bin
-a<-filter(dhighp,binsTime<5.75)
-c<-sort(unique(dhighp$binsTime))[c(TRUE, FALSE)]
+#a<-filter(dhighp,binsTime<5.75)
+#c<-sort(unique(dhighp$binsTime))[c(TRUE, FALSE)]
 
-for(i in c){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("High odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
-  print(i)
-}
+#for(i in c){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("High odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
+#  print(i)
+#}
 
 
 
@@ -521,14 +628,26 @@ abline(m1)
 summary(m1)
 
 #Plotting RTs with sd
-plot(d2$seconds,d2$meanRT,xlim = c(0,8),ylim=c(0,1000),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d2$trials)),"trials;"),
+d2RT<-filter(d,gambleRT!=0) %>% 
+  group_by(binsTime) %>% 
+  summarise(meanRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+
+d2RT$seconds<-d2RT$binsTime
+
+
+plot(d2RT$seconds,d2RT$meanRT,xlim = c(0,8),ylim=c(0,2500),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-for(i in 1:length(d2$seconds)){
-  arrows(as.numeric(d2$seconds[i]),as.numeric(d2[i,6]+(as.numeric(d2[i,7])/5)),as.numeric(d2$seconds[i]),as.numeric(d2[i,6]-(as.numeric(d2[i,7])/5)),length=0.05, angle=90, code=3)
+
+mRT<-lm(d2RT$meanRT~d2RT$seconds)
+abline(mRT)
+summary(mRT)
+for(i in 1:length(d2RT$seconds)){
+  arrows(as.numeric(d2RT$seconds[i]),as.numeric(d2RT[i,6]+(as.numeric(d2RT[i,7])/5)),as.numeric(d2RT$seconds[i]),as.numeric(d2RT[i,6]-(as.numeric(d2RT[i,7])/5)),length=0.05, angle=90, code=3)
   
 }
-arrows(as.numeric(d2$seconds[1]),as.numeric(d2[1,6]+(as.numeric(d2[1,7])/5)),as.numeric(d2$seconds[1]),as.numeric(d2[1,6]-(as.numeric(d2[1,7])/5)),length=0.05, angle=90, code=3)
-histogram(dgamble$gambleRT,breaks=50,xlim=c(25,2500))
+#arrows(as.numeric(d2$seconds[1]),as.numeric(d2[1,6]+(as.numeric(d2[1,7])/5)),as.numeric(d2$seconds[1]),as.numeric(d2[1,6]-(as.numeric(d2[1,7])/5)),length=0.05, angle=90, code=3)
+#histogram(dgamble$gambleRT,breaks=50,xlim=c(25,2500))
 
 
 #Number of trials per participant 
@@ -539,15 +658,15 @@ dTrials<-d %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/ntrials*100))
 dTrials
-histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,10),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
+histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
 
 
 ###Repeat regression plot but only WITHIN each participant
 
 #Setting up definitions so we can break down each participant per cond. mag and odds
 
-#The following is to just get one participant
-dsub<-d[d$uniqueid==8,]
+####The following is to just get one participant's data
+dsub<-d[d$uniqueid==6,]
 d3<-dsub %>% 
   group_by(binsTime) %>% 
   summarise(trials=length(trialNumber),
@@ -557,11 +676,28 @@ d3<-dsub %>%
 d3$seconds<-d3$binsTime-.5
 d3<-filter(d3,seconds>-.5)
 d3
+par(ps = 12, cex = 1, cex.main = 1)
 plot(d3$seconds,d3$percentageGambled,xlim = c(0,7),ylim = c(0,100),
      main=paste("Individual participant data; n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
      xlab="Seconds into trial",ylab="Percentage Gambled")
 mtemp<-lm(d3$percentageGambled~d3$seconds)
 summary(mtemp)
+#One participant RT
+d3RT<-filter(dsub,gambleRT!=0) %>% 
+  group_by(binsTime) %>% 
+  summarise(meanRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+
+d3RT$seconds<-d3RT$binsTime
+
+
+plot(d3RT$seconds,d3RT$meanRT,xlim = c(0,8),ylim=c(0,2500),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+     xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+
+msubRT<-lm(d3RT$meanRT~d3RT$seconds)
+abline(msubRT)
+summary(msubRT)
+
 #Looping through participants data
 
 subj<-unique(d$uniqueid)
@@ -581,21 +717,43 @@ for(i in Participants){
        main=paste("Individual participant data; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
        xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
   mtemp<-lm(d4$percentageGambled~d4$seconds)
+  print(summary(mtemp)$coefficients[8])
   #This checks to see if any participant is ramping
   if(summary(mtemp)$coefficients[8]<.05 & summary(mtemp)$coefficients[2]>0){
     intN<-c(intN,i)
   }
 }
 
+
+
 #Printing off Reaction time histograms by bin
-a<-filter(dgamble,binsTime<5.75)
-for(i in sort(unique(dgamble$binsTime))){
-  atemp<-filter(a,binsTime==i&gambleRT!=0)
-  print(head(atemp))
-  print(histogram(atemp$gambleRT,breaks=50,main=paste("RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))#,"Number of trials:",toString(length(atemp$gambleRT)))))
-  print(i)
-}
+#a<-filter(dgamble,binsTime<5.75)
+#for(i in sort(unique(dgamble$binsTime))){
+#  atemp<-filter(a,binsTime==i&gambleRT!=0)
+#  print(head(atemp))
+#  print(histogram(atemp$gambleRT,breaks=50,main=paste("RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))#,"Number of trials:",toString(length(atemp$gambleRT)))))
+#  print(i)
+#}
 
 #Looking into participants that ramp
 for(i in intN){
 }
+###Breaking down cond. individual participant (p)
+p<-6
+
+dsubMagCond<-filter(d,uniqueid==p|magCond!="catch") %>% 
+  group_by(magCond) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+barplot(dsubMagCond$percentageGambled,names.arg=dsubMagCond$magCond,beside=T,ylim=c(0,50),ylab="Number of trials",main="Participant 6, propensity to gamble across magnitude")
+
+dsubOddsCond<-filter(d,uniqueid==p|oddsCond!="catch") %>% 
+  group_by(oddsCond) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+barplot(dsubOddsCond$percentageGambled,names.arg=dsubOddsCond$oddsCond,beside=T,ylim=c(0,100),ylab="Number of trials",main="Participant 6, propensity to gamble across odds")
+
