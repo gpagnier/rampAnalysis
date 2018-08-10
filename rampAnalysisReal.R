@@ -225,6 +225,7 @@ d<-filter(d,binsTime!=4|binsTime!=2)
 
 
 #Always run the following block2
+#This filters only trials that had a gamble appear
 
 dgamble<-filter(d,gambleDelay!=0)
 
@@ -238,10 +239,15 @@ dBehavioral<-dgamble %>%
 
 histogram(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 
-
-
-
-
+#Adding another column 1 if they gambled, 0 if they didn't
+#This will be outcome variable in logistic regression
+for (i in 1:length(dgamble$response)){
+if(dgamble$response[i]=='gamble'){
+  dgamble$gambled[i]=1
+  } else {
+  dgamble$gambled[i]=0
+  }
+}
 
 
 #Preference for low gambles 
