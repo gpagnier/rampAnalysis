@@ -6,12 +6,14 @@ library(mosaic)
 
 #Up until August 2018, used ramp69.csv for data
 
-#d<-read.csv(file="C:/Users/gpagnier/Documents/Ramping data/ramp.csv",sep=",")
-d0<-read.csv(file.choose(),header=TRUE)
-d<-d0
+d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/ramp69.csv",sep=",")
+#d0<-read.csv(file.choose(),header=TRUE)
+#d<-d0
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
+#Clearing pictures
+graphics.off()
 
 #Getting rid of any trial which gamble interrupted too early
 d<-filter(d,gambleDelay<5.6)
@@ -248,6 +250,12 @@ if(dgamble$response[i]=='gamble'){
   dgamble$gambled[i]=0
   }
 }
+
+
+#Logistic regression for gambled
+mlog<-glm(gambled~gambleDelay+magCond+oddsCond+trialNumber,data=dgamble,family="binomial");
+summary(mlog)
+
 
 
 #Preference for low gambles 
