@@ -6,7 +6,7 @@ library(mosaic)
 
 #Up until August 2018, used ramp69.csv for data
 
-d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/ramp69.csv",sep=",")
+d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/ramp8.22Pilot.csv",sep=",")
 #d0<-read.csv(file.choose(),header=TRUE)
 #d<-d0
 d[d==""] <- NA
@@ -16,17 +16,26 @@ d$binsTime=0;
 graphics.off()
 
 #Getting rid of any trial which gamble interrupted too early
-d<-filter(d,gambleDelay<5.6)
+#d<-filter(d,gambleDelay<5.6)
 histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 
 colnames(d)[1]<-"Trialid"
-#bins=8
+bins=8
+ninbins=round((length(d$Trialid)/bins))
 ##Splitting into number of bins you want
 #quantile(d$gambleDelay[!0])
-#split(d$gambleDelay[!0], ceiling(seq_along(d$gambleDelay[!0])/bins))
+#This creates a list with what should be in the binTimeCalc
+delayValues=split(sort(d$gambleDelay[d$gambleDelay!=0]), ceiling(seq_along(d$gambleDelay[d$gambleDelay!=0])/ninbins))
+
+for (i in 1:length(delayValues)){
+  
+  
+  
+}
 
 
+#The number of statements in this function should match 
 binTimeCalc<-function(row){
   if(d[row,3]==0){
     return(0)
