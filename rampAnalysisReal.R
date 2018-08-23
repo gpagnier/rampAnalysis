@@ -28,8 +28,8 @@ ninbins=round((length(d$Trialid)/bins))
 #This creates a list with what should be in the binTimeCalc
 delayValues=split(sort(d$gambleDelay[d$gambleDelay!=0]), ceiling(seq_along(d$gambleDelay[d$gambleDelay!=0])/ninbins))
 
+#a1-abins has to be changed if you want to change the numebr of bins
 for (i in 1:length(delayValues)){
-  
   
   
 }
