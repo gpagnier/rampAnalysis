@@ -6,9 +6,9 @@ library(mosaic)
 
 #Up until August 2018, used ramp69.csv for data
 
-d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/ramp8.22Pilot.csv",sep=",")
-#d0<-read.csv(file.choose(),header=TRUE)
-#d<-d0
+#d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/ramp8.22Pilot.csv",sep=",")
+d0<-read.csv(file.choose(),header=TRUE)
+d<-d0
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
@@ -28,64 +28,102 @@ ninbins=round((length(d$Trialid)/bins))
 #This creates a list with what should be in the binTimeCalc
 delayValues=split(sort(d$gambleDelay[d$gambleDelay!=0]), ceiling(seq_along(d$gambleDelay[d$gambleDelay!=0])/ninbins))
 
-for (i in 1:length(delayValues)){
-  
-  
-  
-}
+#This needs to manually hardcode the NUMBER of blocks you're using - has to match bins variable 
+a1head<-unlist(lapply(delayValues[1],head,1),use.names=FALSE)
+a1tail<-unlist(lapply(delayValues[1],tail,1),use.names=FALSE)
+a2head<-unlist(lapply(delayValues[2],head,1),use.names=FALSE)
+a2tail<-unlist(lapply(delayValues[2],tail,1),use.names=FALSE)
+a3head<-unlist(lapply(delayValues[3],head,1),use.names=FALSE)
+a3tail<-unlist(lapply(delayValues[3],tail,1),use.names=FALSE)
+a4head<-unlist(lapply(delayValues[4],head,1),use.names=FALSE)
+a4tail<-unlist(lapply(delayValues[4],tail,1),use.names=FALSE)
+a5head<-unlist(lapply(delayValues[5],head,1),use.names=FALSE)
+a5tail<-unlist(lapply(delayValues[5],tail,1),use.names=FALSE)
+a6head<-unlist(lapply(delayValues[6],head,1),use.names=FALSE)
+a6tail<-unlist(lapply(delayValues[6],tail,1),use.names=FALSE)
+a7head<-unlist(lapply(delayValues[7],head,1),use.names=FALSE)
+a7tail<-unlist(lapply(delayValues[7],tail,1),use.names=FALSE)
+a8head<-unlist(lapply(delayValues[8],head,1),use.names=FALSE)
+a8tail<-unlist(lapply(delayValues[8],tail,1),use.names=FALSE)
 
 
 #The number of statements in this function should match 
-binTimeCalc<-function(row){
-  if(d[row,3]==0){
-    return(0)
-  } else if (d[row,3]>0&d[row,3]<1){
-    return(.5)
-  } else if (d[row,3]>1&d[row,3]<2.5){
-    return(1.75)
-  } else if (d[row,3]>2.5&d[row,3]<3){
-    return(2.75)  
-  } else if (d[row,3]>3&d[row,3]<3.4){
-    return(3.2)  
-  } else if (d[row,3]>3.4&d[row,3]<4.75){
-    return(4.1)
-  } else if (d[row,3]>4.75&d[row,3]<5.25){
-    return(5.1) 
-  } else if (d[row,3]>5.25&d[row,3]<5.6){
-    return(5.5) 
-  } else{
-    return(5.5)
-  }
-}
-
-#For new data set
 binTimeCalc<-function(d,row){
-  if(d[row,3]==0){
-    return(0)
-  } else if (d[row,3]>0&d[row,3]<1){
-    return(.8)
-  } else if (d[row,3]>1&d[row,3]<1.5){
-    return(1.2)
-  } else if (d[row,3]>1.5&d[row,3]<2.5){
-    return(3)  
-  } else if (d[row,3]>2.5&d[row,3]<3){
-    return(2.8)
-  } else if (d[row,3]>3&d[row,3]<3.5){
-    return(3.2) 
-  } else if (d[row,3]>3.5&d[row,3]<4.5){
-    return(4)
-  } else if (d[row,3]>4.5&d[row,3]<4.8){
-    return(4.7) 
-  } else if (d[row,3]>4.8&d[row,3]<5){
-    return(4.9) 
-  } else if (d[row,3]>5&d[row,3]<5.2){
-    return(5.1)
-  } else if (d[row,3]>5.2&d[row,3]<5.8){
-    return(5.3) 
-  } else{
-    return(999)
-  }
+  if(d[row,3]==0)
+  {return(0)}
+  else if (d[row,3]>0&d[row,3]<=a1tail)
+  {return(mean(c(a1head,a1tail)))}
+  else if (d[row,3]>=a2head&d[row,3]<=a2tail)
+  {return(mean(c(a2head,a2tail)))}
+  else if (d[row,3]>=a3head&d[row,3]<=a3tail)
+  {return(mean(c(a3head,a3tail)))}
+  else if (d[row,3]>=a4head&d[row,3]<=a4tail)
+  {return(mean(c(a4head,a4tail)))}
+  else if (d[row,3]>=a5head&d[row,3]<=a5tail)
+  {return(mean(c(a5head,a5tail)))}
+  else if (d[row,3]>=a6head&d[row,3]<=a6tail)
+  {return(mean(c(a6head,a6tail)))}
+  else if (d[row,3]>=a7head&d[row,3]<=a7tail)
+  {return(mean(c(a7head,a7tail)))}
+  else if (d[row,3]>=a8head&d[row,3]<=a8tail)
+  {return(mean(c(a8head,a8tail)))}
+  else
+  {return(999)}
+  
 }
+  
+
+# 
+# binTimeCalc<-function(row){
+#   if(d[row,3]==0){
+#     return(0)
+#   } else if (d[row,3]>0&d[row,3]<1){
+#     return(.5)
+#   } else if (d[row,3]>1&d[row,3]<2.5){
+#     return(1.75)
+#   } else if (d[row,3]>2.5&d[row,3]<3){
+#     return(2.75)  
+#   } else if (d[row,3]>3&d[row,3]<3.4){
+#     return(3.2)  
+#   } else if (d[row,3]>3.4&d[row,3]<4.75){
+#     return(4.1)
+#   } else if (d[row,3]>4.75&d[row,3]<5.25){
+#     return(5.1) 
+#   } else if (d[row,3]>5.25&d[row,3]<5.6){
+#     return(5.5) 
+#   } else{
+#     return(5.5)
+#   }
+# }
+# 
+# #For new data set
+# binTimeCalc<-function(d,row){
+#   if(d[row,3]==0){
+#     return(0)
+#   } else if (d[row,3]>0&d[row,3]<1){
+#     return(.8)
+#   } else if (d[row,3]>1&d[row,3]<1.5){
+#     return(1.2)
+#   } else if (d[row,3]>1.5&d[row,3]<2.5){
+#     return(3)  
+#   } else if (d[row,3]>2.5&d[row,3]<3){
+#     return(2.8)
+#   } else if (d[row,3]>3&d[row,3]<3.5){
+#     return(3.2) 
+#   } else if (d[row,3]>3.5&d[row,3]<4.5){
+#     return(4)
+#   } else if (d[row,3]>4.5&d[row,3]<4.8){
+#     return(4.7) 
+#   } else if (d[row,3]>4.8&d[row,3]<5){
+#     return(4.9) 
+#   } else if (d[row,3]>5&d[row,3]<5.2){
+#     return(5.1)
+#   } else if (d[row,3]>5.2&d[row,3]<5.8){
+#     return(5.3) 
+#   } else{
+#     return(999)
+#   }
+# }
 
 
 #binTimeCalcEqualTrials<-function(row){
