@@ -18,17 +18,17 @@ graphics.off()
 #Getting rid of any trial which gamble interrupted too early
 #d<-filter(d,gambleDelay<5.6)
 histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
-histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
+#histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 
 colnames(d)[1]<-"Trialid"
-bins=8
+bins=10
 ninbins=round((length(d$Trialid)/bins))
 ##Splitting into number of bins you want
 #quantile(d$gambleDelay[!0])
 #This creates a list with what should be in the binTimeCalc
 delayValues=split(sort(d$gambleDelay[d$gambleDelay!=0]), ceiling(seq_along(d$gambleDelay[d$gambleDelay!=0])/ninbins))
 
-#This needs to manually hardcode the NUMBER of blocks you're using - has to match bins variable 
+#This is to manually hardcode the NUMBER of blocks you're using - has to match number of 'blocks' in delayValues
 a1head<-unlist(lapply(delayValues[1],head,1),use.names=FALSE)
 a1tail<-unlist(lapply(delayValues[1],tail,1),use.names=FALSE)
 a2head<-unlist(lapply(delayValues[2],head,1),use.names=FALSE)
@@ -45,6 +45,8 @@ a7head<-unlist(lapply(delayValues[7],head,1),use.names=FALSE)
 a7tail<-unlist(lapply(delayValues[7],tail,1),use.names=FALSE)
 a8head<-unlist(lapply(delayValues[8],head,1),use.names=FALSE)
 a8tail<-unlist(lapply(delayValues[8],tail,1),use.names=FALSE)
+a9head<-unlist(lapply(delayValues[9],head,1),use.names=FALSE)
+a9tail<-unlist(lapply(delayValues[9],tail,1),use.names=FALSE)
 
 
 #The number of statements in this function should match 
@@ -71,7 +73,30 @@ binTimeCalc<-function(d,row){
   {return(999)}
   
 }
-
+#Temp code because one of the bins is to big... during V02 analysis
+binTimeCalc<-function(d,row){
+  if(d[row,3]==0)
+  {return(0)}
+  else if (d[row,3]>0&d[row,3]<=a1tail)
+  {return(mean(c(a1head,a1tail)))}
+  else if (d[row,3]>=a2head&d[row,3]<=a2tail)
+  {return(mean(c(a2head,a2tail)))}
+  else if (d[row,3]>=a3head&d[row,3]<=a3tail)
+  {return(mean(c(a3head,a3tail)))}
+  else if (d[row,3]>=a4head&d[row,3]<=a4tail)
+  {return(mean(c(a4head,a4tail)))}
+  else if (d[row,3]>=a5head&d[row,3]<=5.59)
+  {return(mean(c(a5head,a5tail)))}
+  else if (d[row,3]==5.6)
+  {return(5.6)}
+  else if (d[row,3]>5.6&d[row,3]<5.977)
+  {return(mean(c(a7head,a8tail)))}
+  else if (d[row,3]>=a9head&d[row,3]<=a9tail)
+  {return(mean(c(a9head,a9tail)))}
+  else
+  {return(999)}
+  
+}
 
 # 
 # binTimeCalc<-function(row){
@@ -151,6 +176,15 @@ binTimeCalc<-function(d,row){
 for(i in 1:nrow(d)){
   d[i,10]=binTimeCalc(d,i)
 }
+
+#Creating new df to see how many ended up in each bin
+dbins<-d %>% 
+  group_by(binsTime) %>% 
+  summarise(Number=length(response))
+dbins
+
+
+
 #Adding which condition trial was in
 #For new data set
 magCondCalc<-function(d,row){
@@ -269,8 +303,7 @@ Participants<-unique(d$uniqueid)
 nParticipants
 
 ##Removing 4 since there aren't enough trials in the block to consider
-d<-filter(d,binsTime!=4|binsTime!=2)
-
+#d<-filter(d,binsTime!=4|binsTime!=2)
 
 
 #Always run the following block2
