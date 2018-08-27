@@ -85,7 +85,7 @@ binTimeCalc<-function(d,row){
   {return(mean(c(a3head,a3tail)))}
   else if (d[row,3]>=a4head&d[row,3]<=a4tail)
   {return(mean(c(a4head,a4tail)))}
-  else if (d[row,3]>=a5head&d[row,3]<=5.59)
+  else if (d[row,3]>=a5head&d[row,3]<=5.5999999)
   {return(mean(c(a5head,a5tail)))}
   else if (d[row,3]==5.6)
   {return(5.6)}
