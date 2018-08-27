@@ -6,8 +6,8 @@ library(mosaic)
 
 #Up until August 2018, used ramp69.csv for data
 
-#d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/ramp8.22Pilot.csv",sep=",")
-d0<-read.csv(file.choose(),header=TRUE)
+d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampV02DataClean.csv",sep=",")
+#d0<-read.csv(file.choose(),header=TRUE)
 d<-d0
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
@@ -21,7 +21,7 @@ histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted tr
 #histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 
 colnames(d)[1]<-"Trialid"
-bins=10
+bins=8
 ninbins=round((length(d$Trialid)/bins))
 ##Splitting into number of bins you want
 #quantile(d$gambleDelay[!0])
@@ -65,10 +65,8 @@ binTimeCalc<-function(d,row){
   {return(mean(c(a5head,a5tail)))}
   else if (d[row,3]>=a6head&d[row,3]<=a6tail)
   {return(mean(c(a6head,a6tail)))}
-  else if (d[row,3]>=a7head&d[row,3]<=a7tail)
+  else if (d[row,3]>=a7head&d[row,3]<=max(d$gambleDelay))
   {return(mean(c(a7head,a7tail)))}
-  else if (d[row,3]>=a8head&d[row,3]<=a8tail)
-  {return(mean(c(a8head,a8tail)))}
   else
   {return(999)}
   
@@ -337,7 +335,22 @@ mlog<-glm(gambled~gambleDelay+magCond+oddsCond+trialNumber,data=dgamble,family="
 summary(mlog)
 
 
+#Adding RPE as a factor
+#Currently only one participant
+dsub<-filter(d,uniqueid==228)
+dsub[,13]=0
+colnames(dsub)[13]<-"PredictionError"
+for (i in length(dsub$Trialid)){
+  
+  
+  
+  
+}
 
+
+
+
+#####Breaking down sub conditions
 #Preference for low gambles 
 dlow<-filter(dgamble,standardGamble==1|standardGamble==2)
 dBehavioral<-dlow %>% 
