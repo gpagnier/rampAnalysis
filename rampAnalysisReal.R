@@ -20,6 +20,14 @@ graphics.off()
 histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 #histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 
+
+d=d[d$uniqueid>227,]
+unique(d$uniqueid)
+
+
+
+
+
 colnames(d)[1]<-"Trialid"
 bins=8
 ninbins=round((length(d$Trialid)/bins))
@@ -49,7 +57,8 @@ a9head<-unlist(lapply(delayValues[9],head,1),use.names=FALSE)
 a9tail<-unlist(lapply(delayValues[9],tail,1),use.names=FALSE)
 
 
-#The number of statements in this function should match 
+#The number of statements in this function should match
+#This block works well for participants 228 on..
 binTimeCalc<-function(d,row){
   if(d[row,3]==0)
   {return(0)}
@@ -219,6 +228,24 @@ for(i in 1:nrow(d)){
 }
 colnames(d)[12]<-"oddsCond"
 
+#Adding prediction errors as possible variable
+d2=d[0,]
+d[,13]=0
+colnames(d)[13]<-"PredictionError"
+
+#Adding RPE as a factor
+#Currently only one participant
+for (i in Participants){
+  dsub<-filter(d,uniqueid==i)
+  dsub[1,13]=dsub[1,7]
+  for (row in 2:length(dsub$Trialid)){
+    #This is essentially calculating the difference between potential reward on trial
+    #t - reward on trial t-1
+    dsub[row,13]=(dsub[row,7]-dsub[(row-1),7])
+  }
+  d2=rbind(d2,dsub)
+}
+d=d2
 
 
 head(d)
@@ -330,23 +357,10 @@ for (i in 1:length(dgamble$response)){
 }
 
 
+
 #Logistic regression for gambled
-mlog<-glm(gambled~gambleDelay+magCond+oddsCond+trialNumber,data=dgamble,family="binomial");
+mlog<-glm(gambled~gambleDelay+magCond+oddsCond+trialNumber+PredictionError,data=dgamble,family="binomial");
 summary(mlog)
-
-
-#Adding RPE as a factor
-#Currently only one participant
-dsub<-filter(d,uniqueid==228)
-dsub[,13]=0
-colnames(dsub)[13]<-"PredictionError"
-for (i in length(dsub$Trialid)){
-  
-  
-  
-  
-}
-
 
 
 
@@ -693,12 +707,6 @@ plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(200,2500),main=paste(
 #  print(histogram(atemp$gambleRT,breaks=50,main=paste("High odds: RT by interruption, Gamble interrupted around ~ ",toString(i)," seconds")))
 #  print(i)
 #}
-
-
-
-
-
-
 
 
 
