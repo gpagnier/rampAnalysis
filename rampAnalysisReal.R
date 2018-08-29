@@ -8,7 +8,7 @@ library(mosaic)
 
 d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampV02DataClean.csv",sep=",")
 #d0<-read.csv(file.choose(),header=TRUE)
-d<-d0
+#d<-d0
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
@@ -16,7 +16,7 @@ d$binsTime=0;
 graphics.off()
 
 #Filtering participants that have weird bins i.e. too many 5.6
-removeIds=c(201:227)
+removeIds=c(201:228)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -29,22 +29,13 @@ histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted tr
 #histogram(d$gambleDelay,breaks=100,xlim=c(.5,6),ylim=c(0,5.2),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 
 
-d=d[d$uniqueid>227,]
-unique(d$uniqueid)
-
-
-
-
 
 colnames(d)[1]<-"Trialid"
-<<<<<<< HEAD
+
 bins=9
-=======
-bins=8
->>>>>>> eb0d0837da006b0c1cb5fbe74d42ca0fc819cb77
+
 ninbins=round((length(d$Trialid)/bins))
-##Splitting into number of bins you want
-#quantile(d$gambleDelay[!0])
+
 #This creates a list with what should be in the binTimeCalc
 delayValues=split(sort(d$gambleDelay[d$gambleDelay!=0]), ceiling(seq_along(d$gambleDelay[d$gambleDelay!=0])/ninbins))
 
@@ -88,118 +79,40 @@ binTimeCalc<-function(d,row){
   {return(mean(c(a5head,a5tail)))}
   else if (d[row,3]>=a6head&d[row,3]<=a6tail)
   {return(mean(c(a6head,a6tail)))}
-  else if (d[row,3]>=a7head&d[row,3]<=max(d$gambleDelay))
+  else if (d[row,3]>=a7head&d[row,3]<=a7tail)
   {return(mean(c(a7head,a7tail)))}
-<<<<<<< HEAD
   else if (d[row,3]>=a8head&d[row,3]<=a8tail)
   {return(mean(c(a8head,a8tail)))}
-  else if (d[row,3]>=a9head&d[row,3]<=a9tail)
+  else if (d[row,3]>=a9head&d[row,3]<=max(d$gambleDelay))
   {return(mean(c(a9head,a9tail)))}
-=======
->>>>>>> eb0d0837da006b0c1cb5fbe74d42ca0fc819cb77
   else
   {return(999)}
-  
 }
 #Temp code because one of the bins is to big... during V02 analysis
-binTimeCalc<-function(d,row){
-  if(d[row,3]==0)
-  {return(0)}
-  else if (d[row,3]>0&d[row,3]<=a1tail)
-  {return(mean(c(a1head,a1tail)))}
-  else if (d[row,3]>=a2head&d[row,3]<=a2tail)
-  {return(mean(c(a2head,a2tail)))}
-  else if (d[row,3]>=a3head&d[row,3]<=a3tail)
-  {return(mean(c(a3head,a3tail)))}
-  else if (d[row,3]>=a4head&d[row,3]<=a4tail)
-  {return(mean(c(a4head,a4tail)))}
-  else if (d[row,3]>=a5head&d[row,3]<=5.5999999)
-  {return(mean(c(a5head,a5tail)))}
-  else if (d[row,3]==5.6)
-  {return(5.6)}
-  else if (d[row,3]>5.6&d[row,3]<5.977)
-  {return(mean(c(a7head,a8tail)))}
-  else if (d[row,3]>=a9head&d[row,3]<=a9tail)
-  {return(mean(c(a9head,a9tail)))}
-  else
-  {return(999)}
-  
-}
-
-# 
-# binTimeCalc<-function(row){
-#   if(d[row,3]==0){
-#     return(0)
-#   } else if (d[row,3]>0&d[row,3]<1){
-#     return(.5)
-#   } else if (d[row,3]>1&d[row,3]<2.5){
-#     return(1.75)
-#   } else if (d[row,3]>2.5&d[row,3]<3){
-#     return(2.75)  
-#   } else if (d[row,3]>3&d[row,3]<3.4){
-#     return(3.2)  
-#   } else if (d[row,3]>3.4&d[row,3]<4.75){
-#     return(4.1)
-#   } else if (d[row,3]>4.75&d[row,3]<5.25){
-#     return(5.1) 
-#   } else if (d[row,3]>5.25&d[row,3]<5.6){
-#     return(5.5) 
-#   } else{
-#     return(5.5)
-#   }
-# }
-# 
-# #For new data set
 # binTimeCalc<-function(d,row){
-#   if(d[row,3]==0){
-#     return(0)
-#   } else if (d[row,3]>0&d[row,3]<1){
-#     return(.8)
-#   } else if (d[row,3]>1&d[row,3]<1.5){
-#     return(1.2)
-#   } else if (d[row,3]>1.5&d[row,3]<2.5){
-#     return(3)  
-#   } else if (d[row,3]>2.5&d[row,3]<3){
-#     return(2.8)
-#   } else if (d[row,3]>3&d[row,3]<3.5){
-#     return(3.2) 
-#   } else if (d[row,3]>3.5&d[row,3]<4.5){
-#     return(4)
-#   } else if (d[row,3]>4.5&d[row,3]<4.8){
-#     return(4.7) 
-#   } else if (d[row,3]>4.8&d[row,3]<5){
-#     return(4.9) 
-#   } else if (d[row,3]>5&d[row,3]<5.2){
-#     return(5.1)
-#   } else if (d[row,3]>5.2&d[row,3]<5.8){
-#     return(5.3) 
-#   } else{
-#     return(999)
-#   }
+#   if(d[row,3]==0)
+#   {return(0)}
+#   else if (d[row,3]>0&d[row,3]<=a1tail)
+#   {return(mean(c(a1head,a1tail)))}
+#   else if (d[row,3]>=a2head&d[row,3]<=a2tail)
+#   {return(mean(c(a2head,a2tail)))}
+#   else if (d[row,3]>=a3head&d[row,3]<=a3tail)
+#   {return(mean(c(a3head,a3tail)))}
+#   else if (d[row,3]>=a4head&d[row,3]<=a4tail)
+#   {return(mean(c(a4head,a4tail)))}
+#   else if (d[row,3]>=a5head&d[row,3]<=5.5999999)
+#   {return(mean(c(a5head,a5tail)))}
+#   else if (d[row,3]==5.6)
+#   {return(5.6)}
+#   else if (d[row,3]>5.6&d[row,3]<5.977)
+#   {return(mean(c(a7head,a8tail)))}
+#   else if (d[row,3]>=a9head&d[row,3]<=a9tail)
+#   {return(mean(c(a9head,a9tail)))}
+#   else
+#   {return(999)}
+#   
 # }
 
-
-#binTimeCalcEqualTrials<-function(row){
-#  if(d[row,3]==0){
-#    return(0)
-#  } else if (d[row,3]>0&d[row,3]<2.57){
-#    return(1)
-#  } else if (d[row,3]>2.57&d[row,3]<3.22){
-#    return(2.75)
-#  } else if (d[row,3]>3.22&d[row,3]<5.35){
-#    return(4.25)  
-#  } else if (d[row,3]>5.35&d[row,3]<6.5){
-#    return(6)  
-#   } else{
-#    return(NULL)
-#  }
-#}
-
-
-
-#for(i in 1:nrow(d)){
-#  d[i,10]=binTimeCalcEqualTrials(i)
-#}
 
 for(i in 1:nrow(d)){
   d[i,10]=binTimeCalc(d,i)
@@ -253,6 +166,7 @@ colnames(d)[12]<-"oddsCond"
 d2=d[0,]
 d[,13]=0
 colnames(d)[13]<-"PredictionError"
+Participants<-unique(d$uniqueid)
 
 #Adding RPE as a factor
 #Currently only one participant
@@ -266,11 +180,12 @@ for (i in Participants){
   }
   d2=rbind(d2,dsub)
 }
+head(d2)
 d=d2
 
 
 head(d)
-participants<-unique(d$uniqueid)
+
 nParticipants<- length(unique(d$uniqueid))
 nParticipants
 
@@ -281,15 +196,15 @@ dcatch[order(dcatch$Trialid),]
 #75 should gamble; 86 should success/fail; 2 catch trials?
 
 
-catch<-for(i in 1:nrow(dcatch)){
-  if(dcatch[i,1]==85&dcatch[i,2]=="gamble"){
-    noCatch<-c(noCatch,dcatch[i,3])
-  }else if(dcatch[i,1]==75&dcatch[i,2]=="success"){
-    noCatch<-c(noCatch,dcatch[i,3])
-  }else if(dcatch[i,1]==75&dcatch[i,2]=="fail"){
-    noCatch<-c(noCatch,dcatch[i,3])
-  }
-}
+# catch<-for(i in 1:nrow(dcatch)){
+#   if(dcatch[i,1]==85&dcatch[i,2]=="gamble"){
+#     noCatch<-c(noCatch,dcatch[i,3])
+#   }else if(dcatch[i,1]==75&dcatch[i,2]=="success"){
+#     noCatch<-c(noCatch,dcatch[i,3])
+#   }else if(dcatch[i,1]==75&dcatch[i,2]=="fail"){
+#     noCatch<-c(noCatch,dcatch[i,3])
+#   }
+# }
 
 
 #Removing any subjects from dataset if needed, using unique ids in vector removeIds
@@ -351,23 +266,22 @@ nParticipants
 ##Removing 4 since there aren't enough trials in the block to consider
 #d<-filter(d,binsTime!=4|binsTime!=2)
 
-#Adding prediction error...again
-d[,13]=0
-colnames(d)[13]="PredictionError"
-d2=d[0,]
-
-for (i in Participants){
-  dsub=d[d$uniqueid==i,]
-  for (row in 2:length(dsub$Trialid)){
-    dsub[row,13]=(dsub[row,7]-dsub[(row-1),7])
-  }
-  d2=rbind(d2,dsub)
-}
-d=d2
+# #Adding prediction error...again
+# d[,13]=0
+# colnames(d)[13]="PredictionError"
+# d2=d[0,]
+# 
+# for (i in Participants){
+#   dsub=d[d$uniqueid==i,]
+#   for (row in 2:length(dsub$Trialid)){
+#     dsub[row,13]=(dsub[row,7]-dsub[(row-1),7])
+#   }
+#   d2=rbind(d2,dsub)
+# }
+# d=d2
 
 
 #Always run the following block2
-#This filters only trials that had a gamble appear
 
 dgamble<-filter(d,gambleDelay!=0)
 
@@ -393,14 +307,14 @@ for (i in 1:length(dgamble$response)){
 
 
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> eb0d0837da006b0c1cb5fbe74d42ca0fc819cb77
 #Logistic regression for gambled
-mlog<-glm(gambled~gambleDelay+magCond+oddsCond+trialNumber+PredictionError,data=dgamble,family="binomial");
+mlog<-glm(gambled~trialNumber+PredictionError+gambleDelay*oddsCond+gambleDelay*magCond+PredictionError*gambleDelay,data=dgamble,family="binomial");
 summary(mlog)
+
+mlog2<-glm(gambled~trialNumber+PredictionError+gambleDelay+oddsCond+magCond+PredictionError,data=dgamble,family="binomial");
+summary(mlog2)
 
 
 
@@ -749,7 +663,6 @@ plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(200,2500),main=paste(
 
 
 
-<<<<<<< HEAD
 #High PredictionError only
 dhighPE<-filter(dgamble,PredictionError>0)
 
@@ -833,8 +746,8 @@ plot(dlowPERT$seconds,dlowPERT$medianRT,xlim = c(0,8),ylim=c(200,2500),main=past
 
 
 
-=======
->>>>>>> eb0d0837da006b0c1cb5fbe74d42ca0fc819cb77
+
+####################################################################################################################################
 #Overall plot of gambleDelay and percentage gambled
 d2<-d %>% 
   group_by(binsTime) %>% 
@@ -900,6 +813,15 @@ dTrials<-d %>%
 dTrials
 histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
 
+#####################################################################################################
+#Sub analyses
+db=d[d$outcomeRT<300&d$outcomeRT!=0,]
+dbsub<-db %>% 
+  group_by(uniqueid) %>% 
+  summarise(ntrials=length(trialNumber),
+            meanotrt=mean(outcomeRT),
+            sdotrt=mean(outcomeRT))
+dbsub
 
 ###Repeat regression plot but only WITHIN each participant
 
@@ -979,20 +901,24 @@ for(i in Participants){
 for(i in intN){
 }
 ###Breaking down cond. individual participant (p)
-p<-6
+p<-290
 
-dsubMagCond<-filter(d,uniqueid==p|magCond!="catch") %>% 
+dsubMagCond<-filter(d,uniqueid==p&magCond!="catch") %>% 
   group_by(magCond) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-barplot(dsubMagCond$percentageGambled,names.arg=dsubMagCond$magCond,beside=T,ylim=c(0,50),ylab="Number of trials",main="Participant 6, propensity to gamble across magnitude")
+barplot(dsubMagCond$percentageGambled,names.arg=dsubMagCond$magCond,beside=T,ylim=c(0,50),ylab="Number of trials",main=c("Participant ",p, " propensity to gamble across magnitude"))
 
-dsubOddsCond<-filter(d,uniqueid==p|oddsCond!="catch") %>% 
+dsubOddsCond<-filter(d,uniqueid==p&oddsCond!="catch") %>% 
   group_by(oddsCond) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-barplot(dsubOddsCond$percentageGambled,names.arg=dsubOddsCond$oddsCond,beside=T,ylim=c(0,100),ylab="Number of trials",main="Participant 6, propensity to gamble across odds")
+barplot(dsubOddsCond$percentageGambled,names.arg=dsubOddsCond$oddsCond,beside=T,ylim=c(0,100),ylab="Number of trials",main=c("Participant ",p, " propensity to gamble across odds"))
+
+histogram(setdiff(filter(d,uniqueid==p&magCond!="catch")$outcomeRT,0))
+
+          
