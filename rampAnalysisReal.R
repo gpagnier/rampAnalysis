@@ -15,12 +15,11 @@ d$binsTime=0;
 #Clearing pictures
 graphics.off()
 
-#Filtering participants that have weird bins i.e. too many 5.6
-removeIds=c(201:228)
+#Filtering participants that have weird bins i.e. too many 5.6 and too low RTs
+removeIds=c(201:228,226,264,237,239,249,250,261,266,275,279,281,283,285 )
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
-
 
 
 #Getting rid of any trial which gamble interrupted too early
@@ -206,6 +205,7 @@ dcatch[order(dcatch$Trialid),]
 #   }
 # }
 
+#Removing these subjects in V02 because they're probably bots
 
 #Removing any subjects from dataset if needed, using unique ids in vector removeIds
 for(i in removeIds){
@@ -224,10 +224,10 @@ gambleRTs<-d$gambleRT[d$gambleRT!=0]
 histogram(gambleRTs,main="Aggregated gamble RTs",breaks=70)
 #Whenever they claimed 'boring' reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
-histogram(outcomeRTs,main="Aggregated outcome RTs",breaks=70)
+histogram(outcomeRTs,main=c("Aggregated outcome RTs; number of trials:",length(outcomeRTs)),breaks=70)
 #Printing experiment times in minutes CONFIRM PSITURK TRACKS IN MILLISECONDS
 expTimes<-((unique(d$expTime,na.rm=TRUE)/1000)/60)
-histogram(expTimes,main="Experiment Time (in minutes)",breaks=50)
+#histogram(expTimes,main="Experiment Time (in minutes)",breaks=50)
 histogram(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,60))
 
 
@@ -295,6 +295,16 @@ dBehavioral<-dgamble %>%
 
 histogram(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 
+#Remaking behavioral histograms
+#Whenever they gambled
+gambleRTs<-d$gambleRT[d$gambleRT!=0]
+histogram(gambleRTs,main="Aggregated gamble RTs",breaks=70)
+c("Numberof trials that they gambled on: ",length(gambleRTs))
+#Whenever they claimed 'boring' reward
+outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
+histogram(outcomeRTs,main="Aggregated outcome RTs; number of trials:",breaks=70)
+c("Numberof trials that they gambled on: ",length(outcomeRTs))
+
 #Adding another column 1 if they gambled, 0 if they didn't
 #This will be outcome variable in logistic regression
 for (i in 1:length(dgamble$response)){
@@ -310,10 +320,15 @@ for (i in 1:length(dgamble$response)){
 
 
 #Logistic regression for gambled
-mlog<-glm(gambled~trialNumber+PredictionError+gambleDelay*oddsCond+gambleDelay*magCond+PredictionError*gambleDelay,data=dgamble,family="binomial");
+mlog<-glm(gambled~trialNumber+PredictionError+gambleDelay*oddsCond+
+            gambleDelay*magCond+
+            PredictionError*gambleDelay,
+          data=dgamble,family="binomial");
 summary(mlog)
 
-mlog2<-glm(gambled~trialNumber+PredictionError+gambleDelay+oddsCond+magCond+PredictionError,data=dgamble,family="binomial");
+mlog2<-glm(gambled~trialNumber+PredictionError+
+             gambleDelay+oddsCond+magCond+PredictionError,
+           data=dgamble,family="binomial");
 summary(mlog2)
 
 
@@ -864,6 +879,7 @@ summary(msubRT)
 
 subj<-unique(d$uniqueid)
 intN<-NULL
+botN<-NULL
 for(i in Participants){
   print(i)
   dsub<-d[d$uniqueid==i,]
@@ -875,14 +891,20 @@ for(i in Participants){
               percentageGambled=round(gambleCount/trials*100))
   d4$seconds<-d4$binsTime
   d4<-filter(d4,seconds>0)
-  plot(d4$seconds,d4$percentageGambled,xlim = c(0,7),ylim = c(0,100),
-       main=paste("Individual participant data; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
-       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+  # plot(d4$seconds,d4$percentageGambled,xlim = c(0,7),ylim = c(0,100),
+  #      main=paste("Individual participant data; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+  #      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
   mtemp<-lm(d4$percentageGambled~d4$seconds)
-  print(summary(mtemp)$coefficients[8])
+  if (sum(dsub$outcomeRT)>0){
+    hist(setdiff(dsub$outcomeRT,0),breaks=50,xlim=c(0,800),main=c("Outcome RT; participant: ",i,"meanOutcomeRT: ",round(mean(setdiff(dsub$outcomeRT,0)))/1000))}
+  
   #This checks to see if any participant is ramping
   if(summary(mtemp)$coefficients[8]<.05 & summary(mtemp)$coefficients[2]>0){
     intN<-c(intN,i)
+  }
+  #Check to see if any participant has a RT that's susupiciously low..
+  if(mean(setdiff(dsub$outcomeRT,0),na.rm=TRUE)<250){
+    botN<-c(botN,i)
   }
 }
 
@@ -901,15 +923,15 @@ for(i in Participants){
 for(i in intN){
 }
 ###Breaking down cond. individual participant (p)
-p<-290
-
+p<-286
+dp=filter(d,uniqueid==p)
 dsubMagCond<-filter(d,uniqueid==p&magCond!="catch") %>% 
   group_by(magCond) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-barplot(dsubMagCond$percentageGambled,names.arg=dsubMagCond$magCond,beside=T,ylim=c(0,50),ylab="Number of trials",main=c("Participant ",p, " propensity to gamble across magnitude"))
+barplot(dsubMagCond$percentageGambled,names.arg=dsubMagCond$magCond,beside=T,ylab="Number of trials",main=c("Participant ",p, " propensity to gamble across magnitude"))
 
 dsubOddsCond<-filter(d,uniqueid==p&oddsCond!="catch") %>% 
   group_by(oddsCond) %>% 
@@ -917,8 +939,9 @@ dsubOddsCond<-filter(d,uniqueid==p&oddsCond!="catch") %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-barplot(dsubOddsCond$percentageGambled,names.arg=dsubOddsCond$oddsCond,beside=T,ylim=c(0,100),ylab="Number of trials",main=c("Participant ",p, " propensity to gamble across odds"))
+barplot(dsubOddsCond$percentageGambled,names.arg=dsubOddsCond$oddsCond,beside=T,ylab="Number of trials",main=c("Participant ",p, " propensity to gamble across odds"))
 
-histogram(setdiff(filter(d,uniqueid==p&magCond!="catch")$outcomeRT,0))
+pDF=(filter(d,uniqueid==p&magCond!="catch"))
+histogram(setdiff(pDF$outcomeRT,0),breaks=50,xlim=c(0,800))
 
           
