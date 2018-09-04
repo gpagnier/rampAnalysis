@@ -3,9 +3,9 @@
 
 #Things to do
 #Add High/low RPE
-#Add sanbox mode for sub sub analyses
-
-
+#Add  sub sub analyses
+#Add in knobs to filter sub sub categoies per participant
+#Add easy to use sandbox mode
 
 ##Loading packages
 install.packages('mosaic')
@@ -613,8 +613,6 @@ d3<-dsub %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-d3$seconds<-d3$binsTime-.5
-d3<-filter(d3,seconds>-.5)
 d3
 par(ps = 12, cex = 1, cex.main = 1)
 plot(d3$seconds,d3$percentageGambled,xlim = c(0,7),ylim = c(0,100),
@@ -629,7 +627,7 @@ d3RT<-filter(dsub,gambleRT!=0) %>%
             sdRT=sd(gambleRT))
 d3RT$seconds<-d3RT$binsTime
 
-plot(d3RT$seconds,d3RT$meanRT,xlim = c(0,8),ylim=c(0,2500),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+plot(d3RT$seconds,d3RT$meanRT,xlim = c(0,8),ylim=c(400,1000),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(d3RT$seconds)){
   arrows(as.numeric(d3RT$seconds[i]),as.numeric(d3RT[i,2]+(as.numeric(d3RT[i,3]))),as.numeric(d3RT$seconds[i]),as.numeric(d3RT[i,2]-(as.numeric(d3RT[i,3]))),length=0.05, angle=90, code=3)
@@ -645,6 +643,8 @@ intN<-NULL
 botN<-NULL
 plotRT=FALSE
 plotGD=TRUE
+#Add in knobs for different sub categories (though this number is very small....)
+
 
 for(i in Participants){
   print(i)
@@ -656,14 +656,25 @@ for(i in Participants){
               didNotGamble=sum(response=="fail"|response=="success"),
               percentageGambled=round(gambleCount/trials*100))
   d4$seconds<-d4$binsTime
-  d4<-filter(d4,seconds>0)
-  plot(d4$seconds,d4$percentageGambled,xlim = c(0,7),ylim = c(0,100),
-       main=paste("Individual participant data; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
-       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+  if (plotGD){
+    plot(d4$seconds,d4$percentageGambled,xlim = c(0,7),ylim = c(0,100),
+         main=paste("Individual participant data; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+         xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+  }
+  #One participant RT
+  d4RT<-filter(dsub,gambleRT!=0) %>% 
+    group_by(binsTime) %>% 
+    summarise(meanRT=mean(gambleRT),
+              sdRT=sd(gambleRT))
+  d4RT$seconds<-d4RT$binsTime
+  
+  if (plotRT){
+    plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
+         main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+         xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+  }
+  
   mtemp<-lm(d4$percentageGambled~d4$seconds)
-  # if (sum(dsub$outcomeRT)>0){
-  #   hist(setdiff(dsub$outcomeRT,0),breaks=50,xlim=c(0,800),main=c("Outcome RT; participant: ",i,"meanOutcomeRT: ",round(mean(setdiff(dsub$outcomeRT,0)))/1000))}
-  #
   #This checks to see if any participant is ramping
   if(summary(mtemp)$coefficients[8]<.05 & summary(mtemp)$coefficients[2]>0){
     intN<-c(intN,i)
@@ -672,4 +683,9 @@ for(i in Participants){
   if(mean(setdiff(dsub$outcomeRT,0),na.rm=TRUE)<250){
     botN<-c(botN,i)
   }
+}
+
+
+#Looking into participants that ramp
+for(i in intN){
 }
