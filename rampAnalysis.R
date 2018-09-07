@@ -12,6 +12,28 @@ install.packages('mosaic')
 library(mosaic)
 
 ##Loading data
+d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
+
+#Cleaning data
+bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
+bonusAmounts=bonusAmountsTemp
+for (i in 1:length(d0$BonusAmount)){
+  if(!is.na(d0[i,2])){
+    bonusAmountsTemp[1,1]=as.integer(d0[i,"BonusAmount"])
+    bonusAmountsTemp[1,2]=as.character(d0[i,"uniqueid"])
+    bonusAmounts=rbind(bonusAmounts,bonusAmountsTemp)
+  }
+}
+bonusAmounts=bonusAmounts[-1,]
+colnames(bonusAmounts)[1]<-"Amount"
+colnames(bonusAmounts)[2]<-"ID"
+bonusAmounts
+
+
+#Need to replace uniqueid with numbers and clean out columns that aren't useful
+
+
+
 
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
@@ -27,7 +49,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(201:228,226,264,237,239,249,250,261,266,275,279,281,283,285 )
+removeIds=c()
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
