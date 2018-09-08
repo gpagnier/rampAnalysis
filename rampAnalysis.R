@@ -12,7 +12,8 @@ install.packages('mosaic')
 library(mosaic)
 
 ##Loading data
-d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
+#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -29,18 +30,24 @@ colnames(bonusAmounts)[1]<-"Amount"
 colnames(bonusAmounts)[2]<-"ID"
 bonusAmounts
 
-
-#Need to replace uniqueid with numbers and clean out columns that aren't useful
-
-
-
-
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
+#Need to replace uniqueid with numbers and clean out columns that aren't useful
+d<-d0[,c("Trialid","expTime","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
+d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
+d<-filter(d,d$response!="")
+
+#Replace uniqueid with numbers
+#for (i in nrow(d)){
+  
+  
+  
+#}
+
 #d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampV02DataClean.csv",sep=",")
-d0<-read.csv(file.choose(),header=TRUE)
-d<-d0
+#d0<-read.csv(file.choose(),header=TRUE)
+#d<-d0
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
