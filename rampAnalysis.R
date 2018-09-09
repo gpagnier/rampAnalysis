@@ -8,7 +8,7 @@
 #Add easy to use sandbox mode
 
 ##Loading packages
-install.packages('mosaic')
+#install.packages('mosaic')
 library(mosaic)
 
 ##Loading data
@@ -38,16 +38,28 @@ d<-d0[,c("Trialid","expTime","gambleDelay","gambleRT","outcomeRT","response","st
 d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
 d<-filter(d,d$response!="")
 
-#Replace uniqueid with numbers
-#for (i in nrow(d)){
+#Adding col uniqueID uniqueid with numbers
+d$uniqueID=NA
+seed=201
+d[1,"uniqueID"]<-seed
+for (i in 2:nrow(d)){
+  if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
+    d[i,"uniqueID"]=d[i-1,"uniqueID"]
+  }
+  else if (d[i,"uniqueid"]!=d[i-1,"uniqueid"]){
+    d[i,"uniqueID"]=(d[i-1,"uniqueID"]+1)
+  }
   
-  
-  
-#}
+}
+unique(d$uniqueID)
+d$uniqueid=d$uniqueID
+d$uniqueID=NULL
 
-#d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampV02DataClean.csv",sep=",")
-#d0<-read.csv(file.choose(),header=TRUE)
-#d<-d0
+#Now we have a dataframe we can work with
+#Replace any empty cell with NA
+#Colnames should now be:
+#"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
+
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
