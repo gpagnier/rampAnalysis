@@ -12,8 +12,8 @@
 library(mosaic)
 
 ##Loading data
-#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampNotCleanv02.csv",sep=",")
+d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/5ramp9.10.csv",sep=",")
+#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampNotCleanv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -69,7 +69,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(201:310)
+removeIds=c(201:313)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -149,6 +149,9 @@ dbins<-d %>%
   group_by(binsTime) %>% 
   summarise(Number=length(response))
 dbins
+
+#Remove/coalesce any rows with bins if the numbers are too far apart from one another
+
 
 
 #Adding which condition trial was in
