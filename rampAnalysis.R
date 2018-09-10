@@ -8,11 +8,12 @@
 #Add easy to use sandbox mode
 
 ##Loading packages
-install.packages('mosaic')
+#install.packages('mosaic')
 library(mosaic)
 
 ##Loading data
-d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
+#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampNotClean.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampNotCleanv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -27,20 +28,39 @@ for (i in 1:length(d0$BonusAmount)){
 bonusAmounts=bonusAmounts[-1,]
 colnames(bonusAmounts)[1]<-"Amount"
 colnames(bonusAmounts)[2]<-"ID"
+
+bonusAmounts<-unique(bonusAmounts)
 bonusAmounts
-
-
-#Need to replace uniqueid with numbers and clean out columns that aren't useful
-
-
-
-
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
-#d<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/rampV02DataClean.csv",sep=",")
-d0<-read.csv(file.choose(),header=TRUE)
-d<-d0
+#Need to replace uniqueid with numbers and clean out columns that aren't useful
+d<-d0[,c("Trialid","expTime","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
+d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
+d<-subset(d,d$response!="")
+
+#Adding col uniqueID uniqueid with numbers
+d$uniqueID=NA
+seed=201
+d[1,"uniqueID"]<-seed
+for (i in 2:nrow(d)){
+  if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
+    d[i,"uniqueID"]=d[i-1,"uniqueID"]
+  }
+  else if (d[i,"uniqueid"]!=d[i-1,"uniqueid"]){
+    d[i,"uniqueID"]=(d[i-1,"uniqueID"]+1)
+  }
+  
+}
+unique(d$uniqueID)
+d$uniqueid=d$uniqueID
+d$uniqueID=NULL
+
+#Now we have a dataframe we can work with
+#Replace any empty cell with NA
+#Colnames should now be:
+#"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
+
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
@@ -49,13 +69,14 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c()
+removeIds=c(201:310)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
+unique(d$uniqueid)
 
 #Where did gambles interrupt
-histogram(d$gambleDelay,breaks=50,xlim=c(0,7),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
+histogram(d$gambleDelay,breaks=50,xlim=c(0,8),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
 
 
 
