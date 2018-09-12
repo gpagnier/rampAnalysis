@@ -6,14 +6,15 @@
 #Add  sub sub analyses
 #Add in knobs to filter sub sub categoies per participant
 #Add easy to use sandbox mode
+#Normalize z score RT
 
 ##Loading packages
 #install.packages('mosaic')
 library(mosaic)
 
 ##Loading data
-d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/5ramp9.10.csv",sep=",")
-#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampNotCleanv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/5ramp9.10.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/50ramp9.11.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -69,7 +70,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(201:313)
+removeIds=c()
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -151,8 +152,18 @@ dbins<-d %>%
 dbins
 
 #Remove/coalesce any rows with bins if the numbers are too far apart from one another
-
-
+#Highly conditional, should hardcode for every dataset
+#Right now this takes the last one and adds it to the last 'bin'
+for(i in 1:nrow(d)){
+  if(d[i,"binsTime"]==mean(c(a8head,a8tail))){
+    d[i,"binsTime"]=mean(c(a7head,a7tail))
+    i
+  }
+};
+dbins<-d %>% 
+  group_by(binsTime) %>% 
+  summarise(Number=length(response))
+dbins
 
 #Adding which condition trial was in
 #For new data set
@@ -355,7 +366,7 @@ dRT<-filter(d,gambleRT!=0) %>%
   summarise(medianRT=mean(gambleRT),
             sdRT=sd(gambleRT))
 dRT$seconds<-dRT$binsTime
-plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,1000),main=paste("Group data; total data; median RT with sd; n =",toString(sum(dhighp2$trials)),"trials;"),
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,1000),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
@@ -503,10 +514,10 @@ for(i in 1:length(dhighRT$seconds)){
 }
 
 
-#How does payout affect gamble propensity
-#Low payout = 1.5 x standard gamble
-#Mid payout = 2 x standard gamble
-#High payout = 3 x standard gamble
+#How does odds(payout) affect gamble propensity
+#Low odds = 1.5 x standard gamble
+#Mid odds = 2 x standard gamble
+#High odds = 3 x standard gamble
 
 
 
@@ -651,7 +662,7 @@ for(i in 1:length(dhighpRT$seconds)){
 #Breaking down by participant
 
 ####The following is to just get one participant's data
-p=230
+p=237
 dsub<-d[d$uniqueid==p,]
 d3<-dsub %>% 
   group_by(binsTime) %>% 
@@ -659,7 +670,8 @@ d3<-dsub %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-d3
+d3$seconds<-d3$binsTime
+
 par(ps = 12, cex = 1, cex.main = 1)
 plot(d3$seconds,d3$percentageGambled,xlim = c(0,7),ylim = c(0,100),
      main=paste("Individual participant data (all trials); n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
