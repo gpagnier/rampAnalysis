@@ -14,7 +14,7 @@ library(mosaic)
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/5ramp9.10.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/50ramp9.11.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -204,20 +204,36 @@ colnames(d)[12]<-"oddsCond"
 #Adding prediction errors:
 #Adding prediction errors as possible variable
 d2=d[0,]
+#RPE
 d[,13]=0
+#Normalized RT log(1/RT)
+d[,14]=0
 colnames(d)[13]<-"PredictionError"
+colnames(d)[14]<-"NormalizedRT"
+
 Participants<-unique(d$uniqueid)
 
-#Adding RPE as a factor
+#Adding RPE as a factor AND normalized z score
 #Currently only one participant
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
   dsub[1,13]=dsub[1,7]
+  #This is adding RPE
   for (row in 2:length(dsub$Trialid)){
     #This is essentially calculating the difference between potential reward on trial
     #t - reward on trial t-1
     dsub[row,13]=(dsub[row,7]-dsub[(row-1),7])
   }
+  #This is adding log(1/RT) as a column
+  subMeanRT=mean(d)
+  for (row in 1:length(dsub$Trialid)){
+        dsub[row,14]=#NEED TO FIGURE THIS OUT log(1/)
+  }
+  
+  
+  
+  
+  
   d2=rbind(d2,dsub)
 }
 head(d2)
@@ -265,7 +281,8 @@ dlowG<-filter(dBehavioralTotal,percentageGambled<6)
 noGamblers<-dlowG$uniqueid
 dhighg<-filter(dBehavioralTotal,percentageGambled>95)
 allGamblers<-dhighg$uniqueid
-removeIds<-c(noGamblers,allGamblers)
+lowTrials<-filter(dBehavioralTotal,trials<50)$uniqueid
+removeIds<-c(noGamblers,allGamblers,lowTrials)
 
 #Removing any subjects from dataset if needed, using unique ids in vector removeIds
 for(i in removeIds){
@@ -324,6 +341,7 @@ dTrials<-d %>%
             percentageGambled=round(gambleCount/ntrials*100))
 dTrials
 histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
+
 
 #Logistic regression for gambled
 #Need to figure out which one to use
@@ -657,7 +675,7 @@ for(i in 1:length(dhighpRT$seconds)){
 
 #############################################################################################
 #Sandbox mode
-#Design your own mag/odds filter
+#Design your own mag/odds filter for group participants
 #############################################################################################
 #Breaking down by participant
 
