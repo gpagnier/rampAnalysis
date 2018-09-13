@@ -13,8 +13,8 @@
 library(mosaic)
 
 ##Loading data
-#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/5ramp9.10.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -205,39 +205,79 @@ for(i in 1:nrow(d)){
 }
 colnames(d)[12]<-"oddsCond"
 
+#Adding another column 1 if they gambled, 0 if they didn't
+#This will be outcome variable in logistic regression
+d$gambled=0
+for (i in 1:length(d$response)){
+  if(d$response[i]=='gamble'){
+    d$gambled[i]=1
+  } else {
+    d$gambled[i]=0
+  }
+}
+#This is a column for highest gamble shown (used to calculate RPE2 and RPE3)
+d$gambleAmt=0
+for (i in 1:length(d$response)){
+  if(d$oddsCond[i]=='lowp'){
+    d$gambleAmt[i]=(d$standardGamble[i]*1.5)
+  } else if(d$oddsCond[i]=='midp'){
+    d$gambleAmt[i]=(d$standardGamble[i]*2)
+  }else if(d$oddsCond[i]=='highp'){
+    d$gambleAmt[i]=(d$standardGamble[i]*3)
+  } else {
+    d$gambleAmt[i]=d$standardGamble[i]
+  }
+}
+
 #Adding prediction errors:
 #Adding prediction errors as possible variable
 d2=d[0,]
-#RPE
-d[,13]=0
-#Normalized RT log(1/RT)
-d[,14]=0
-d[,15]=0
+#rpe 1 2 and 3
+d$rpe1=0
+d$rpe2=0
+d$rpe3=0
 
-colnames(d)[13]<-"PredictionError"
-colnames(d)[14]<-"NormalizedGambleRT"
-colnames(d)[15]<-"NormalizedOutcomeRT"
+# colnames(d)[14]<-"rpe1"
+# colnames(d)[15]<-"rpe2"
+# colnames(d)[16]<-"NormalizedGambleRT"
+# colnames(d)[17]<-"NormalizedOutcomeRT"
 
 Participants<-unique(d$uniqueid)
 
 #Adding RPE as a factor AND normalized z score
-
+#rpe1 is the standard gamble of trial t- standard gamble of t-1
+#rpe2 is the standard gamble of t - the average of whatever was chosen in t-1
+#rpe3 is the standard gamble of t - whatever was chosen in t-1 but the highest gamble option instead of average
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
-  dsub[1,13]=dsub[1,7]
+  dsub[1,"rpe1"]=dsub[1,"standardGamble"]
+  dsub[1,"rpe2"]=dsub[1,"standardGamble"]
   #This is adding RPE
   for (row in 2:length(dsub$Trialid)){
     #This is essentially calculating the difference between potential reward on trial
     #t - reward on trial t-1
-    dsub[row,13]=(dsub[row,7]-dsub[(row-1),7])
+    dsub[row,"rpe1"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
+    if(dsub[row,"gambled"]){
+      dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleAmt"]/2))
+    } else{
+      dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
+    }
   }
-  #This is adding log(1/RT) as a column for gamble AND outcomeRT
-  subGambleRT=filter(dsub,gambleRT!=0)
-  subOutcomeRT=filter(dsub,outcomeRT!=0)
-  subMeanGambleRT=mean(subGambleRT$gambleRT)
-  subMeanOutcomeRT=mean(subOutcomeRT$outcomeRT)
-  subsdGambleRT=sd(subGambleRT$gambleRT)
-  subsdOutcomeRT=sd(subOutcomeRT$outcomeRT)
+  for (row in 2:length(dsub$Trialid)){
+    if(dsub[row,"gambled"]){
+      dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleAmt"]))
+    } else{
+      dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
+    }
+  }
+  #This is adding (1/RT) as a column for gamble AND outcomeRT
+  #Not used right now because I'm just doing 1/RT (i.e. speed)
+  # subGambleRT=filter(dsub,gambleRT!=0)
+  # subOutcomeRT=filter(dsub,outcomeRT!=0)
+  # subMeanGambleRT=mean(subGambleRT$gambleRT)
+  # subMeanOutcomeRT=mean(subOutcomeRT$outcomeRT)
+  # subsdGambleRT=sd(subGambleRT$gambleRT)
+  # subsdOutcomeRT=sd(subOutcomeRT$outcomeRT)
    # for (row in 1:length(dsub$Trialid)){
    #     if(dsub[row,"gambleRT"]!=0){
    #         dsub[row,14]=(dsub[row,"gambleRT"]-subMeanGambleRT)/(subsdGambleRT)
@@ -248,15 +288,26 @@ for (i in Participants){
    #   }
   d2=rbind(d2,dsub)
 }
-head(d2)
 d=d2
 
-#Dividing gambleRT by log(1/RT) on new column
-# for(i in 1:length(d$response)){
-#   if(d[i,4]!=0){
-#     d[i,4]=log(1/d[i,4])
-#   }
-# }
+#Normalized RT log(1/RT)
+d$ngambleRT=0
+d$noutcomeRT=0
+
+
+#Dividing gambleRT by (1/RT) on new column
+for(i in 1:length(d$response)){
+  if(d[i,"gambleRT"]!=0){
+    d[i,"ngambleRT"]=(1/d[i,"gambleRT"])
+  }
+}
+#Dividing OutcomeRT by 1/RT
+for(i in 1:length(d$response)){
+  if(d[i,"outcomeRT"]!=0){
+    d[i,"noutcomeRT"]=(1/d[i,"outcomeRT"])
+  }
+}
+head(d)
 
 #This should be ready to run now without any artificial filtering of participants for low RT etc.
 
@@ -340,15 +391,6 @@ outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
 histogram(outcomeRTs,main="Aggregated outcome RTs; number of trials:",breaks=70)
 c("Numberof trials that they gambled on: ",length(outcomeRTs))
 
-#Adding another column 1 if they gambled, 0 if they didn't
-#This will be outcome variable in logistic regression
-for (i in 1:length(dgamble$response)){
-  if(dgamble$response[i]=='gamble'){
-    dgamble$gambled[i]=1
-  } else {
-    dgamble$gambled[i]=0
-  }
-}
 
 
 #Number of trials per participant 
@@ -364,9 +406,8 @@ histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Numbe
 
 #Logistic regression for gambled
 #Need to figure out which one to use
-mlog<-glm(gambled~trialNumber+PredictionError+gambleDelay*oddsCond+
-            gambleDelay*magCond+
-            PredictionError*gambleDelay,
+mlog<-glm(gambled~trialNumber+rpe1+gambleDelay+oddsCond+
+            rpe2+rpe3,
           data=dgamble,family="binomial");
 summary(mlog)
 
@@ -400,15 +441,23 @@ plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
 #Plotting RTs with sd
 dRT<-filter(d,gambleRT!=0) %>%
   group_by(binsTime) %>%
-  summarise(medianRT=mean(gambleRT),
-            sdRT=sd(gambleRT))
+  summarise(medianRT=median(gambleRT),
+            sdRT=sd(gambleRT),
+            medianSpeed=median(ngambleRT),
+            sdSpeed=sd(ngambleRT))
 dRT$seconds<-dRT$binsTime
+#This is raw RT
 plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
-
+#This is speed RT
+# plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(.0012,.002),main=paste("Group data; total data; median median with sd; n =",toString(sum(d2$trials)),"trials;"),
+#      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+# for(i in 1:length(dRT$seconds)){
+#   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,"medianSpeed"]+(as.numeric(dRT[i,"sdSpeed"]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,"medianSpeed"]-(as.numeric(dRT[i,"sdSpeed"]))),length=0.05, angle=90, code=3)
+# }
 
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
@@ -689,8 +738,50 @@ plot(dhighpRT$seconds,dhighpRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste
 for(i in 1:length(dhighpRT$seconds)){
   arrows(as.numeric(dhighpRT$seconds[i]),as.numeric(dhighpRT[i,2]+(as.numeric(dhighpRT[i,3]))),as.numeric(dhighpRT$seconds[i]),as.numeric(dhighpRT[i,2]-(as.numeric(dhighpRT[i,3]))),length=0.05, angle=90, code=3)
 }
+#####################################################################################
+#RPE
+#Need to add high/low RPE sets of 6 graphs -rpe1, rpe2, rpe3
+drpe<-filter(dgamble,dgamble$rpe3>0)
+length(drpe$response)
+#By uniqueId
+dBehavioralrpe<-drpe %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+dBehavioralrpe
+#How much did each participant choose to gamble
+histogram(dBehavioralrpe$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on RPE gambles; n =",toString(sum(dBehavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+#RTs histogram
+histogram(setdiff(drpe$gambleRT,0),xlim=c(0,1000),breaks=50,main="Reaction Time for RPE gambles",xlab="Reaction time")
+#By GambleDelay
+drpe2<-drpe %>% 
+  group_by(binsTime) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100),
+            medianRT=median(setdiff(gambleRT,0)),
+            sdRT=sd(gambleRT))
+drpe2$seconds<-drpe2$binsTime
+drpe2
+#Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
+plot(drpe2$seconds,drpe2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
+     main=paste("RPE; Gamble propensity; n =",toString(sum(drpe2$trials)),"trials;"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-#Need to add high/low RPE sets of 4 graphs
+#Plotting RTs with sd
+drpeRT<-filter(drpe,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+drpeRT$seconds<-drpeRT$binsTime
+plot(drpeRT$seconds,drpeRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Group data; RPE; median RT with sd; n =",toString(sum(drpe2$trials)),"trials;"),
+     xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+for(i in 1:length(drpeRT$seconds)){
+  arrows(as.numeric(drpeRT$seconds[i]),as.numeric(drpeRT[i,2]+(as.numeric(drpeRT[i,3]))),as.numeric(drpeRT$seconds[i]),as.numeric(drpeRT[i,2]-(as.numeric(drpeRT[i,3]))),length=0.05, angle=90, code=3)
+}
 
 #############################################################################################
 #Sandbox mode
@@ -698,12 +789,6 @@ for(i in 1:length(dhighpRT$seconds)){
 
 mag="high"
 odds="low"
-if(mag=="high"){
-  d5=dhigh}
-else if(mag=="mid"){
-  d5=dmid}
-else if(mag=="low"){
-  d5=dlow}
 
 
 d5<-filter(dhigh,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
@@ -753,12 +838,6 @@ for(i in 1:length(d5pRT$seconds)){
 
 mag="high"
 odds="low"
-if(mag=="high"){
-  d5=dhigh}
-else if(mag=="mid"){
-  d5=dmid}
-else if(mag=="low"){
-  d5=dlow}
 
 
 d5<-filter(dgamble,uniqueid==231|uniqueid==245|uniqueid==267|uniqueid==279|uniqueid==282|uniqueid==298|uniqueid==308|uniqueid==334|uniqueid==352|uniqueid==367|uniqueid==371|uniqueid==375|uniqueid==360|uniqueid==296|uniqueid==287)
