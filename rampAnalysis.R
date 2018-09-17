@@ -406,8 +406,7 @@ histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Numbe
 
 #Logistic regression for gambled
 #Need to figure out which one to use
-mlog<-glm(gambled~trialNumber+rpe1+gambleDelay+oddsCond+
-            rpe2+rpe3,
+mlog<-glm(gambled~rpe1+oddsCond+gambleDelay,
           data=dgamble,family="binomial");
 summary(mlog)
 
@@ -788,12 +787,35 @@ for(i in 1:length(drpeRT$seconds)){
 #Design your own mag/odds filter for group participants
 
 mag="high"
-odds="low"
+odds="mid"
+
+#Breaking down by mag condition?
+if(mag=="low"){
+  d5=dlow
+} else if(mag=="mid"){
+  d5=dmid
+} else if (mag=="high"){
+  d5=dhigh}
+
+#If you dont want both, run the following line which resets
+d5=dgamble
+
+#Breaking down by odds condition?
+if(odds=="low"){
+  d5=filter(dgamble,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
+} else if(odds=="mid"){
+  d5=filter(dgamble,Trialid==1|Trialid==2|Trialid==3|Trialid==4|Trialid==5|Trialid==6)
+} else if(odds=="high"){
+  d5=filter(dgamble,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
+}
+
+#Breaking down by RPE
+d5=filter(dgamble,rpe1>0)
+
+c("Number of trials that they gambled on:",length(d5$gambleRT[d5$gambleRT!=0]))
+c("Number of trials that they had the chance to gamble on:",length(d5$gambleDelay))
 
 
-d5<-filter(dhigh,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
-c("Number of trials that they gambled on: ",length(dhighp$gambleRT[dhighp$gambleRT!=0]))
-c("Number of trials that they had the chance to gamble on: ",length(dhighp$gambleDelay))
 #By uniqueId
 d5Behavioral<-d5 %>% 
   group_by(uniqueid) %>% 
@@ -803,9 +825,9 @@ d5Behavioral<-d5 %>%
             percentageGambled=round(gambleCount/trials*100))
 d5Behavioral
 #How much did each participant choose to gamble
-histogram(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on high odds/high mag gambles; n =",toString(sum(d5Behavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+histogram(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on gambles; n =",toString(sum(d5Behavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 #RTs histogram
-histogram(setdiff(d5$gambleRT,0),xlim=c(0,1000),breaks=50,main="Reaction Time for high odds/high mag gambles",xlab="Reaction time")
+histogram(setdiff(d5$gambleRT,0),xlim=c(0,1000),breaks=50,main="Reaction Time ",xlab="Reaction time")
 #By GambleDelay
 d52<-d5 %>% 
   group_by(binsTime) %>% 
@@ -833,12 +855,12 @@ plot(d5pRT$seconds,d5pRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Grou
 for(i in 1:length(d5pRT$seconds)){
   arrows(as.numeric(d5pRT$seconds[i]),as.numeric(d5pRT[i,2]+(as.numeric(d5pRT[i,3]))),as.numeric(dhighpRT$seconds[i]),as.numeric(d5pRT[i,2]-(as.numeric(d5pRT[i,3]))),length=0.05, angle=90, code=3)
 }
+
 #Sandbox mode
 #Design your own mag/odds filter for group participants
 
 mag="high"
 odds="low"
-
 
 d5<-filter(dgamble,uniqueid==231|uniqueid==245|uniqueid==267|uniqueid==279|uniqueid==282|uniqueid==298|uniqueid==308|uniqueid==334|uniqueid==352|uniqueid==367|uniqueid==371|uniqueid==375|uniqueid==360|uniqueid==296|uniqueid==287)
 c("Number of trials that they gambled on: ",length(dhighp$gambleRT[dhighp$gambleRT!=0]))
