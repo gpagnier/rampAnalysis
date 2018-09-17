@@ -954,13 +954,33 @@ subj<-unique(d$uniqueid)
 intN<-NULL
 botN<-NULL
 plotRT=FALSE
-plotGD=TRUE
+plotGD=FALSE
 #Add in knobs for different sub categories (though this number is very small....)
 
 
 for(i in Participants){
   print(i)
   dsub<-d[d$uniqueid==i,]
+  dsubhigh<-filter(dsub,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
+  dsublow<-filter(dsub,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
+  #Breaking down by subFilter
+  d4behavioralHigh<-dsubhigh %>% 
+    group_by(uniqueid) %>% 
+    summarise(trials=length(trialNumber),
+              gambleCount=sum(response=="gamble"),
+              didNotGamble=sum(response=="fail"|response=="success"),
+              percentageGambled=round(gambleCount/trials*100))
+  
+  d4behavioralLow<-dsublow %>% 
+    group_by(uniqueid) %>% 
+    summarise(trials=length(trialNumber),
+              gambleCount=sum(response=="gamble"),
+              didNotGamble=sum(response=="fail"|response=="success"),
+              percentageGambled=round(gambleCount/trials*100))
+  
+  gamblingScore=d4behavioralHigh$percentageGambled-d4behavioralLow$percentageGambled
+  
+  #Breaking down subdf by gambleDelay
   d4<-dsub %>% 
     group_by(binsTime) %>% 
     summarise(trials=length(trialNumber),
@@ -968,6 +988,7 @@ for(i in Participants){
               didNotGamble=sum(response=="fail"|response=="success"),
               percentageGambled=round(gambleCount/trials*100))
   d4$seconds<-d4$binsTime
+  
   if (plotGD){
     plot(d4$seconds,d4$percentageGambled,xlim = c(0,7),ylim = c(0,100),
          main=paste("Individual participant data; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
