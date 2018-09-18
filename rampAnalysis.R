@@ -13,8 +13,8 @@
 library(mosaic)
 
 ##Loading data
-d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -257,12 +257,14 @@ for (i in Participants){
     #This is essentially calculating the difference between potential reward on trial
     #t - reward on trial t-1
     dsub[row,"rpe1"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
+    #This is rpe2
     if(dsub[row,"gambled"]){
       dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleAmt"]/2))
     } else{
       dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
     }
   }
+  #This is rpe3
   for (row in 2:length(dsub$Trialid)){
     if(dsub[row,"gambled"]){
       dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleAmt"]))
@@ -406,7 +408,7 @@ histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Numbe
 
 #Logistic regression for gambled
 #Need to figure out which one to use
-mlog<-glm(gambled~rpe1+oddsCond+gambleDelay,
+mlog<-glm(gambled~rpe3+oddsCond,
           data=dgamble,family="binomial");
 summary(mlog)
 
@@ -809,8 +811,16 @@ if(odds=="low"){
   d5=filter(dgamble,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
 }
 
+
+
+
+
+
+
+
+
 #Breaking down by RPE
-d5=filter(dgamble,rpe1>0)
+d5=filter(dgamble,rpe3>(1))
 
 c("Number of trials that they gambled on:",length(d5$gambleRT[d5$gambleRT!=0]))
 c("Number of trials that they had the chance to gamble on:",length(d5$gambleDelay))
@@ -823,9 +833,8 @@ d5Behavioral<-d5 %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-d5Behavioral
 #How much did each participant choose to gamble
-histogram(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on gambles; n =",toString(sum(d5Behavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+histogram(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 #RTs histogram
 histogram(setdiff(d5$gambleRT,0),xlim=c(0,1000),breaks=50,main="Reaction Time ",xlab="Reaction time")
 #By GambleDelay
@@ -838,10 +847,9 @@ d52<-d5 %>%
             medianRT=median(setdiff(gambleRT,0)),
             sdRT=sd(gambleRT))
 d52$seconds<-d52$binsTime
-d52
 #Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
 plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
-     main=paste("High odds/highMag; Gamble propensity; n =",toString(sum(d52$trials)),"trials;"),
+     main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
 #Plotting RTs with sd
@@ -850,8 +858,35 @@ d5pRT<-filter(d5,gambleRT!=0) %>%
   summarise(medianRT=mean(gambleRT),
             sdRT=sd(gambleRT))
 d5pRT$seconds<-d5pRT$binsTime
-plot(d5pRT$seconds,d5pRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Group data; High odds/highMag; median RT with sd; n =",toString(sum(d52$trials)),"trials;"),
+plot(d5pRT$seconds,d5pRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Group data; median RT with sd; n =",toString(sum(d52$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+
+d5high<-filter(d5,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
+d5low<-filter(d5,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
+#Breaking down by subFilter to get Odds score and mag score
+d5behavioralHigh<-d5high %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+
+d5behavioralLow<-d5low %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+
+oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
+oddsScore
+
+
+
+
+
+
+
 for(i in 1:length(d5pRT$seconds)){
   arrows(as.numeric(d5pRT$seconds[i]),as.numeric(d5pRT[i,2]+(as.numeric(d5pRT[i,3]))),as.numeric(dhighpRT$seconds[i]),as.numeric(d5pRT[i,2]-(as.numeric(d5pRT[i,3]))),length=0.05, angle=90, code=3)
 }
@@ -916,7 +951,7 @@ for(i in 1:length(d5pRT$seconds)){
 #Breaking down by participant
 
 ####The following is to just get one participant's data
-p=237
+p=254
 dsub<-d[d$uniqueid==p,]
 d3<-dsub %>% 
   group_by(binsTime) %>% 
@@ -953,7 +988,16 @@ summary(msubRT)
 subj<-unique(d$uniqueid)
 intN<-NULL
 botN<-NULL
-plotRT=FALSE
+rtn<-NULL
+oddsN<-NULL
+oddsNtemp<-data.frame(matrix(NA, ncol = 2, nrow =1))
+  colnames(oddsNtemp)[1]<-"OddsGamblingScore"
+  colnames(oddsNtemp)[2]<-"Participant"
+magN<-NULL
+magNtemp<-data.frame(matrix(NA, ncol = 2, nrow =1))
+  colnames(magNtemp)[1]<-"MagGamblingScore"
+  colnames(magNtemp)[2]<-"Participant"  
+plotRT=TRUE
 plotGD=FALSE
 #Add in knobs for different sub categories (though this number is very small....)
 
@@ -978,7 +1022,30 @@ for(i in Participants){
               didNotGamble=sum(response=="fail"|response=="success"),
               percentageGambled=round(gambleCount/trials*100))
   
-  gamblingScore=d4behavioralHigh$percentageGambled-d4behavioralLow$percentageGambled
+  oddsNtemp[1,1]=as.integer(d4behavioralHigh$gambleCount-d4behavioralLow$gambleCount)
+  oddsNtemp[1,2]=as.character(i)
+  oddsN=rbind(oddsN,oddsNtemp)
+  
+  dsubhigh<-filter(dsub,Trialid==5|Trialid==6|Trialid==25|Trialid==26|Trialid==35|Trialid==36)
+  dsublow<-filter(dsub,Trialid==1|Trialid==2|Trialid==21|Trialid==22|Trialid==31|Trialid==32)
+  d4behavioralHigh<-dsubhigh %>% 
+    group_by(uniqueid) %>% 
+    summarise(trials=length(trialNumber),
+              gambleCount=sum(response=="gamble"),
+              didNotGamble=sum(response=="fail"|response=="success"),
+              percentageGambled=round(gambleCount/trials*100))
+  
+  d4behavioralLow<-dsublow %>% 
+    group_by(uniqueid) %>% 
+    summarise(trials=length(trialNumber),
+              gambleCount=sum(response=="gamble"),
+              didNotGamble=sum(response=="fail"|response=="success"),
+              percentageGambled=round(gambleCount/trials*100))
+  
+  magNtemp[1,1]=as.integer(d4behavioralHigh$gambleCount-d4behavioralLow$gambleCount)
+  magNtemp[1,2]=as.character(i)
+  magN=rbind(magNtemp,magN)
+  
   
   #Breaking down subdf by gambleDelay
   d4<-dsub %>% 
@@ -1008,6 +1075,9 @@ for(i in Participants){
   }
   
   mtemp<-lm(d4$percentageGambled~d4$seconds)
+  tempRTdf<-filter(dsub,gambleRT!=0)
+  
+  mtempRT<-lm(tempRTdf$gambleRT~tempRTdf$gambleDelay)
   #This checks to see if any participant is ramping
   if(summary(mtemp)$coefficients[8]<.05 & summary(mtemp)$coefficients[2]>0){
     intN<-c(intN,i)
@@ -1016,10 +1086,151 @@ for(i in Participants){
   if(mean(setdiff(dsub$outcomeRT,0),na.rm=TRUE)<250){
     botN<-c(botN,i)
   }
+  #Check to see if participant has a downwards decreasing RT ramp
+  if(summary(mtempRT)$coefficients[8]<.05 & summary(mtempRT)$coefficients[2]<0){
+    rtn<-c(rtn,i)
+  }
 }
 
+
 intN=c(intN,375,360,296,287,272,237)
-#Looking into participants that ramp
-for(i in intN){
+#Looking into subsets of participants, high mag preferetial, odds, etc.
+
+
+
+
+#Breaking down by oddsScore
+d5<-filter(dgamble,uniqueid==209|uniqueid==219|uniqueid==225|uniqueid==262|uniqueid==353|uniqueid==235|uniqueid==253|uniqueid==351|uniqueid==355|uniqueid==266|uniqueid==280|uniqueid==376|uniqueid==212|uniqueid==239|uniqueid==273|uniqueid==297)
+
+c("Number of trials that they gambled on:",length(d5$gambleRT[d5$gambleRT!=0]))
+c("Number of trials that they had the chance to gamble on:",length(d5$gambleDelay))
+d5<-filter(d5,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
+d5<-filter(d5,Trialid==1|Trialid==2|Trialid==3|Trialid==4|Trialid==5|Trialid==6)
+d5<-filter(d5,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
+
+#By uniqueId
+d5Behavioral<-d5 %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+#How much did each participant choose to gamble
+histogram(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+#RTs histogram
+histogram(setdiff(d5$gambleRT,0),xlim=c(0,1000),breaks=50,main="Reaction Time ",xlab="Reaction time")
+#By GambleDelay
+d52<-d5 %>% 
+  group_by(binsTime) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100),
+            medianRT=median(setdiff(gambleRT,0)),
+            sdRT=sd(gambleRT))
+d52$seconds<-d52$binsTime
+#Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
+     main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"trials;"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+
+#Plotting RTs with sd
+d5pRT<-filter(d5,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+d5pRT$seconds<-d5pRT$binsTime
+plot(d5pRT$seconds,d5pRT$medianRT,xlim = c(0,8),ylim=c(500,1000),main=paste("Group data; median RT with sd; n =",toString(sum(d52$gambleCount)),"trials;"),
+     xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+
+d5high<-filter(d5,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
+d5low<-filter(d5,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
+#Breaking down by subFilter to get Odds score and mag score
+d5behavioralHigh<-d5high %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+
+d5behavioralLow<-d5low %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+
+oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
+oddsScore
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Looking into participants who shown downwards ramp in RT
+rtn2<-c(367,354,348,345,334,324,304,296,291,272,263,261,257,237)
+
+d5<-filter(dgamble,uniqueid==237|uniqueid==257|uniqueid==261|uniqueid==272|uniqueid==291|uniqueid==296|uniqueid==304|uniqueid==324|uniqueid==334|uniqueid==345|uniqueid==348|uniqueid==354|uniqueid==367)
+c("Number of trials that they gambled on: ",length(d5$gambleRT[d5$gambleRT!=0]))
+c("Number of trials that they had the chance to gamble on: ",length(d5$gambleDelay))
+d5<-filter(d5,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
+d5<-filter(d5,Trialid==1|Trialid==2|Trialid==3|Trialid==4|Trialid==5|Trialid==6)
+d5<-filter(d5,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
+d5<-filter(d5,standardGamble==1|standardGamble==2)
+d5<-filter(d5,standardGamble==3|standardGamble==4)
+d5<-filter(d5,standardGamble==5|standardGamble==6)
+
+
+#By uniqueId
+d5Behavioral<-d5 %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100))
+d5Behavioral
+#How much did each participant choose to gamble
+histogram(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on gambles; n =",toString(sum(d5Behavioral$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+#RTs histogram
+histogram(setdiff(d5$gambleRT,0),xlim=c(0,1000),breaks=50,main="Reaction Time for gambles",xlab="Reaction time")
+#By GambleDelay
+d52<-d5 %>% 
+  group_by(binsTime) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response=="fail"|response=="success"),
+            percentageGambled=round(gambleCount/trials*100),
+            medianRT=median(setdiff(gambleRT,0)),
+            sdRT=sd(gambleRT))
+d52$seconds<-d52$binsTime
+d52
+#Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
+     main=paste("Gamble propensity; n =",toString(sum(d52$trials)),"trials;"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+
+#Plotting RTs with sd
+d5pRT<-filter(d5,gambleRT!=0) %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=mean(gambleRT),
+            sdRT=sd(gambleRT))
+d5pRT$seconds<-d5pRT$binsTime
+plot(d5pRT$seconds,d5pRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Small Group data; median RT with sd; n =",toString(sum(d52$trials)),"trials;"),
+     xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+for(i in 1:length(d5pRT$seconds)){
+  arrows(as.numeric(d5pRT$seconds[i]),as.numeric(d5pRT[i,2]+(as.numeric(d5pRT[i,3]))),as.numeric(dhighpRT$seconds[i]),as.numeric(d5pRT[i,2]-(as.numeric(d5pRT[i,3]))),length=0.05, angle=90, code=3)
 }
 
