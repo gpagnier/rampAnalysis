@@ -13,8 +13,8 @@
 library(mosaic)
 
 ##Loading data
-#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -997,12 +997,12 @@ magN<-NULL
 magNtemp<-data.frame(matrix(NA, ncol = 2, nrow =1))
   colnames(magNtemp)[1]<-"MagGamblingScore"
   colnames(magNtemp)[2]<-"Participant"  
-plotRT=TRUE
-plotGD=FALSE
+plotRT=FALSE
+plotGD=TRUE
 #Add in knobs for different sub categories (though this number is very small....)
 
 
-for(i in Participants){
+for(i in rtn2){
   print(i)
   dsub<-d[d$uniqueid==i,]
   dsubhigh<-filter(dsub,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
