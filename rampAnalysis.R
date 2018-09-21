@@ -2,10 +2,10 @@
 ###Rewritten/organized 9.4.2018 by Guillaume
 
 #Things to do
-#Add High/low RPE
+#Filter df that only includes participants who passed catch
 #Add  sub sub analyses
 #Add in knobs to filter sub sub categoies per participant - very few trials though
-#Add easy to use sandbox mode
+#
 #Normalize z score RT
 
 ##Loading packages
@@ -13,8 +13,9 @@
 library(mosaic)
 
 ##Loading data
-d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 #d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -319,7 +320,14 @@ nParticipants
 #Check for catch trials
 #This prints off the trial ids of anyone who made a mistake
 #75 should gamble; 86 should success/fail; 2 catch trials?
-head(d)
+#Check for catch trials
+dcatch<-filter(d,Trialid==75|Trialid==86)[,c(1,6,9)]
+dcatch[order(dcatch$Trialid),]
+dcatchGamble<-dcatch[dcatch$Trialid==75,]
+failCatchId<-dcatchGamble[dcatchGamble$response!='gamble',]$uniqueid
+dcatchSuccess<-dcatch[dcatch$Trialid==86,]
+failCatchId<-c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid)
+unique(failCatchId)
 
 ###Behavioral analyses
 ##Reaction time
@@ -459,6 +467,10 @@ for(i in 1:length(dRT$seconds)){
 # for(i in 1:length(dRT$seconds)){
 #   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,"medianSpeed"]+(as.numeric(dRT[i,"sdSpeed"]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,"medianSpeed"]-(as.numeric(dRT[i,"sdSpeed"]))),length=0.05, angle=90, code=3)
 # }
+
+#Making a new df that only includes participants who passed catch
+#atn<-filter(d,Trialid!=failCatchId)
+
 
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
@@ -1002,7 +1014,7 @@ plotGD=TRUE
 #Add in knobs for different sub categories (though this number is very small....)
 
 
-for(i in rtn2){
+for(i in Participants){
   print(i)
   dsub<-d[d$uniqueid==i,]
   dsubhigh<-filter(dsub,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
