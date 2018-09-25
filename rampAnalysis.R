@@ -86,6 +86,8 @@ histogram(d$gambleDelay,breaks=50,xlim=c(0,8),main="Where gambles interrupted tr
 
 
 
+
+
 colnames(d)[1]<-"Trialid"
 
 bins=9
@@ -246,9 +248,9 @@ d$rpe3=0
 Participants<-unique(d$uniqueid)
 
 #Adding RPE as a factor AND normalized z score
-#rpe1 is the standard gamble of trial t- standard gamble of t-1
-#rpe2 is the standard gamble of t - the average of whatever was chosen in t-1
-#rpe3 is the standard gamble of t - whatever was chosen in t-1 but the highest gamble option instead of average
+#rpe1 is the sure thing of trial t- standard gamble of t-1
+#rpe2 is the sure thing of t - the average of whatever was chosen in t-1
+#rpe3 is the sure thing of t - whatever was chosen in t-1 but the highest gamble option instead of average
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
   dsub[1,"rpe1"]=dsub[1,"standardGamble"]
@@ -327,8 +329,8 @@ dcatchGamble<-dcatch[dcatch$Trialid==75,]
 failCatchId<-dcatchGamble[dcatchGamble$response!='gamble',]$uniqueid
 dcatchSuccess<-dcatch[dcatch$Trialid==86,]
 failCatchId<-c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid)
-unique(failCatchId)
-
+failCatchId<-unique(failCatchId)
+catchSucc<-setdiff(Participants,failCatchId)
 ###Behavioral analyses
 ##Reaction time
 #Whenever they gambled
@@ -990,7 +992,7 @@ d3RT<-filter(dsub,gambleRT!=0) %>%
             sdRT=sd(gambleRT))
 d3RT$seconds<-d3RT$binsTime
 
-plot(d3RT$seconds,d3RT$meanRT,xlim = c(0,8),ylim=c(400,1000),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+plot(d3RT$seconds,d3RT$meanRT,xlim = c(0,8),ylim=c(200,1500),main=paste("All gambles; Reaction time with sd; n =",toString(sum(d3$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(d3RT$seconds)){
   arrows(as.numeric(d3RT$seconds[i]),as.numeric(d3RT[i,2]+(as.numeric(d3RT[i,3]))),as.numeric(d3RT$seconds[i]),as.numeric(d3RT[i,2]-(as.numeric(d3RT[i,3]))),length=0.05, angle=90, code=3)
@@ -1111,16 +1113,25 @@ for(i in Participants){
 
 
 intN=c(intN,375,360,296,287,272,237)
+a<-oddsN[order(oddsN$OddsGamblingScore),]
+oddsN<-as.integer(a$Participant[82:112])
 #Looking into subsets of participants, high mag preferetial, odds, etc.
+
 
 #group rtn = group that was automatically filtered
 
 
 #Breaking down by oddsScore
-d5<-filter(dgamble,uniqueid==209|uniqueid==219|uniqueid==225|uniqueid==262|uniqueid==353|uniqueid==235|uniqueid==253|uniqueid==351|uniqueid==355|uniqueid==266|uniqueid==280|uniqueid==376|uniqueid==212|uniqueid==239|uniqueid==273|uniqueid==297)
-
+##This is old way
+#d5<-filter(dgamble,uniqueid==209|uniqueid==219|uniqueid==225|uniqueid==262|uniqueid==353|uniqueid==235|uniqueid==253|uniqueid==351|uniqueid==355|uniqueid==266|uniqueid==280|uniqueid==376|uniqueid==212|uniqueid==239|uniqueid==273|uniqueid==297)
+#New way which is better
+d5<-dgamble[dgamble$uniqueid %in% rtn,]
+d5<-dgamble[dgamble$uniqueid %in% Participants,]
 c("Number of trials that they gambled on:",length(d5$gambleRT[d5$gambleRT!=0]))
 c("Number of trials that they had the chance to gamble on:",length(d5$gambleDelay))
+
+
+#CONDITIONAL IF YOU WANT TO LOOK AT SUBGROUPS OF ODDS
 d5<-filter(d5,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
 d5<-filter(d5,Trialid==1|Trialid==2|Trialid==3|Trialid==4|Trialid==5|Trialid==6)
 d5<-filter(d5,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
@@ -1179,9 +1190,35 @@ d5behavioralLow<-d5low %>%
 
 oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
 oddsScore
+d6<-filter(d5,response=='gamble')
+#Sig effect of gambleDelay on gambling? 
+summary(glm(gambled~gambleDelay,
+            data=d5,family="binomial"))
+#Sig effect of gambleDelay on RT when gambling? 
+  summary(glm(gambleRT~gambleDelay,
+              data=d6))
 
 
+#Overlaying histograms
+d5<-d[d$uniqueid %in% catchSucc,]
 
+rthigh<-filter(d,response=='success')
+rtlow<-filter(d5,response=='success')
+
+hist(rthigh$outcomeRT,col=rgb(1,0,0,0.5), main='RTs when accepting sure thing', xlab='RT',breaks=40,xlim=c(0,1200))
+abline(v=median(rthigh$outcomeRT),col="red",lwd=2)
+hist(rtlow$outcomeRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
+abline(v=median(rtlow$outcomeRT),col="blue",lwd=2)
+
+
+rthigh<-filter(d,response=='gamble')
+rtlow<-filter(d5,response=='gamble')
+
+hist(rthigh$gambleRT,col=rgb(1,0,0,0.5), main='RTs when gambling', xlab='RT',breaks=40,xlim=c(0,1200))
+abline(v=median(rthigh$gambleRT),col="red",lwd=2)
+
+hist(rtlow$gambleRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
+abline(v=median(rtlow$gambleRT),col="blue",lwd=2)
 
 
 
@@ -1200,7 +1237,7 @@ oddsScore
 #Looking into participants who shown downwards ramp in RT
 #rtn2<-c(367,354,348,345,334,324,304,296,291,272,261,257,237)
 
-d5<-dgamble[dgamble$uniqueid %in% rtn2,]
+d5<-dgamble[dgamble$uniqueid %in% rtn,]
 c("Number of trials that they gambled on: ",length(d5$gambleRT[d5$gambleRT!=0]))
 c("Number of trials that they had the chance to gamble on: ",length(d5$gambleDelay))
 c("Percentage of trials they gambled on: ",length(d5$gambleRT[d5$gambleRT!=0])/length(d5$gambleDelay))
@@ -1261,15 +1298,13 @@ summary(glm(gambled~gambleDelay,
 
 
 
-oddsN=c(347, 363, 243, 261, 279, 289, 304, 337, 345, 294, 324, 332, 359, 207, 218, 265, 274, 314, 316, 321, 341, 257, 268, 287, 205, 206, 217, 259, 281,
-284, 354, 201, 204, 231, 272, 338, 212, 239, 273, 297 266 280 376 235 253 351 355 209 219 225 262 353)
 
 #Extra analyses maybe save for later
 #Overlaying RTs (no gambles) for high mag (red) vs low mag (blue) trials
 d6<-d[d$uniqueid %in% rtn,]
 
 rthigh<-filter(d,response=='success')
-rtlow<-filter(d6,response=='success')
+rtlow<-filter(d5,response=='success')
 
 hist(rthigh$gambleRT,col=rgb(1,0,0,0.5), main='RTs when accepting sure thing', xlab='RT',breaks=50,xlim=c(0,1200))
 
