@@ -969,7 +969,7 @@ highMag<-c(5,6,25,26,35,36)
 
 
 ####The following is to just get one participant's data
-p=254
+p=256
 dsub<-d[d$uniqueid==p,]
 d3<-dsub %>% 
   group_by(binsTime) %>% 
@@ -1000,6 +1000,11 @@ for(i in 1:length(d3RT$seconds)){
 msubRT<-lm(d3RT$meanRT~d3RT$seconds)
 abline(msubRT)
 summary(msubRT)
+#Gamble slope
+summary(mtempRT)$coefficients[2]
+#RT slope
+tempRTdf<-filter(dsub,gambleRT!=0)
+mtempRT<-lm(tempRTdf$gambleRT~tempRTdf$gambleDelay)
 #############################################################################################
 #Looping through participants data
 
@@ -1015,6 +1020,11 @@ magN<-NULL
 magNtemp<-data.frame(matrix(NA, ncol = 2, nrow =1))
   colnames(magNtemp)[1]<-"MagGamblingScore"
   colnames(magNtemp)[2]<-"Participant"  
+
+rtSlopes<-NULL
+gambleSlopes<-NULL
+run<-NULL
+slopeDF<-NULL
 plotRT=FALSE
 plotGD=FALSE
 #Add in knobs for different sub categories (though this number is very small....)
@@ -1106,15 +1116,49 @@ for(i in Participants){
     botN<-c(botN,i)
   }
   #Check to see if participant has a downwards decreasing RT ramp
+  
   if(summary(mtempRT)$coefficients[8]<.1 & summary(mtempRT)$coefficients[2]<0){
     rtn<-c(rtn,i)
   }
+  #Making df of gambleSlopes, rtSlopes, and i (who was just analyzed)
+  rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
+  gambleSlopes<-c(gambleSlopes,summary(mtemp)$coefficients[2])
+  run<-c(run,i)
 }
 
-
+slopeDF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
 intN=c(intN,375,360,296,287,272,237)
 a<-oddsN[order(oddsN$OddsGamblingScore),]
 oddsN<-as.integer(a$Participant[82:112])
+
+
+
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants (n=112)',xlim=c(-10,15),ylim=c(-90,40))
+with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
+m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
+abline(m1)
+cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
+
+
+
+
+plot(slopeDF$gambleSlopes~slopeDF$rtSlopes,xlab='rtSlopes',ylab='gambleSlopes',main='All Participants (n=112)',xlim=c(-90,40),ylim=c(-10,15))
+with(slopeDF, text(slopeDF$gambleSlopes~slopeDF$rtSlopes, labels = slopeDF$run,cex=.8), pos = 2)
+m1<-lm(slopeDF$gambleSlopes~slopeDF$rtSlopes)
+abline(m1)
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Looking into subsets of participants, high mag preferetial, odds, etc.
 
 
@@ -1315,6 +1359,10 @@ splotRT=FALSE
 splotGD=TRUE
 soddsN=NULL
 smagN=NULL
+rtSlopes<-NULL
+gambleSlopes<-NULL
+run<-NULL
+slopeDF<-NULL
 
 for(i in rtn){
   print(i)
@@ -1392,8 +1440,23 @@ for(i in rtn){
   tempRTdf<-filter(dsub,gambleRT!=0)
   
   mtempRT<-lm(tempRTdf$gambleRT~tempRTdf$gambleDelay)
+  #Making df of gambleSlopes, rtSlopes, and i (who was just analyzed)
+  rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
+  gambleSlopes<-c(gambleSlopes,summary(mtemp)$coefficients[2])
+  run<-c(run,i)
 
 }
+slopeDF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
 
+#slopeDF analysis
 
+plot(slopeDF$gambleSlopes~slopeDF$rtSlopes,xlab='rtSlopes',ylab='gambleSlopes',main='Subgroup of RT Rampers (n=34)',xlim=c(-90,40),ylim=c(-10,15))
+with(slopeDF, text(slopeDF$gambleSlopes~slopeDF$rtSlopes, labels = slopeDF$run,cex=.8), pos = 2)
+m1<-lm(slopeDF$gambleSlopes~slopeDF$rtSlopes)
+abline(m1)
 
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='Subgroup of RT Rampers (n=34)',xlim=c(-10,15),ylim=c(-90,40))
+with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
+m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
+abline(m1)
+cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
