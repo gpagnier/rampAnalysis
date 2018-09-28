@@ -14,8 +14,8 @@ library(mosaic)
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-#d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -57,7 +57,7 @@ for (i in 2:nrow(d)){
 unique(d$uniqueID)
 d$uniqueid=d$uniqueID
 d$uniqueID=NULL
-
+#############################################################################################################################
 #Now we have a dataframe we can work with
 #Replace any empty cell with NA
 #Colnames should now be:
@@ -65,11 +65,8 @@ d$uniqueID=NULL
 
 d[d==""] <- NA
 d$gambleDelay<-d$gambleDelay/1000
-
-
-
-
 d$binsTime=0;
+
 #Clearing pictures
 graphics.off()
 
@@ -82,14 +79,11 @@ for(i in removeIds){
 unique(d$uniqueid)
 
 #Where did gambles interrupt
-histogram(d$gambleDelay,breaks=50,xlim=c(0,8),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared")
+hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="Where gambles interrupted trials. All trials",xlab="seconds into trial gamble appeared",col='black')
 
 
-
-
-
-colnames(d)[1]<-"Trialid"
-
+#How many points do you want on the gambleDelay?
+d$binsTme=NULL
 bins=9
 
 ninbins=round((length(d$Trialid)/bins))
@@ -120,8 +114,7 @@ a10head<-unlist(lapply(delayValues[10],head,1),use.names=FALSE)
 a10tail<-unlist(lapply(delayValues[10],tail,1),use.names=FALSE)
 
 
-#The number of statements in this function should match
-#This block works well for participants 228 on..
+#This is the function that creates gambleBins
 binTimeCalc<-function(d,row){
   if(d[row,3]==0)
   {return(0)}
@@ -147,9 +140,9 @@ binTimeCalc<-function(d,row){
   {return(999)}
 }
 
-
+#Actually running the functon
 for(i in 1:nrow(d)){
-  d[i,10]=binTimeCalc(d,i)
+  d[i,'binsTime']=binTimeCalc(d,i)
 }
 
 #Creating new df to see how many ended up in each bin/ this is sanity check
@@ -159,7 +152,6 @@ dbins<-d %>%
 dbins
 
 #Remove/coalesce any rows with bins if the numbers are too far apart from one another
-#Highly conditional, should hardcode for every dataset
 #Right now this takes the last one and adds it to the last 'bin'
 for(i in 1:nrow(d)){
   if(d[i,"binsTime"]==mean(c(a8head,a8tail))){
@@ -172,14 +164,18 @@ dbins<-d %>%
   summarise(Number=length(response))
 dbins
 
+###################################################################################
+#Adding different factors
+
 #Adding which condition trial was in
 #For new data set
+d$magCond<-NULL
 magCondCalc<-function(d,row){
-  if(d[row,7]==1|d[row,7]==2){
+  if(d[row,'standardGamble']==1|d[row,'standardGamble']==2){
     return("low")
-  } else if (d[row,7]==3|d[row,7]==4){
+  } else if (d[row,'standardGamble']==3|d[row,'standardGamble']==4){
     return("mid")
-  } else if (d[row,7]==5|d[row,7]==6){
+  } else if (d[row,'standardGamble']==5|d[row,'standardGamble']==6){
     return("high")
   } else{
     return("null")
@@ -187,16 +183,16 @@ magCondCalc<-function(d,row){
 }
 
 for(i in 1:nrow(d)){
-  d[i,11]=magCondCalc(d,i)
+  d[i,'magCond']=magCondCalc(d,i)
 }
-colnames(d)[11]<-"magCond"
 
+d$oddsCond<-NULL
 oddsCondCalc<-function(d,row){
-  if(d[row,1]==21|d[row,1]==22|d[row,1]==23|d[row,1]==24|d[row,1]==25|d[row,1]==26){
+  if(d[row,'Trialid']==21|d[row,'Trialid']==22|d[row,'Trialid']==23|d[row,'Trialid']==24|d[row,'Trialid']==25|d[row,'Trialid']==26){
     return("lowp")
-  } else if (d[row,1]==1|d[row,1]==2|d[row,1]==3|d[row,1]==4|d[row,1]==5|d[row,1]==6){
+  } else if (d[row,'Trialid']==1|d[row,'Trialid']==2|d[row,'Trialid']==3|d[row,'Trialid']==4|d[row,'Trialid']==5|d[row,'Trialid']==6){
     return("midp")
-  } else if (d[row,1]==31|d[row,1]==32|d[row,1]==33|d[row,1]==34|d[row,1]==35|d[row,1]==36){
+  } else if (d[row,'Trialid']==31|d[row,'Trialid']==32|d[row,'Trialid']==33|d[row,'Trialid']==34|d[row,'Trialid']==35|d[row,'Trialid']==36){
     return("highp")
   } else{
     return("catch")
@@ -204,13 +200,12 @@ oddsCondCalc<-function(d,row){
 }
 
 for(i in 1:nrow(d)){
-  d[i,12]=oddsCondCalc(d,i)
+  d[i,'oddsCond']=oddsCondCalc(d,i)
 }
-colnames(d)[12]<-"oddsCond"
 
 #Adding another column 1 if they gambled, 0 if they didn't
 #This will be outcome variable in logistic regression
-d$gambled=0
+d$gambled=NULL
 for (i in 1:length(d$response)){
   if(d$response[i]=='gamble'){
     d$gambled[i]=1
@@ -218,17 +213,18 @@ for (i in 1:length(d$response)){
     d$gambled[i]=0
   }
 }
+
 #This is a column for highest gamble shown (used to calculate RPE2 and RPE3)
-d$gambleAmt=0
+d$gambleMaxAmt=NULL
 for (i in 1:length(d$response)){
   if(d$oddsCond[i]=='lowp'){
-    d$gambleAmt[i]=(d$standardGamble[i]*1.5)
+    d$gambleMaxAmt[i]=(d$standardGamble[i]*1.5)
   } else if(d$oddsCond[i]=='midp'){
-    d$gambleAmt[i]=(d$standardGamble[i]*2)
+    d$gambleMaxAmt[i]=(d$standardGamble[i]*2)
   }else if(d$oddsCond[i]=='highp'){
-    d$gambleAmt[i]=(d$standardGamble[i]*3)
+    d$gambleMaxAmt[i]=(d$standardGamble[i]*3)
   } else {
-    d$gambleAmt[i]=d$standardGamble[i]
+    d$gambleMaxAmt[i]=d$standardGamble[i]
   }
 }
 
@@ -236,14 +232,10 @@ for (i in 1:length(d$response)){
 #Adding prediction errors as possible variable
 d2=d[0,]
 #rpe 1 2 and 3
-d$rpe1=0
-d$rpe2=0
-d$rpe3=0
+d$rpe1=NULL
+d$rpe2=NULL
+d$rpe3=NULL
 
-# colnames(d)[14]<-"rpe1"
-# colnames(d)[15]<-"rpe2"
-# colnames(d)[16]<-"NormalizedGambleRT"
-# colnames(d)[17]<-"NormalizedOutcomeRT"
 
 Participants<-unique(d$uniqueid)
 
@@ -255,6 +247,7 @@ for (i in Participants){
   dsub<-filter(d,uniqueid==i)
   dsub[1,"rpe1"]=dsub[1,"standardGamble"]
   dsub[1,"rpe2"]=dsub[1,"standardGamble"]
+  dsub[1,"rpe3"]=dsub[1,"standardGamble"]
   #This is adding RPE
   for (row in 2:length(dsub$Trialid)){
     #This is essentially calculating the difference between potential reward on trial
@@ -262,7 +255,7 @@ for (i in Participants){
     dsub[row,"rpe1"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
     #This is rpe2
     if(dsub[row,"gambled"]){
-      dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleAmt"]/2))
+      dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleMaxAmt"]/2))
     } else{
       dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
     }
@@ -270,82 +263,69 @@ for (i in Participants){
   #This is rpe3
   for (row in 2:length(dsub$Trialid)){
     if(dsub[row,"gambled"]){
-      dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleAmt"]))
+      dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleMaxAmt"]))
     } else{
       dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
     }
   }
-  #This is adding (1/RT) as a column for gamble AND outcomeRT
-  #Not used right now because I'm just doing 1/RT (i.e. speed)
-  # subGambleRT=filter(dsub,gambleRT!=0)
-  # subOutcomeRT=filter(dsub,outcomeRT!=0)
-  # subMeanGambleRT=mean(subGambleRT$gambleRT)
-  # subMeanOutcomeRT=mean(subOutcomeRT$outcomeRT)
-  # subsdGambleRT=sd(subGambleRT$gambleRT)
-  # subsdOutcomeRT=sd(subOutcomeRT$outcomeRT)
-   # for (row in 1:length(dsub$Trialid)){
-   #     if(dsub[row,"gambleRT"]!=0){
-   #         dsub[row,14]=(dsub[row,"gambleRT"]-subMeanGambleRT)/(subsdGambleRT)
-   #       }
-   #     if(dsub[row,"outcomeRT"]!=0){
-   #       dsub[row,15]=(dsub[row,"outcomeRT"]-subMeanOutcomeRT)/(subsdOutcomeRT)
-   #     }
-   #   }
   d2=rbind(d2,dsub)
 }
 d=d2
 
-#Normalized RT log(1/RT)
-d$ngambleRT=0
-d$noutcomeRT=0
+#Normalized RT log(1/RT) to get speed
+d$NgambleRT=0
+d$NoutcomeRT=0
 
 
 #Dividing gambleRT by (1/RT) on new column
 for(i in 1:length(d$response)){
   if(d[i,"gambleRT"]!=0){
-    d[i,"ngambleRT"]=(1/d[i,"gambleRT"])
+    d[i,"NgambleRT"]=(1/d[i,"gambleRT"])
   }
 }
 #Dividing OutcomeRT by 1/RT
 for(i in 1:length(d$response)){
   if(d[i,"outcomeRT"]!=0){
-    d[i,"noutcomeRT"]=(1/d[i,"outcomeRT"])
+    d[i,"NoutcomeRT"]=(1/d[i,"outcomeRT"])
   }
 }
-head(d)
 
+#########################################################################################################################################
 #This should be ready to run now without any artificial filtering of participants for low RT etc.
 
 nParticipants<- length(unique(d$uniqueid))
 nParticipants
 
 #Check for catch trials
-#This prints off the trial ids of anyone who made a mistake
 #75 should gamble; 86 should success/fail; 2 catch trials?
 #Check for catch trials
 dcatch<-filter(d,Trialid==75|Trialid==86)[,c(1,6,9)]
-dcatch[order(dcatch$Trialid),]
+#dcatch[order(dcatch$Trialid),]
 dcatchGamble<-dcatch[dcatch$Trialid==75,]
 failCatchId<-dcatchGamble[dcatchGamble$response!='gamble',]$uniqueid
 dcatchSuccess<-dcatch[dcatch$Trialid==86,]
-failCatchId<-c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid)
-failCatchId<-unique(failCatchId)
-catchSucc<-setdiff(Participants,failCatchId)
+
+failCatchId<-unique(c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid))
+catchSuccessId<-setdiff(Participants,failCatchId)
+
+
+
+
 ###Behavioral analyses
 ##Reaction time
 #Whenever they gambled
 gambleRTs<-d$gambleRT[d$gambleRT!=0]
-histogram(gambleRTs,main="Aggregated gamble RTs",breaks=70)
+hist(gambleRTs,main="Aggregated gamble RTs",breaks=70)
 #Whenever they claimed 'boring' reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
-histogram(outcomeRTs,main=c("Aggregated outcome RTs; number of trials:",length(outcomeRTs)),breaks=70)
+hist(outcomeRTs,main=c("Aggregated outcome RTs; number of trials:",length(outcomeRTs)),breaks=70)
+
 #Printing experiment times in minutes CONFIRM PSITURK TRACKS IN MILLISECONDS
 expTimes<-((unique(d$expTime,na.rm=TRUE)/1000)/60)
-histogram(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,60))
+hist(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,120))
 
 
 #Removing participants who gambled too much/not enough
-
 dgamble0<-filter(d,gambleDelay!=0)
 
 dBehavioralTotal<-dgamble0 %>% 
@@ -355,9 +335,9 @@ dBehavioralTotal<-dgamble0 %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 
-head(dBehavioralTotal)
+#head(dBehavioralTotal)
 #Overall preference for gambling
-histogram(dBehavioralTotal$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity(everyone) to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+hist(dBehavioralTotal$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity(everyone) to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 
 dlowG<-filter(dBehavioralTotal,percentageGambled<6)
 noGamblers<-dlowG$uniqueid
@@ -366,11 +346,11 @@ allGamblers<-dhighg$uniqueid
 lowTrials<-filter(dBehavioralTotal,trials<50)$uniqueid
 removeIds<-c(noGamblers,allGamblers,lowTrials)
 
-#Removing any subjects from dataset if needed, using unique ids in vector removeIds
+#Removing any subjects from dataset, using unique ids in vector removeIds
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
-#Now this is refinde number of participants
+#Now this is refined number of participants
 nParticipants<- length(unique(d$uniqueid))
 Participants<-unique(d$uniqueid)
 nParticipants
@@ -390,18 +370,19 @@ dBehavioral<-dgamble %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 
-histogram(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+hist(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall propensity to gamble; n =",toString(sum(dBehavioral$trials))," possible trials;",nParticipants,"subj"),xlab="Percentage of time gambled")
+boxplot(dBehavioral$percentageGambled,ylim=c(0,100),main="Distribution of gambling percentages across everyone",ylab="Percentage gambled (per participant)")
 
 #Remaking behavioral histograms
 #Whenever they gambled
 gambleRTs<-d$gambleRT[d$gambleRT!=0]
-histogram(gambleRTs,main="Aggregated gamble RTs",breaks=70)
-c("Numberof trials that they gambled on: ",length(gambleRTs))
+hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=70)
+c("Numberof trials that they gambled on: ",toString(sum(dBehavioral$gambleCount)))
 
-#Whenever they claimed 'boring' reward
+#Whenever they claimed guaranteed reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
-histogram(outcomeRTs,main="Aggregated outcome RTs; number of trials:",breaks=70)
-c("Numberof trials that they gambled on: ",length(outcomeRTs))
+hist(outcomeRTs,main=paste("Aggregated outcome RTs; ",toString(length(outcomeRTs)),"trials accepted sure thing"),breaks=70)
+c("Number of trials that they accepted sur thing: ",length(outcomeRTs))
 
 
 
@@ -412,24 +393,24 @@ dTrials<-d %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/ntrials*100))
-dTrials
-histogram(dTrials$ntrials,breaks=50,xlim=c(0,120),ylim=c(0,30),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
+#dTrials
+hist(dTrials$ntrials,breaks=50,xlim=c(0,120),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
 
 
-#Logistic regression for gambled
+#Logistic regression models to predict gambled
 #Need to figure out which one to use
 mlog<-glm(gambled~rpe3+oddsCond,
           data=dgamble,family="binomial");
 summary(mlog)
 
-mlog2<-glm(gambled~trialNumber+PredictionError+
-             gambleDelay+oddsCond+magCond+PredictionError,
+mlog2<-glm(gambled~trialNumber+rpe1+
+             gambleDelay+oddsCond+magCond+rpe2,
            data=dgamble,family="binomial");
 summary(mlog2)
 
 ##Total data
-c("Number of trials that they gambled on: ",length(d$gambleRT[d$gambleRT!=0]))
-c("Number of trials that they had the chance to gamble on: ",length(d$gambleDelay))
+c("Number of trials that they gambled on: ",length(dgamble$response[dgamble$response=='gamble']))
+c("Number of trials that they had the chance to gamble on: ",length(dgamble$response))
 
 #By GambleDelay
 d2<-d %>% 
@@ -440,40 +421,33 @@ d2<-d %>%
             percentageGambled=round(gambleCount/trials*100),
             medianRT=median(setdiff(gambleRT,0)),
             sdRT=sd(gambleRT))
+
 d2$seconds<-d2$binsTime
 d2=filter(d2,binsTime!=0)
 d2
 
-#Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
+#Interesting plot of gambleDelay vs propensity to gamble. NEED TO ADD SDS HERE
 plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-#Plotting RTs with sd
-dRT<-filter(d,gambleRT!=0) %>%
+#Plotting gamble RTs with sd
+dRT<-filter(dgamble,response=='gamble') %>%
   group_by(binsTime) %>%
   summarise(medianRT=median(gambleRT),
             sdRT=sd(gambleRT),
-            medianSpeed=median(ngambleRT),
-            sdSpeed=sd(ngambleRT))
+            medianSpeed=median(NgambleRT),
+            sdSpeed=sd(NgambleRT))
 dRT$seconds<-dRT$binsTime
+
 #This is raw RT
-plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(600,800),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
-#This is speed RT
-# plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(.0012,.002),main=paste("Group data; total data; median median with sd; n =",toString(sum(d2$trials)),"trials;"),
-#      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-# for(i in 1:length(dRT$seconds)){
-#   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,"medianSpeed"]+(as.numeric(dRT[i,"sdSpeed"]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,"medianSpeed"]-(as.numeric(dRT[i,"sdSpeed"]))),length=0.05, angle=90, code=3)
-# }
 
-#Making a new df that only includes participants who passed catch
-#atn<-filter(d,Trialid!=failCatchId)
-
-
+#Took a break here to keep on rewriting
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
