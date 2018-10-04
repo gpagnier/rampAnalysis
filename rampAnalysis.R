@@ -15,9 +15,9 @@ library(mosaic)
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+d0<-read.csv(file.choose())
 #Cleaning data
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
 bonusAmounts=bonusAmountsTemp
@@ -408,6 +408,12 @@ mlog2<-glm(gambled~trialNumber+rpe1+
              gambleDelay+oddsCond+magCond+rpe2,
            data=dgamble,family="binomial");
 summary(mlog2)
+library(lme4)
+dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
+mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
+          data=dgamble,family="binomial");
+summary(mlmerog)
+
 
 ##Total data
 c("Number of trials that they gambled on: ",length(dgamble$response[dgamble$response=='gamble']))
