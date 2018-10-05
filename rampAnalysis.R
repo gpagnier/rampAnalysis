@@ -73,7 +73,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c()
+removeIds=c(201:260)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -411,7 +411,7 @@ summary(mlog2)
 library(lme4)
 dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
 mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
-          data=dgamble,family="binomial");
+         data=dgamble,family="binomial");
 summary(mlmerog)
 
 
@@ -454,7 +454,6 @@ for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
 
-#Took a break here to keep on rewriting
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
