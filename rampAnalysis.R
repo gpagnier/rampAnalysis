@@ -13,6 +13,7 @@
 #install.packages('mosaic')
 library(mosaic)
 
+
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 #d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -35,6 +36,8 @@ colnames(bonusAmounts)[2]<-"ID"
 
 bonusAmounts<-unique(bonusAmounts)
 bonusAmounts
+#If you want to see survey results
+hist(d0$interest,na.rm=TRUE)
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
