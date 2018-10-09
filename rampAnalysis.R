@@ -15,10 +15,11 @@ library(mosaic)
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-#d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
+#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
+d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 d0<-read.csv(file.choose())
 #Cleaning data
+d0<-d0[5836:length(d0$viewTime),]
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
 bonusAmounts=bonusAmountsTemp
 for (i in 1:length(d0$BonusAmount)){
