@@ -5,7 +5,7 @@
 #Things to do
 #Get sd bars to work
 #In the 'interesting' graphs, plot mean of participants AND each indiv. point
-
+#Is there a way of doing some kind of analysis to see what other groups intN is a part of?
 
 
 ##Loading packages
@@ -36,7 +36,7 @@ colnames(bonusAmounts)[2]<-"ID"
 bonusAmounts<-unique(bonusAmounts)
 bonusAmounts
 #If you want to see survey results
-hist(d0$interest,na.rm=TRUE)
+hist(d0$gender,na.rm=TRUE,breaks=50,ylim=c(150,300))
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
@@ -76,7 +76,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(201:261)
+removeIds=c()
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -1113,6 +1113,7 @@ for(i in Participants){
     rtn<-c(rtn,i)
   }
   #Making df of gambleSlopes, rtSlopes, and i (who was just analyzed)
+  
   rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
   gambleSlopes<-c(gambleSlopes,summary(mlogtemp)$coefficients[2])
   run<-c(run,i)
@@ -1124,7 +1125,7 @@ a<-oddsN[order(oddsN$OddsGamblingScore),]
 oddsN<-as.integer(a$Participant[(length(a$Participant)/2):length(a$Participant)])
 
 
-
+#Plot of gamble slopes vs. rtSlopes
 plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=88',xlim=c(-1,1),ylim=c(-90,50))
 with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
 m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
@@ -1168,6 +1169,7 @@ d5<-dgamble[dgamble$uniqueid %in% Participants,]
 d5<-dgamble[dgamble$uniqueid %in% intN,]
 d5<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 d5<-dgamble[dgamble$uniqueid %in% oddsN,]
+d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1192,7 +1194,7 @@ d5Behavioral<-d5 %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 #How much did each participant choose to gamble
-hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
+hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 #RTs histogram
 hist(setdiff(d5$gambleRT,0),xlim=c(0,1500),breaks=50,main=paste("RT; n =",toString(sum(d5Behavioral$gambleCount)),"gambled trials;"),xlab="Reaction time")
 #By GambleDelay
@@ -1210,7 +1212,7 @@ plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount))," gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(35,50),
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(65,80),
      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1286,7 +1288,7 @@ smagN=NULL
 rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
-slopeDF<-NULL
+SubslopeDF<-NULL
 
 #Want to look at subgroups of participants?
 oddsFilter<-FALSE
@@ -1294,7 +1296,7 @@ oddsFilter<-FALSE
 MagFilter<-FALSE
   subMagCond<-'high'
 
-for(i in oddsN){
+for(i in catchSuccessId){
   print(i)
   dsub<-filter(d,uniqueid==i)
   
@@ -1370,7 +1372,7 @@ for(i in oddsN){
     #One participant RT
     d4RT<-filter(dsub,gambleRT!=0) %>% 
       group_by(binsTime) %>% 
-      summarise(meanRT=mean(gambleRT),
+      summarise(medianRT=median(gambleRT),
                 sdRT=sd(gambleRT))
     d4RT$seconds<-d4RT$binsTime
     
@@ -1387,7 +1389,7 @@ for(i in oddsN){
     
     tempRTdf<-filter(dsub,response=='gamble')
     
-    mtempRT<-lm(tempRTdf$gambleRT~tempRTdf$gambleDelay)
+    mtempRT<-lm(d4RT$medianRT~d4RT$seconds)
     
     #This is tracking all the RT slopes of everyone in subgroup
     
@@ -1400,24 +1402,31 @@ for(i in oddsN){
   
 
 }
-slopeDF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
+SubslopeDF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
+
+#Adding labels to overall plot of gambleSlopes
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=88',xlim=c(-1,1),ylim=c(-90,50))
+with(SubslopeDF, text(SubslopeDF$rtSlopes~SubslopeDF$gambleSlopes, labels = SubslopeDF$run,cex=.6), pos = 2)
+Txtlabels<-c(rep('All participants',length(slopeDF$gambleSlopes)),rep('Subgroup',length(SubslopeDF$gambleSlopes)))
+barplot(c(mean(SubslopeDF$gambleSlopes),mean(slopeDF$gambleSlopes)),ylim=c(-.02,.06),names.arg = c("subgroup","All Participants"),beside=TRUE)
 
 #slopeDF analysis for indiv. subgroup
 
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main=paste('logical gamblers n=',toString(length(slopeDF$gambleSlopes))),xlim=c(-1,1),ylim=c(-90,50))
-#with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
-summary(m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes))
+plot(SubslopeDF$rtSlopes~SubslopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main=paste('logical gamblers n=',toString(length(SubslopeDF$gambleSlopes))),xlim=c(-1,1),ylim=c(-90,50))
+with(SubslopeDF, text(SubslopeDF$rtSlopes~SubslopeDF$gambleSlopes, labels = SubslopeDF$run,cex=.2), pos = 1)
+summary(m1<-lm(SubslopeDF$rtSlopes~SubslopeDF$gambleSlopes))
 abline(m1)
-cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
+cor(SubslopeDF$rtSlopes~SubslopeDF$gambleSlopes)
 
 
-plot(slopeDF$gambleSlopes~slopeDF$rtSlopes,xlab='rtSlopes',ylab='gambleSlopes',main='rt rampers',ylim=c(-1,1),xlim=c(-90,50))
-with(slopeDF, text(slopeDF$gambleSlopes~slopeDF$rtSlopes, labels = slopeDF$run,cex=.8), pos = 2)
-summary(m1<-lm(slopeDF$gambleSlopes~slopeDF$rtSlopes))
+plot(SubslopeDF$gambleSlopes~SubslopeDF$rtSlopes,xlab='rtSlopes',ylab='gambleSlopes',main='rt rampers',ylim=c(-1,1),xlim=c(-90,50))
+with(SubslopeDF, text(SubslopeDF$gambleSlopes~SubslopeDF$rtSlopes, labels = SubslopeDF$run,cex=.8), pos = 2)
+summary(m1<-lm(SubslopeDF$gambleSlopes~SubslopeDF$rtSlopes))
 abline(m1)
 
 
 
 
-
+#People who gambled a lot
+highGamblers<-filter(dBehavioral,percentageGambled>60)$uniqueid
 
