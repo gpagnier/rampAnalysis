@@ -5,19 +5,21 @@
 #Things to do
 #Get sd bars to work
 #In the 'interesting' graphs, plot mean of participants AND each indiv. point
-
-
+#Add st err of PARTICIPANT to gambleDelay graphs
+#Barplot of different values / magnitudes
 
 ##Loading packages
 #install.packages('mosaic')
+#install.packages('vioplot)
 library(mosaic)
+library(vioplot)
 
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
+#d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
-#d0<-read.csv(file.choose())
+d0<-read.csv(file.choose())
 #Cleaning data
 d0<-d0[5836:length(d0$viewTime),]
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -330,18 +332,6 @@ for(i in 1:length(d$response)){
 nParticipants<- length(unique(d$uniqueid))
 nParticipants
 
-#Check for catch trials
-#75 should gamble; 86 should success/fail; 2 catch trials - moved to 6?
-#Check for catch trials
-dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
-#dcatch[order(dcatch$Trialid),]
-dcatchGamble<-dcatch[dcatch$Trialid==75,]
-failCatchId<-dcatchGamble[dcatchGamble$response=='success'|dcatchGamble$response=='fail',]$uniqueid
-
-dcatchSuccess<-dcatch[dcatch$Trialid==86,]
-
-failCatchId<-unique(c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid))
-catchSuccessId<-setdiff(Participants,failCatchId)
 
 
 
@@ -386,10 +376,26 @@ removeIds<-c(removeIds,fastRTers)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
+
+#Check for catch trials
+#75 should gamble; 86 should success/fail; 2 catch trials - moved to 6?
+#Check for catch trials
+dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
+#dcatch[order(dcatch$Trialid),]
+dcatchGamble<-dcatch[dcatch$Trialid==75,]
+failCatchId<-dcatchGamble[dcatchGamble$response=='success'|dcatchGamble$response=='fail',]$uniqueid
+
+dcatchSuccess<-dcatch[dcatch$Trialid==86,]
+
+failCatchId<-unique(c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid))
+catchSuccessId<-setdiff(Participants,failCatchId)
+
+
 #Now this is refined number of participants
 nParticipants<- length(unique(d$uniqueid))
 Participants<-unique(d$uniqueid)
 nParticipants
+
 
 #######################################################################################################
 #Clearing pictures
@@ -490,6 +496,10 @@ plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group da
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
+
+
+
+
 
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
@@ -1208,7 +1218,7 @@ d52<-d5 %>%
             sdRT=sd(gambleRT))
 d52$seconds<-d52$binsTime
 #Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
-plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(45,60),
      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1271,11 +1281,12 @@ abline(v=median(rthigh$gambleRT),col="red",lwd=2)
 hist(rtlow$gambleRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
 abline(v=median(rtlow$gambleRT),col="blue",lwd=2)
 
+t.test(rtlow$gambleRT,rthigh$gambleRT)
 
 
 
 #Looping through subgroups to get INDIVIDUAL graphs 
-subplotRT=TRUE
+subplotRT=FALSE
 subplotGD=FALSE
 soddsN=NULL
 oddsScoreKnob=FALSE
@@ -1292,10 +1303,17 @@ oddsFilter<-FALSE
 MagFilter<-FALSE
   subMagCond<-'high'
 
-for(i in intN){
+gdx<-NULL
+gdy<-NULL
+rtx<-NULL
+rty<-NULL
+
+
+
+for(i in Participants){
   print(i)
   dsub<-filter(d,uniqueid==i)
-  
+  dsubGamble<-filter(dsub,gambleDelay!=0)
   if(oddsFilter){
     dsub<-filter(dsub,oddsCond==subOddsCond)
   }
@@ -1387,6 +1405,9 @@ for(i in intN){
     
     mtempRT<-lm(tempRTdf$gambleRT~tempRTdf$gambleDelay)
     
+    #mtempRT<-lm(tempRTdf$gambleRT~tempRTdf$gambleDelay)
+    
+  
     #This is tracking all the RT slopes of everyone in subgroup
     
     rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
@@ -1395,9 +1416,25 @@ for(i in intN){
     
     }
   
+  #Storing individual amounts during RT and gamble delay to plot violin plots
+  dpoint<-dsubGamble %>% 
+    group_by(binsTime) %>% 
+    summarise(trials=length(trialNumber),
+              gambleCount=sum(response=="gamble"),
+              percentageGambled=round(gambleCount/trials*100))
   
-
+  dpointRT<-filter(dsub,response=='gamble') %>% 
+    group_by(binsTime) %>% 
+    summarise(Gambledtrials=length(trialNumber),
+              medianRT=median(gambleRT))
+  gdx<-c(gdx,dpoint$binsTime)
+  gdy<-c(gdy,dpoint$percentageGambled)
+  rtx<-c(rtx,dpointRT$binsTime)
+  rty<-c(rty,dpointRT$medianRT)
+  
 }
+
+
 slopeDF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
 
 #slopeDF analysis for indiv. subgroup
@@ -1414,6 +1451,22 @@ abline(m1)
 cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Make violin plots for gambledelay
 
 
 
