@@ -532,11 +532,14 @@ plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
      main=paste("Propensity to gamble vs. when gamble interrupted progress bar"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 abline(lm(d2$percentageGambled~d2$seconds))
-
+summary(lm(d2$percentageGambled~d2$seconds))
 #Making poster graph of RT of d2p with semRTs
 #POSTER2
-pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+stat_summary(geom="errorbar",fun.data=mean_se)
-
+pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+
+              stat_summary(geom="errorbar",fun.data=mean_se)+theme_classic()+
+              xlim(0,8)+ylim(725,825)+xlab("Seconds into trial gamble interrupted")+
+              ggtitle("RT vs. when gamble interrupted progress bar")+ylab("Median RT")+
+              theme(plot.title = element_text(hjust = 0.5))
 pRT
 
 
@@ -1180,7 +1183,7 @@ oddsN<-as.integer(a$Participant[(length(a$Participant)/2):length(a$Participant)]
 #Plot of gamble slopes vs. rtSlopes
 #POSTER graph
 #POSTER3
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Gamble slopes',ylab='RT Slopes',main='All Participants; n=88',xlim=c(-.7,.7),ylim=c(-80,50))
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change per 1 second gamble was introduced)',ylab='Individual RT Slopes (ms change per 1 second gamble was introduced)',pch=16,cex=0.8,main='All Participants; n=88',xlim=c(-.7,.7),ylim=c(-80,50))
 with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
 m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
 abline(m1)
@@ -1190,12 +1193,18 @@ summary(m1)
 #TO do make plot of gamble slopes histogram
 #POSTER graph
 #POSTER4
+par(bty="7")
+hist(slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change per 1 second gamble was introduced)',ylab='Frequency',pch=16,cex=0.8,main='All Participants; n=88',
+     breaks=50,xlim=c(-.7,.7),bty='7')
+t.test(slopeDF$gambleSlopes)
 
 
 
 #TO do make plot of RT slopes histogram
 #POSTER graph
 #POSTER5
+hist(slopeDF$rtSlopes,xlab='Individual RT Slopes (ms change per 1 second gamble was introduced)',ylab='Frequency',pch=16,cex=0.8,main='All Participants; n=88',breaks=50,xlim=c(-150,150))
+t.test(slopeDF$rtSlopes)
 
 
 # #Same plot but rtSlopes is on x axis
@@ -1620,10 +1629,10 @@ for(i in Participants){
   subslope2DF<-NULL
   
   #Want to look at subgroups of participants?
-  oddsFilter<-FALSE
-  subOddsCond<-'lowp'
-  MagFilter<-TRUE
-  subMagCond<-'high'
+  oddsFilter<-TRUE
+  subOddsCond<-'highp'
+  MagFilter<-FALSE
+  subMagCond<-'low'
 
   
 #Subgroup 2    
@@ -1737,7 +1746,6 @@ for(i in Participants){
     
   }
 subslope2DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
-
 #Making vectors for barplots of gambleSlopes and RTslopes
 if(oddsFilter & subOddsCond=='lowp'){
   lowvaluegambleslopes<-subslope2DF$gambleSlopes
@@ -1773,19 +1781,25 @@ if(oddsFilter & subOddsCond=='lowp'){
 
 #Barplots
 #POSTER6
-#Plotting the slopes of different conditions doesn't look good
-barplot(c(mean(lowmaggambleslopes[lowmaggambleslopes %in% boxplot.stats(lowmaggambleslopes)$out]),mean(midmaggambleslopes[midmaggambleslopes %in% boxplot.stats(midmaggambleslopes)$out]),mean(highmaggambleslopes[highmaggambleslopes %in% boxplot.stats(highmaggambleslopes)$out])),names.arg = c("Lowmag","Midmag","Highmag"),bty='n')
+##Plotting the slopes of different conditions doesn't look good
+#barplot(c(mean(lowmaggambleslopes[lowmaggambleslopes %in% boxplot.stats(lowmaggambleslopes)$out]),mean(midmaggambleslopes[midmaggambleslopes %in% boxplot.stats(midmaggambleslopes)$out]),mean(highmaggambleslopes[highmaggambleslopes %in% boxplot.stats(highmaggambleslopes)$out])),names.arg = c("Lowmag","Midmag","Highmag"),bty='n')
 
-#Gamble propensity does though - Value
-valueMeans<-c(mean(lowmaggamblepropensity),mean(midmaggamblepropensity),mean(highmaggamblepropensity))
-pg3<-barplot(valueMeans,names.arg = c("Low magnitude","Mid magnitude","High magnitude"),ylim=c(0,80),ylab="Gamble Propensity",col="black")
-valueSems<-c((sd(lowmaggamblepropensity)/sqrt(length(lowmaggamblepropensity))),(sd(midmaggamblepropensity)/sqrt(length(midmaggamblepropensity))),(sd(highmaggamblepropensity)/sqrt(length(highmaggamblepropensity))))
-valueSds<-c((sd(lowmaggamblepropensity)),(sd(midmaggamblepropensity)),(sd(highmaggamblepropensity)))
-arrows(pg3,valueMeans-valueSds,pg3,valueMeans+valueSds,lwd=2,angle=90,code=3)
+#Gamble propensity does though - Mag
+bpCol<- rgb(0, 0, 255, max = 255, alpha = 125, names = "blue50")
+magMeans<-c(mean(lowmaggamblepropensity),mean(midmaggamblepropensity),mean(highmaggamblepropensity))
+pg6<-barplot(magMeans,names.arg = c("Low magnitude","Mid magnitude","High magnitude"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol, main="Effect of magnitude on Gamble propensity")
+magSems<-c((sd(lowmaggamblepropensity)/sqrt(length(lowmaggamblepropensity))),(sd(midmaggamblepropensity)/sqrt(length(midmaggamblepropensity))),(sd(highmaggamblepropensity)/sqrt(length(highmaggamblepropensity))))
+magSds<-c((sd(lowmaggamblepropensity)),(sd(midmaggamblepropensity)),(sd(highmaggamblepropensity)))
+arrows(pg6,magMeans-magSds,pg6,magMeans+magSds,lwd=2,angle=90,code=3)
 
 
-#To do gamble propensity mag
+#To do gamble propensity Value
 #POSTER7
+valueMeans<-c(mean(lowvaluegamblepropensity),mean(midvaluegamblepropensity),mean(highvaluegamblepropensity))
+pg7<-barplot(valueMeans,names.arg = c("Low value","Mid value","High value"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol,main="Effect of value on Gamble propensity")
+valueSems<-c((sd(lowvaluegamblepropensity)/sqrt(length(lowvaluegamblepropensity))),(sd(midvaluegamblepropensity)/sqrt(length(midvaluegamblepropensity))),(sd(highvaluegamblepropensity)/sqrt(length(highvaluegamblepropensity))))
+valueSds<-c((sd(lowvaluegamblepropensity)),(sd(midvaluegamblepropensity)),(sd(highvaluegamblepropensity)))
+arrows(pg7,valueMeans-valueSems,pg7,valueMeans+valueSems,lwd=2,angle=90,code=3)
 
 
 
@@ -1845,4 +1859,5 @@ abline(m1)
 
 #People who gambled a lot
 highGamblers<-filter(dBehavioral,percentageGambled>60)$uniqueid
+lowGamblers<-filter(dBehavioral,percentageGambled<30)$uniqueid
 
