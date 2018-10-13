@@ -10,7 +10,10 @@
 
 ##Loading packages
 #install.packages('mosaic')
+#install.packages('plotrix')
+
 library(mosaic)
+library(plotrix)
 source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
 
 ##Loading data
@@ -528,18 +531,18 @@ for(i in 1:nrow(d2p)){
  #Scatterplot with error bars
   pGD<-ggplot(d2poster,aes(binsTime,percentageGambled))+stat_summary(geom="point",fun.y=mean)+stat_summary(geom="errorbar",fun.data=mean_se)
   pGD  
-plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
-     main=paste("Propensity to gamble vs. when gamble interrupted progress bar"),
-     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,7.5),ylim = c(35,50),
+     main=paste("Propensity to gamble vs. when gamble interruption"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
 abline(lm(d2$percentageGambled~d2$seconds))
 summary(lm(d2$percentageGambled~d2$seconds))
 #Making poster graph of RT of d2p with semRTs
 #POSTER2
 pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+
               stat_summary(geom="errorbar",fun.data=mean_se)+theme_classic()+
-              xlim(0,8)+ylim(725,825)+xlab("Seconds into trial gamble interrupted")+
-              ggtitle("RT vs. when gamble interrupted progress bar")+ylab("Median RT")+
-              theme(plot.title = element_text(hjust = 0.5))
+              xlim(1,7.5)+ylim(735,825)+xlab("Seconds into trial")+
+              ggtitle("RT vs. when gamble interruption")+ylab("Median RT")+
+              theme(plot.title = element_text(hjust = 0.5))+geom_smooth(method='lm',se=FALSE,color='black',size=.8)
 pRT
 
 
@@ -1183,9 +1186,10 @@ oddsN<-as.integer(a$Participant[(length(a$Participant)/2):length(a$Participant)]
 #Plot of gamble slopes vs. rtSlopes
 #POSTER graph
 #POSTER3
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change per 1 second gamble was introduced)',ylab='Individual RT Slopes (ms change per 1 second gamble was introduced)',pch=16,cex=0.8,main='All Participants; n=88',xlim=c(-.7,.7),ylim=c(-80,50))
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/seconds)',ylab='Individual RT Slopes (ms/seconds)',pch=16,cex=0.8,main='All Participants; n=88',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
 m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
+
 abline(m1)
 cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
 summary(m1)
@@ -1194,8 +1198,8 @@ summary(m1)
 #POSTER graph
 #POSTER4
 par(bty="7")
-hist(slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change per 1 second gamble was introduced)',ylab='Frequency',pch=16,cex=0.8,main='All Participants; n=88',
-     breaks=50,xlim=c(-.7,.7),bty='7')
+hist(slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/seconds)',ylab='Frequency',pch=16,cex=0.8,main='All Participants; n=88',
+     breaks=50,xlim=c(-.7,.7),bty='7',col='black')
 t.test(slopeDF$gambleSlopes)
 
 
@@ -1203,7 +1207,7 @@ t.test(slopeDF$gambleSlopes)
 #TO do make plot of RT slopes histogram
 #POSTER graph
 #POSTER5
-hist(slopeDF$rtSlopes,xlab='Individual RT Slopes (ms change per 1 second gamble was introduced)',ylab='Frequency',pch=16,cex=0.8,main='All Participants; n=88',breaks=50,xlim=c(-150,150))
+hist(slopeDF$rtSlopes,xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,main='All Participants; n=88',breaks=50,xlim=c(-150,150),col='black')
 t.test(slopeDF$rtSlopes)
 
 
@@ -1238,20 +1242,20 @@ summaryOddsFilter=FALSE
   summaryOddsCond='highp'
   
 #New way which is better
-d5<-dgamble[dgamble$uniqueid %in% rtn,]
-d5<-dgamble[dgamble$uniqueid %in% Participants,]
-d5<-dgamble[dgamble$uniqueid %in% intN,]
-d5<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
-d5<-dgamble[dgamble$uniqueid %in% oddsN,]
-d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
+# d5<-dgamble[dgamble$uniqueid %in% rtn,]
+# d5<-dgamble[dgamble$uniqueid %in% Participants,]
+# d5<-dgamble[dgamble$uniqueid %in% intN,]
+ d5<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
+# d5<-dgamble[dgamble$uniqueid %in% oddsN,]
+# d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
-  filter(d5,magCond==SummaryMagCond)
+  d5<-filter(d5,magCond==summaryMagCond)
 }
 if(summaryOddsFilter){
-  filter(d5,oddsCond==SummaryOddsCond)
+  d5<-filter(d5,oddsCond==summaryOddsCond)
 }
 
 c("Number of trials that they gambled on:",length(d5$gambleRT[d5$gambleRT!=0]))
@@ -1266,9 +1270,9 @@ d5Behavioral<-d5 %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 #How much did each participant choose to gamble
-hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
+#hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 #RTs histogram
-hist(setdiff(d5$gambleRT,0),xlim=c(0,1500),breaks=50,main=paste("RT; n =",toString(sum(d5Behavioral$gambleCount)),"gambled trials;"),xlab="Reaction time")
+#hist(setdiff(d5$gambleRT,0),xlim=c(0,1500),breaks=50,main=paste("RT; n =",toString(sum(d5Behavioral$gambleCount)),"gambled trials;"),xlab="Reaction time")
 #By GambleDelay
 d52<-d5 %>% 
   group_by(binsTime) %>% 
@@ -1280,13 +1284,18 @@ d52<-d5 %>%
             sdRT=sd(gambleRT))
 d52$seconds<-d52$binsTime
 #Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
-plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
-     main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount))," gambled trials;"),
-     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+# plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(0,100),
+#      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount))," gambled trials;"),
+#      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(25,45),
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(30,80),
      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+
+
+
+
+
 
 #Plotting RTs with sd
 d5pRT<-filter(d5,gambleRT!=0) %>%
@@ -1487,6 +1496,7 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 subslope1DF<-NULL
+gambleMeans<-NULL
 
 #Want to look at subgroups of participants?
 oddsFilter<-FALSE
@@ -1496,7 +1506,7 @@ MagFilter<-FALSE
 
   
 #Subgroup 1
-for(i in Participants){
+for(i in lowGamblers){
   print(i)
   dsub<-filter(d,uniqueid==i)
   
@@ -1597,6 +1607,9 @@ for(i in Participants){
     
     run<-c(run,i)
     
+    #This is just one number to see how much overall they gambled
+    gambleMeans=c(gambleMeans,mean(d4$percentageGambled))
+    
     }
   
   
@@ -1605,7 +1618,7 @@ for(i in Participants){
 
   
   
-  subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
+  subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 
   
   
@@ -1629,14 +1642,14 @@ for(i in Participants){
   subslope2DF<-NULL
   
   #Want to look at subgroups of participants?
-  oddsFilter<-TRUE
+  oddsFilter<-FALSE
   subOddsCond<-'highp'
   MagFilter<-FALSE
   subMagCond<-'low'
 
   
 #Subgroup 2    
-for(i in Participants){
+for(i in highGamblers){
     print(i)
     dsub<-filter(d,uniqueid==i)
     
@@ -1785,12 +1798,12 @@ if(oddsFilter & subOddsCond=='lowp'){
 #barplot(c(mean(lowmaggambleslopes[lowmaggambleslopes %in% boxplot.stats(lowmaggambleslopes)$out]),mean(midmaggambleslopes[midmaggambleslopes %in% boxplot.stats(midmaggambleslopes)$out]),mean(highmaggambleslopes[highmaggambleslopes %in% boxplot.stats(highmaggambleslopes)$out])),names.arg = c("Lowmag","Midmag","Highmag"),bty='n')
 
 #Gamble propensity does though - Mag
-bpCol<- rgb(0, 0, 255, max = 255, alpha = 125, names = "blue50")
+bpCol<- rgb(200, 200, 200, max = 255, alpha = 125, names = "blue50")
 magMeans<-c(mean(lowmaggamblepropensity),mean(midmaggamblepropensity),mean(highmaggamblepropensity))
-pg6<-barplot(magMeans,names.arg = c("Low magnitude","Mid magnitude","High magnitude"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol, main="Effect of magnitude on Gamble propensity")
-magSems<-c((sd(lowmaggamblepropensity)/sqrt(length(lowmaggamblepropensity))),(sd(midmaggamblepropensity)/sqrt(length(midmaggamblepropensity))),(sd(highmaggamblepropensity)/sqrt(length(highmaggamblepropensity))))
+pg6<-barplot(magMeans,names.arg = c("Low magnitude","Mid magnitude","High magnitude"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol, main="Effect of Magnitude on Gamble propensity")
+magSems<-c((std.error(lowmaggamblepropensity)),(std.error(midmaggamblepropensity)),(std.error(highmaggamblepropensity)))
 magSds<-c((sd(lowmaggamblepropensity)),(sd(midmaggamblepropensity)),(sd(highmaggamblepropensity)))
-arrows(pg6,magMeans-magSds,pg6,magMeans+magSds,lwd=2,angle=90,code=3)
+arrows(pg6,magMeans-magSems,pg6,magMeans+magSems,lwd=2,angle=90,code=3)
 
 
 #To do gamble propensity Value
@@ -1804,16 +1817,44 @@ arrows(pg7,valueMeans-valueSems,pg7,valueMeans+valueSems,lwd=2,angle=90,code=3)
 
 
 
-#POSTER8,9,10
+#poster graphs
 #Bargraphs of 
 #1) gamble propensity infrequent vs frequent
+#POSTER8
+
+#subslope1DF is low gamblers, 2DF is high gamblers
+compMeans<-c(mean(subslope1DF$gambleMeans),mean(subslope2DF$gambleMeans))
+pg8<-barplot(compMeans,names.arg = c("Infrequent gamblers","Frequent gamblers"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol)
+compSems<-c((sd(subslope1DF$gambleMeans)/sqrt(length(subslope1DF$gambleMeans))),(sd(subslope2DF$gambleMeans)/sqrt(length(subslope2DF$gambleMeans))))
+compSds<-c((sd(subslope1DF$gambleMeans)),(sd(subslope2DF$gambleMeans)))
+arrows(pg8,compMeans-compSds,pg8,compMeans+compSds,lwd=2,angle=90,code=3)
+
+
 #2)Gamble slopes of infrequent vs frequent
+compMeans<-c(mean(subslope1DF$gambleSlopes),mean(subslope2DF$gambleSlopes))
+pg9<-barplot(compMeans,names.arg = c("Infrequent gamblers","Frequent gamblers"),ylab="Gamble Slopes",col=bpCol,ylim=c(0,.15))
+compSems<-c((sd(subslope1DF$gambleSlopes)/sqrt(length(subslope1DF$gambleSlopes))),(sd(subslope2DF$gambleSlopes)/sqrt(length(subslope2DF$gambleSlopes))))
+compSds<-c((sd(subslope1DF$gambleSlopes)),(sd(subslope2DF$gambleSlopes)))
+arrows(pg9,compMeans-compSems,pg9,compMeans+compSems,lwd=2,angle=90,code=3)
+t.test(subslope1DF$gambleSlopes,subslope2DF$gambleSlopes)
+
 #3)RT slopes of infrequent vs frequent
+compMeans<-c(mean(subslope1DF$rtSlopes),mean(subslope2DF$rtSlopes))
+pg10<-barplot(compMeans,names.arg = c("Infrequent gamblers","Frequent gamblers"),ylab="RT Slopes",col=bpCol)
+compSems<-c((sd(subslope1DF$rtSlopes)/sqrt(length(subslope1DF$rtSlopes))),(sd(subslope2DF$rtSlopes)/sqrt(length(subslope2DF$rtSlopes))))
+compSds<-c((sd(subslope1DF$rtSlopes)),(sd(subslope2DF$rtSlopes)))
+arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
+t.test(subslope1DF$rtSlopes,subslope2DF$rtSlopes)
 
 
 #Adding labels to overall plot of gambleSlopes (only 1 of the two subgroups)
 plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=88 with ',xlim=c(-1,1),ylim=c(-90,50))
+plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='Infrequent Gamblers n=23 with ',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
+par(new=TRUE)
+plot(subslope2DF$rtSlopes~subslope2DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='red',pch=18)
+
 with(subslope2DF, text(subslope2DF$rtSlopes~subslope2DF$gambleSlopes, labels = subslope2DF$run,cex=.6), pos = 2)
+with(subslope1DF, text(subslope1DF$rtSlopes~subslope1DF$gambleSlopes, labels = subslope1DF$run,cex=.6), pos = 2)
 
 #Txtlabels<-c(rep('SuccessfulCatch ',length(successfulCatchM$gambleSlopes)),rep('FailCatch',length(failCatchM$gambleSlopes)))
 #sds<-c(rep(sd(successfulCatchM$gambleSlopes),length(successfulCatchM$gambleSlopes)),rep(sd(failCatchM$gambleSlopes),length(failCatchM$gambleSlopes)))
