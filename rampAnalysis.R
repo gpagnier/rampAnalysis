@@ -11,6 +11,7 @@
 ##Loading packages
 #install.packages('mosaic')
 #install.packages('plotrix')
+#install.packages('plotrix', dependencies=TRUE, repos='http://cran.rstudio.com/')
 
 library(mosaic)
 library(plotrix)
@@ -334,20 +335,32 @@ for(i in 1:length(d$response)){
 nParticipants<- length(unique(d$uniqueid))
 nParticipants
 
-#Check for catch trials
-#75 should gamble; 86 should success/fail; 2 catch trials - moved to 6?
-#Check for catch trials
-dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
-#dcatch[order(dcatch$Trialid),]
-dcatchGamble<-dcatch[dcatch$Trialid==75,]
-failCatchId<-dcatchGamble[dcatchGamble$response=='success'|dcatchGamble$response=='fail',]$uniqueid
-
-dcatchSuccess<-dcatch[dcatch$Trialid==86,]
-
-failCatchId<-unique(c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid))
-catchSuccessId<-setdiff(Participants,failCatchId)
-
-
+# #Check for catch trials
+# #75 should gamble; 86 should success/fail; 2 catch trials - moved to 6
+# #Check for catch trials
+# dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
+# #dcatch[order(dcatch$Trialid),]
+# dcatchGamble<-dcatch[dcatch$Trialid==75,]
+# failCatchId<-dcatchGamble[dcatchGamble$response=='success'|dcatchGamble$response=='fail',]$uniqueid
+# 
+# dcatchSuccess<-dcatch[dcatch$Trialid==86,]
+# 
+# failCatchId<-unique(c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid))
+# catchSuccessId<-setdiff(Participants,failCatchId)
+# 
+# #Differential analysis of failCatch
+# #Called what they SHOULD do
+# dcatchidFinish<-dcatch[dcatch$Trialid==86,] %>% 
+#   group_by(uniqueid) %>% 
+#   summarise(FailTrials=sum(response=="gamble"|response=='earlyFail'))
+# 
+# dcatchidGamble<-dcatch[dcatch$Trialid==75,] %>% 
+#   group_by(uniqueid) %>% 
+#   summarise(FailTrials=sum(response=="fail"|response=='success'|response=='earlyFail'))
+# 
+# dcatchscore<-data.frame(dcatchidFinish$uniqueid)
+# colnames(dcatchscore)[1]='uniqueid'
+# dcatchscore$failScore<-dcatchidFinish$FailTrials+dcatchidGamble$FailTrials
 
 ###Behavioral analyses
 ##Reaction time
@@ -390,6 +403,35 @@ removeIds<-c(removeIds,fastRTers)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
+
+#Check for catch trials
+#75 should gamble; 86 should success/fail; 2 catch trials - moved to 6
+#Check for catch trials
+dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
+
+#Differential analysis of failCatch
+#Called what they SHOULD do
+dcatchidFinish<-dcatch[dcatch$Trialid==86,] %>% 
+  group_by(uniqueid) %>% 
+  summarise(FailTrials=sum(response=="gamble"|response=='earlyFail'))
+
+dcatchidGamble<-dcatch[dcatch$Trialid==75,] %>% 
+  group_by(uniqueid) %>% 
+  summarise(FailTrials=sum(response=="fail"|response=='success'|response=='earlyFail'))
+
+dcatchscore<-data.frame(dcatchidFinish$uniqueid)
+colnames(dcatchscore)[1]='uniqueid'
+dcatchscore$failScore<-dcatchidFinish$FailTrials+dcatchidGamble$FailTrials
+
+failCatchId<-unique(dcatchscore$uniqueid[dcatchscore$failScore>0])
+catchSuccessId<-unique(dcatchscore$uniqueid[dcatchscore$failScore==0])
+
+#Breaking down catchTrials by severity
+fail1<-unique(dcatchscore$uniqueid[dcatchscore$failScore==1])
+fail2<-unique(dcatchscore$uniqueid[dcatchscore$failScore==2])
+fail3<-unique(dcatchscore$uniqueid[dcatchscore$failScore==3])
+fail4<-unique(dcatchscore$uniqueid[dcatchscore$failScore==4])
+
 #Now this is refined number of participants
 nParticipants<- length(unique(d$uniqueid))
 Participants<-unique(d$uniqueid)
@@ -1375,7 +1417,7 @@ d5prime<-dgamble[dgamble$uniqueid %in% intN,]
 d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 d5prime<-dgamble[dgamble$uniqueid %in% oddsN,]
 d5prime<-dgamble[dgamble$uniqueid %in% highGamblers,]
-d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
+d5prime<-dgamble[dgamble$uniqueid %in% fail1,]
 
 #This filters summary d5prime by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1415,7 +1457,7 @@ plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount))," gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(25,45),
+plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(30,55),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount)),"gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1901,4 +1943,18 @@ abline(m1)
 #People who gambled a lot
 highGamblers<-filter(dBehavioral,percentageGambled>60)$uniqueid
 lowGamblers<-filter(dBehavioral,percentageGambled<30)$uniqueid
+
+#Plotting odds scores against one another
+
+
+#This plots the two subgroups histograms against one another
+par(new=FALSE)
+hist(a$OddsGamblingScore,breaks=30,col="red",xlim=c(-10,40),main="propensity to gamble on high value vs. low value",xlab="Percentage of high value trials gambled on - percentage of low value trials gambled on")
+abline(v=median(a$OddsGamblingScore),col="red",lwd=2)
+par(new=TRUE)
+hist(b$OddsGamblingScore,breaks=30,col="blue",xlim=c(-10,40),main="propensity to gamble on high value vs. low value",xlab="Percentage of high value trials gambled on - percentage of low value trials gambled on")
+abline(v=median(b$OddsGamblingScore),col="blue",lwd=2)
+t.test((1/rtsub1$outcomeRT),(1/rtsub2$outcomeRT))
+
+d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
 
