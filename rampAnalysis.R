@@ -431,6 +431,7 @@ fail1<-unique(dcatchscore$uniqueid[dcatchscore$failScore==1])
 fail2<-unique(dcatchscore$uniqueid[dcatchscore$failScore==2])
 fail3<-unique(dcatchscore$uniqueid[dcatchscore$failScore==3])
 fail4<-unique(dcatchscore$uniqueid[dcatchscore$failScore==4])
+fail5<-unique(dcatchscore$uniqueid[dcatchscore$failScore==5])
 
 #Now this is refined number of participants
 nParticipants<- length(unique(d$uniqueid))
@@ -1417,7 +1418,8 @@ d5prime<-dgamble[dgamble$uniqueid %in% intN,]
 d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 d5prime<-dgamble[dgamble$uniqueid %in% oddsN,]
 d5prime<-dgamble[dgamble$uniqueid %in% highGamblers,]
-d5prime<-dgamble[dgamble$uniqueid %in% fail1,]
+d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
+d5prime<-dgamble[dgamble$uniqueid %in% fail5,]
 
 #This filters summary d5prime by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1457,8 +1459,8 @@ plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount))," gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(30,55),
-     main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount)),"gambled trials;"),
+plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(45,70),
+     main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount)),"gambled trials;",toString(length(unique(d5prime$uniqueid))),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
 #Plotting RTs with sd
@@ -1548,7 +1550,7 @@ MagFilter<-FALSE
 
   
 #Subgroup 1
-for(i in lowGamblers){
+for(i in fail1){
   print(i)
   dsub<-filter(d,uniqueid==i)
   
@@ -1691,7 +1693,7 @@ for(i in lowGamblers){
 
   
 #Subgroup 2    
-for(i in highGamblers){
+for(i in fail2){
     print(i)
     dsub<-filter(d,uniqueid==i)
     
@@ -1801,6 +1803,10 @@ for(i in highGamblers){
     
   }
 subslope2DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
+
+fail5df<-subslope2DF
+
+
 #Making vectors for barplots of gambleSlopes and RTslopes
 if(oddsFilter & subOddsCond=='lowp'){
   lowvaluegambleslopes<-subslope2DF$gambleSlopes
@@ -1889,11 +1895,19 @@ arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
 t.test(subslope1DF$rtSlopes,subslope2DF$rtSlopes)
 
 
-#Adding labels to overall plot of gambleSlopes (only 1 of the two subgroups)
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=88 with ',xlim=c(-1,1),ylim=c(-90,50))
-plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='Infrequent Gamblers n=23 with ',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
+#Adding colors to overall plot of gambleSlopes (only 1 of the two subgroups)
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=88 with failCatch highlighted',xlim=c(-1,1),ylim=c(-90,50))
 par(new=TRUE)
-plot(subslope2DF$rtSlopes~subslope2DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='red',pch=18)
+plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
+par(new=TRUE)
+plot(subslope2DF$rtSlopes~subslope2DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='green',pch=18)
+par(new=TRUE)
+plot(fail3df$rtSlopes~fail3df$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='maroon',pch=18)
+par(new=TRUE)
+plot(fail4df$rtSlopes~fail4df$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='orange',pch=18)
+par(new=TRUE)
+plot(fail5df$rtSlopes~fail5df$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='red',pch=18)
+legend(.5,40,legend=c("1","2","3","4","5"),col=c("blue","green","maroon","orange","red"),title="Number of catch Trials failed",pch=18)
 
 with(subslope2DF, text(subslope2DF$rtSlopes~subslope2DF$gambleSlopes, labels = subslope2DF$run,cex=.6), pos = 2)
 with(subslope1DF, text(subslope1DF$rtSlopes~subslope1DF$gambleSlopes, labels = subslope1DF$run,cex=.6), pos = 2)
