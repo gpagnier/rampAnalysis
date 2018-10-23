@@ -22,6 +22,8 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
 #d0<-read.csv(file.choose())
@@ -1262,13 +1264,14 @@ slopeDF<-data.frame(cbind(run,rtSlopes,gambleSlopes))
 a<-oddsN[order(oddsN$OddsGamblingScore),]
 #oddsN is the median split of people who respond well to odds
 oddsN<-as.integer(a$Participant[(length(a$Participant)/2):length(a$Participant)])
-
+#Quartile split
+oddsN<-oddsN[(length(oddsN)/2):(length(oddsN))]
 
 #Plot of gamble slopes vs. rtSlopes
 #POSTER graph
 #POSTER3
 
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=131',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=141',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 abline(v=0,col="black")
 abline(h=0,col="black")
 with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
@@ -1342,7 +1345,7 @@ summaryOddsFilter=FALSE
 # d5<-dgamble[dgamble$uniqueid %in% Participants,]
  d5<-dgamble[dgamble$uniqueid %in% intN,]
  d5<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
-# d5<-dgamble[dgamble$uniqueid %in% oddsN,]
+ d5<-dgamble[dgamble$uniqueid %in% oddsN,]
  d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 
@@ -1912,7 +1915,7 @@ subslope2DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 
 #Subplot dot plot
 #Adding colors to overall plot of gambleSlopes (only 1 of the two subgroups)
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=131 with failCatch (n=77) highlighted',xlim=c(-1,1),ylim=c(-90,50))
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=131 failCatch (n=82) highlighted',xlim=c(-1,1),ylim=c(-90,50))
 par(new=TRUE)
 plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
 abline(v=0,col="blue")
