@@ -1,5 +1,5 @@
 ###Ramp analysis
-###Rewritten/organized 9.4.2018 by Guillaume
+###Rewritten/organized 9.4.2018
 ###Updated 10.1.2018
 
 #Things to do
@@ -22,7 +22,7 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+#d0<-read.csv(file="C:/Users//Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
@@ -45,7 +45,31 @@ colnames(bonusAmounts)[2]<-"ID"
 bonusAmounts<-unique(bonusAmounts)
 bonusAmounts
 #If you want to see survey results
-hist(d0$gender,na.rm=TRUE,breaks=50,ylim=c(150,300))
+dsurvey<-d0 %>% 
+  group_by(uniqueid) %>% 
+  summarise(engagement=unique(engagement)[2],
+            difficulty=unique(difficulty)[2],
+            length=unique(length)[2],
+            design=unique(design)[2],
+            gender=unique(gender)[2],
+            interest=unique(interest)[2])
+#Removing rows that have empty column values (specifically if gender is empty)
+dsurvey<-dsurvey[!(is.na(dsurvey$gender)|dsurvey$gender==""),]
+
+#Engagment: how engaging, 1 is not, 10 is very engaging
+hist(as.integer(dsurvey$engagement),breaks=50,main="Length: 10 is very engaging")
+#difficult: 1 is easy, 10 is hard
+hist(as.integer(dsurvey$difficulty),breaks=50,main="Length: 10 is too hard")
+#length: 1 is could be longer, 10 is much too long
+hist(as.integer(dsurvey$length),breaks=50,ylim=c(0,50),main="Length: 10 is too long")
+#design: how engaging, 1 is unplayable, 4 is worked fine
+table(as.integer(dsurvey$design))
+#Gender: 1 male, 2 is female 4: decline to answer
+table(as.integer(dsurvey$gender))
+#interest: 1 is no way; 10 is absolutely yes
+hist(as.integer(dsurvey$interest),breaks=50,ylim=c(0,100),main="interest; 10 is very interesting")
+
+
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
@@ -85,7 +109,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(301:420)
+removeIds=c(404)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -272,7 +296,7 @@ d2=d[0,]
 d$rpe1=NULL
 d$rpe2=NULL
 d$rpe3=NULL
-
+d$gamblePrevTrial=NULL
 #RT z score
 #Should I do z scores on speed or raw RT?
 d$gambleRTz<-NULL
@@ -296,15 +320,18 @@ for (i in Participants){
     #t - reward on trial t-1
     dsub[row,"rpe1"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
     #This is rpe2
-    if(dsub[row,"gambled"]){
+    #And gamblingPrevTrial
+    if(dsub[(row-1),"gambled"]){
       dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleMaxAmt"]/2))
+      dsub[row,"gamblePrevTrial"]=1
     } else{
       dsub[row,"rpe2"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
+      dsub[row,"gamblePrevTrial"]=0
     }
   }
   #This is rpe3
   for (row in 2:length(dsub$Trialid)){
-    if(dsub[row,"gambled"]){
+    if(dsub[(row-1),"gambled"]){
       dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-(dsub[(row-1),"gambleMaxAmt"]))
     } else{
       dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
@@ -508,23 +535,28 @@ dTrials<-d %>%
 #dTrials
 hist(dTrials$ntrials,breaks=50,xlim=c(0,140),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
 
-
+#Statistics
 #Logistic regression models to predict gambled
 #Need to figure out which one to use
 mlog<-glm(gambled~gambleDelay+oddsCond,
           data=dgamble,family="binomial");
 summary(mlog)
 
-mlog2<-glm(gambled~trialNumber+rpe1+
-             gambleDelay+oddsCond+magCond+rpe2,
+mlog2<-glm(gambled~gambleDelay+oddsCond+gamblePrevTrial,
            data=dgamble,family="binomial");
 summary(mlog2)
 
-#library(lme4)
-# dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
-#  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
-#           data=dgamble,family="binomial");
-#  summary(mlmerog)
+d5primegamble[,'oddsCondf'] <- as.factor(d5primegamble[,'oddsCond'])
+d5primegamble[,'gamblePrevTrialf'] <- as.factor(d5primegamble[,'gamblePrevTrial'])
+mlogfc<-glm(gambled~gambleDelay+oddsCondf+gamblePrevTrial,
+          data=d5primegamble,family="binomial");
+summary(mlogfc)
+
+library(lme4)
+ dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
+  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
+           data=dgamble,family="binomial");
+  summary(mlmerog)
 
 
 ##Total data
@@ -591,7 +623,7 @@ plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group da
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
-#Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant Guillaume)
+#Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant)
 d2p$binsTime<-as.factor(d2p$binsTime)
 d2poster<-d2p
 for(i in 1:nrow(d2p)){
@@ -1274,7 +1306,7 @@ oddsN<-oddsN[(length(oddsN)/2):(length(oddsN))]
 plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=141',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 abline(v=0,col="black")
 abline(h=0,col="black")
-with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
+#with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
 m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
 #Make ggExtrav(ggMarginal)
 #Andrew3
@@ -1285,7 +1317,7 @@ ap3<-ggplot(slopeDF,aes(gambleSlopes,rtSlopes))+geom_point()+theme_bw()+ theme(
   geom_hline(yintercept = 0)+geom_vline(xintercept=0)+
   labs(y="RT Slopes",x="Gamble Slopes")+xlim(-.75,.75)+ylim(-110,110)
 ggExtra::ggMarginal(ap3,type='density')
-ap3
+
 
 abline(m1)
 cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
@@ -1461,7 +1493,7 @@ t.test((1/rtall$gambleRT),(1/rtsub$gambleRT))
 
 
 
-
+#guillaume1
 #Now making a second 'd5' so you can compare summary graphs of two summary plots of subgroups
 
 #THIS IS WHATEVER SUBGROUP YOU WANT TO LOOK AT
@@ -1474,16 +1506,18 @@ summaryOddsFilter=FALSE
 summaryOddsCond='highp'
 
 #New way which is better
-d5prime<-dgamble[dgamble$uniqueid %in% rtn,]
-d5prime<-dgamble[dgamble$uniqueid %in% Participants,]
-d5prime<-dgamble[dgamble$uniqueid %in% intN,]
-d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
-d5prime<-dgamble[dgamble$uniqueid %in% oddsN,]
-d5prime<-dgamble[dgamble$uniqueid %in% highGamblers,]
-d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
-d5prime<-dgamble[dgamble$uniqueid %in% fail5,]
-d5prime<-dgamble[dgamble$uniqueid %in% truehigh,]
+# d5prime<-dgamble[dgamble$uniqueid %in% rtn,]
+# d5prime<-dgamble[dgamble$uniqueid %in% Participants,]
+# d5prime<-dgamble[dgamble$uniqueid %in% intN,]
+# d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
+# d5prime<-dgamble[dgamble$uniqueid %in% oddsN,]
+# d5prime<-dgamble[dgamble$uniqueid %in% highGamblers,]
+ d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
+# d5prime<-dgamble[dgamble$uniqueid %in% fail5,]
+# d5prime<-dgamble[dgamble$uniqueid %in% truehigh,]
 
+d5prime<-filter(d5prime,gamblePrevTrial==1) 
+ 
 #This filters summary d5prime by odds/mag if specified above via T/F
 if(summaryMagFilter){
   filter(d5prime,magCond==SummaryMagCond)
@@ -1495,6 +1529,9 @@ if(summaryOddsFilter){
 c("Number of trials that they gambled on:",length(d5prime$gambleRT[d5prime$gambleRT!=0]))
 c("Number of trials that they had the chance to gamble on:",length(d5prime$gambleDelay))
 
+#n<-filter(d5primeBehavioral,percentageGambled<60)
+
+d5prime<-d5prime[dgamble$uniqueid %in% n,]
 
 #By uniqueId
 d5primeBehavioral<-d5prime %>% 
@@ -1518,11 +1555,11 @@ d5prime2<-d5prime %>%
             sdRT=sd(gambleRT))
 d5prime2$seconds<-d5prime2$binsTime
 #Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
-plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(40,55),
+plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount))," gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(60,80),
+plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(55,80),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount)),"gambled trials;",toString(length(unique(d5prime$uniqueid))),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1742,7 +1779,7 @@ subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
   
   
   
-  
+  #guillaume2
   #Subgroup 2
   #Looping through subgroups to get INDIVIDUAL graphs
  # indivd5prime<-intN
