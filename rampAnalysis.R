@@ -29,6 +29,8 @@ d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
 d0<-d0[5836:length(d0$viewTime),]
+d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
+
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
 bonusAmounts=bonusAmountsTemp
 for (i in 1:length(d0$BonusAmount)){
@@ -74,10 +76,32 @@ hist(as.integer(dsurvey$interest),breaks=50,ylim=c(0,100),main="interest; 10 is 
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
 #Need to replace uniqueid with numbers and clean out columns that aren't useful
-d<-d0[,c("Trialid","expTime","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
+d<-d0[,c("Trialid","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
 d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
 d<-subset(d,d$response!="")
+d$engagement<-NULL
+d$difficulty<-NULL
+d$length<-NULL
+d$design<-NULL
+d$gender<-NULL
+d$interest<-NULL
+d$expTime
 
+#Adding survey answers
+d2=NULL
+for(i in unique(d$uniqueid)){
+  d0sub<-filter(d0,uniqueid==i)
+  dsub<-filter(d,uniqueid==i)
+  dsub$engagement=unique(d0sub$engagement)[2]
+  dsub$difficulty=unique(d0sub$difficulty)[2]
+  dsub$length=unique(d0sub$length)[2]
+  dsub$design=unique(d0sub$design)[2]
+  dsub$gender=unique(d0sub$gender)[2]
+  dsub$interest=unique(d0sub$interest)[2]
+  dsub$expTime=unique(d0sub$expTime)[2]
+  d2<-rbind(d2,dsub)
+}
+d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
 seed=401
@@ -109,7 +133,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(404)
+removeIds=c()
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -121,7 +145,7 @@ hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the pr
 
 #How many points do you want on the gambleDelay?
 d$binsTme=NULL
-bins=3
+bins=6
 
 ninbins=round((length(d$Trialid)/bins))
 
@@ -176,25 +200,25 @@ a6tail<-6.8
 
 #This is the function that creates gambleBins
 binTimeCalc<-function(d,row){
-  if(d[row,3]==0)
+  if(d[row,'gambleDelay']==0)
   {return(0)}
-  else if (d[row,3]>0&d[row,3]<=a1tail)
+  else if (d[row,'gambleDelay']>0&d[row,'gambleDelay']<=a1tail)
   {return(mean(c(a1head,a1tail)))}
-  else if (d[row,3]>=a2head&d[row,3]<=a2tail)
+  else if (d[row,'gambleDelay']>=a2head&d[row,'gambleDelay']<=a2tail)
   {return(mean(c(a2head,a2tail)))}
-  else if (d[row,3]>=a3head&d[row,3]<=a3tail)
+  else if (d[row,'gambleDelay']>=a3head&d[row,'gambleDelay']<=a3tail)
   {return(mean(c(a3head,a3tail)))}
-  else if (d[row,3]>=a4head&d[row,3]<=a4tail)
+  else if (d[row,'gambleDelay']>=a4head&d[row,'gambleDelay']<=a4tail)
   {return(mean(c(a4head,a4tail)))}
-  else if (d[row,3]>=a5head&d[row,3]<=a5tail)
+  else if (d[row,'gambleDelay']>=a5head&d[row,'gambleDelay']<=a5tail)
   {return(mean(c(a5head,a5tail)))}
-  else if (d[row,3]>=a6head&d[row,3]<=a6tail)
+  else if (d[row,'gambleDelay']>=a6head&d[row,'gambleDelay']<=a6tail)
   {return(mean(c(a6head,a6tail)))}
-  # else if (d[row,3]>=a7head&d[row,3]<=a7tail)
+  # else if (d[row,'gambleDelay']>=a7head&d[row,'gambleDelay']<=a7tail)
   # {return(mean(c(a7head,a7tail)))}
-  # else if (d[row,3]>=a8head&d[row,3]<=a8tail)
+  # else if (d[row,'gambleDelay']>=a8head&d[row,'gambleDelay']<=a8tail)
   # {return(mean(c(a8head,a8tail)))}
-  # else if (d[row,3]>=a9head&d[row,3]<=max(d$gambleDelay))
+  # else if (d[row,'gambleDelay']>=a9head&d[row,'gambleDelay']<=max(d$gambleDelay))
   # {return(mean(c(a9head,a9tail)))}
   else
   {return(999)}
@@ -301,8 +325,15 @@ d$gamblePrevTrial=NULL
 #Should I do z scores on speed or raw RT?
 d$gambleRTz<-NULL
 d$outcomeRTz<-NULL
-
+acfdf<-matrix(NA, ncol = 133, nrow =0)
 Participants<-unique(d$uniqueid)
+for (i in Participants){
+  dsub<-filter(d,uniqueid==i)
+  if(length(dsub$gambled)==133){
+    acfdf<-rbind(acfdf,dsub$gambled)
+  }
+}
+
 #Adding vector to filter out fast RTers
 fastRTers<-NULL
 #Adding RPE as a factor AND normalized RT z score
@@ -430,7 +461,16 @@ hist(outcomeRTs,main=c("Aggregated outcome RTs; number of trials:",length(outcom
 expTimes<-((unique(d$expTime,na.rm=TRUE)/1000)/60)
 hist(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,120))
 
-
+#Survey responses
+dsurvey<-d %>% 
+  group_by(uniqueid) %>% 
+  summarise(engagement=unique(engagement),
+            difficulty=unique(difficulty),
+            length=unique(length),
+            design=unique(design),
+            gender=unique(gender),
+            interest=unique(interest))
+dsurvey<-dsurvey[!(is.na(dsurvey$gender)|dsurvey$gender==""),]
 #Removing participants who gambled too much/not enough
 dgamble0<-filter(d,gambleDelay!=0)
 
@@ -542,15 +582,10 @@ mlog<-glm(gambled~gambleDelay+oddsCond,
           data=dgamble,family="binomial");
 summary(mlog)
 
-mlog2<-glm(gambled~gambleDelay+oddsCond+gamblePrevTrial,
+mlog2<-glm(gambled~gambleDelay+oddsCond+interest,
            data=dgamble,family="binomial");
 summary(mlog2)
 
-d5primegamble[,'oddsCondf'] <- as.factor(d5primegamble[,'oddsCond'])
-d5primegamble[,'gamblePrevTrialf'] <- as.factor(d5primegamble[,'gamblePrevTrial'])
-mlogfc<-glm(gambled~gambleDelay+oddsCondf+gamblePrevTrial,
-          data=d5primegamble,family="binomial");
-summary(mlogfc)
 
 library(lme4)
  dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
@@ -558,13 +593,18 @@ library(lme4)
            data=dgamble,family="binomial");
   summary(mlmerog)
 
-
+# d5primegamble[,'oddsCondf'] <- as.factor(d5primegamble[,'oddsCond'])
+# d5primegamble[,'gamblePrevTrialf'] <- as.factor(d5primegamble[,'gamblePrevTrial'])
+# mlogfc<-glm(gambled~gambleDelay+oddsCondf+gamblePrevTrial,
+#               data=d5primegamble,family="binomial");
+# summary(mlogfc)
+  
 ##Total data
 c("Number of trials that they gambled on: ",length(dgamble$response[dgamble$response=='gamble']))
 c("Number of trials that they had the chance to gamble on: ",length(dgamble$response))
 
 #By GambleDelay
-d2<-d %>% 
+d2<-filter(d,gambleDelay!=0) %>% 
   group_by(binsTime) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
@@ -577,7 +617,7 @@ d2$seconds<-d2$binsTime
 d2=filter(d2,binsTime!=0)
 d2
 
-d2p<-d %>% 
+d2p<-filter(d,gambleDelay!=0) %>% 
   group_by(binsTime,uniqueid) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
@@ -623,6 +663,12 @@ plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group da
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
+#This is Speed
+plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),main=paste("Group data; total data; median Speed with sd; n =",toString(sum(d2$trials)),"trials;"),
+     xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+for(i in 1:length(dRT$seconds)){
+  arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']+(as.numeric(dRT[i,'sdSpeed']))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']-(as.numeric(dRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
+}
 #Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant)
 d2p$binsTime<-as.factor(d2p$binsTime)
 d2poster<-d2p
@@ -635,8 +681,18 @@ for(i in 1:nrow(d2p)){
   # p1<-ggplot(d2poster,aes(binsTime,percentageGambled))+geom_violin(data=d2poster)
   # p1
  #Scatterplot with error bars
-  pGD<-ggplot(d2poster,aes(binsTime,percentageGambled))+stat_summary(geom="point",fun.y=mean)+stat_summary(geom="errorbar",fun.data=mean_se)
-  pGD  
+
+  # 
+  # pGD<-ggplot(d2p,aes(seconds,percentageGambled))+stat_summary(geom="point",fun.y=mean)+
+  #   stat_summary(geom="errorbar",fun.data=mean_se)+theme_bw()+
+  #   xlim(1,7.5)+xlab("Seconds into trial")+
+  #   ggtitle("Total group data; Gamble Propensity; n = 13654 trials; 121 participants")+ylab("Mean Gamble propensity")+
+  #   theme(plot.title = element_text(hjust = 0.5,face="bold",size=14))+
+  #   geom_smooth(method='lm',se=FALSE,color='black',size=.4)+
+  #   theme(axis.title.y = element_text(margin=unit(c(0,4,0,0),"mm")),panel.grid.major = element_blank(),
+  #         panel.grid.minor = element_blank())
+  # pGD  
+  # 
 plot(d2$seconds,d2$percentageGambled,xlim = c(0,7.5),ylim = c(35,50),
      main=paste("Propensity to gamble vs. gamble interruption time"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
@@ -648,13 +704,12 @@ summary(lm(d2$percentageGambled~d2$seconds))
 pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+
               stat_summary(geom="errorbar",fun.data=mean_se)+theme_bw()+
               xlim(1,7.5)+ylim(735,825)+xlab("Seconds into trial")+
-              ggtitle("Total group data; Reaction Time; n = 14806 trials; 131 participants")+ylab("Mean RT")+
+              ggtitle("Total group data; Reaction Time; n = 13654 trials; 121 participants")+ylab("Mean RT")+
               theme(plot.title = element_text(hjust = 0.5,face="bold",size=14))+
               geom_smooth(method='lm',se=FALSE,color='black',size=.4)+
               theme(axis.title.y = element_text(margin=unit(c(0,4,0,0),"mm")),panel.grid.major = element_blank(),
                     panel.grid.minor = element_blank())
 pRT
-
 
 
 
@@ -1185,6 +1240,12 @@ magNtemp<-data.frame(matrix(NA, ncol = 2, nrow =1))
   colnames(magNtemp)[1]<-"MagGamblingScore"
   colnames(magNtemp)[2]<-"Participant"  
 
+acf1<-NULL
+acf2<-NULL
+acf3<-NULL
+acf4<-NULL
+acf5<-NULL
+
 rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
@@ -1285,6 +1346,15 @@ for(i in Participants){
   if(summary(mtempRT)$coefficients[8]<.1 & summary(mtempRT)$coefficients[2]<0){
     rtn<-c(rtn,i)
   }
+  
+  
+  #Making acf coefficient vectors
+  acf1<-c(acf1,acf(dsub$gambled,lag.max=5,plot = FALSE)$acf[2])
+  acf2<-c(acf2,acf(dsub$gambled,lag.max=5,plot = FALSE)$acf[3])
+  acf3<-c(acf3,acf(dsub$gambled,lag.max=5,plot = FALSE)$acf[4])
+  acf4<-c(acf4,acf(dsub$gambled,lag.max=5,plot = FALSE)$acf[5])
+  acf5<-c(acf5,acf(dsub$gambled,lag.max=5,plot = FALSE)$acf[6])
+  
   #Making df of gambleSlopes, rtSlopes, and i (who was just analyzed)
   
   rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
@@ -1380,6 +1450,9 @@ summaryOddsFilter=FALSE
  d5<-dgamble[dgamble$uniqueid %in% oddsN,]
  d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
+
+#This is if you want intersection of two groups
+d5<-dgamble[dgamble$uniqueid %in% intersect(failCatchId,oddsN),]
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -2068,6 +2141,8 @@ abline(m1)
 #People who gambled a lot
 highGamblers<-filter(dBehavioral,percentageGambled>60)$uniqueid
 lowGamblers<-filter(dBehavioral,percentageGambled<30)$uniqueid
+
+highInterest<-filter(dsurvey,interest>7)$uniqueid
 
 
 
