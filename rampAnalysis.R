@@ -18,6 +18,7 @@ library(mosaic)
 library(plotrix)
 library(VennDiagram)
 source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
@@ -669,6 +670,7 @@ plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),main=paste("Group data; total dat
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']+(as.numeric(dRT[i,'sdSpeed']))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']-(as.numeric(dRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
 }
+
 #Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant)
 d2p$binsTime<-as.factor(d2p$binsTime)
 d2poster<-d2p
@@ -712,8 +714,17 @@ pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+
 pRT
 
 
+#Another way of getting interesting graph once you have d2p (summarize by uniqueid and bins Time)
+dTest<-d2p %>%
+  group_by(seconds) %>%
+  summarise(meanPercentageGambled=mean(percentageGambled),
+            medianPercentageGambled=median(percentageGambled),
+            sdPercentageGambled=sd(percentageGambled),
+            stdPercentageGambled=std.error(percentageGambled))
 
-
+plot(dTest$seconds,dTest$medianPercentageGambled,xlim = c(0,7.5),ylim = c(35,50),
+     main=paste("Propensity to gamble vs. gamble interruption time"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
@@ -748,16 +759,18 @@ dlow2<-dlow %>%
             sdRT=sd(setdiff(gambleRT,0)))
 dlow2$seconds<-dlow2$binsTime
 
+
 #Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
 plot(dlow2$seconds,dlow2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
      main=paste("Low mag; Gamble propensity; n =",toString(sum(dlow2$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
+
 #Plotting RTs with sd
 dlowRT<-filter(dlow,response=='gamble') %>%
   group_by(binsTime) %>%
   summarise(medianRT=mean(gambleRT),
-            sdRT=sd(gambleRT),
+            sdRT=std.error(gambleRT),
             medianSpeed=mean(NgambleRT),
             sdSpeed=sd(NgambleRT),
             medianRtz=median(gambleRTz),
@@ -768,9 +781,10 @@ plot(dlowRT$seconds,dlowRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Gr
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 
 
-#for(i in 1:length(dlowRT$seconds)){
-#  arrows(as.numeric(dlowRT$seconds[i]),as.numeric(dlowRT[i,2]+(as.numeric(dlowRT[i,3]))),as.numeric(dlowRT$seconds[i]),as.numeric(dlowRT[i,2]-(as.numeric(dlowRT[i,3]))),length=0.05, angle=90, code=3)
-#}
+for(i in 1:length(dlowRT$seconds)){
+  arrows(as.numeric(dlowRT$seconds[i]),as.numeric(dlowRT[i,2]+(as.numeric(dlowRT[i,3]))),as.numeric(dlowRT$seconds[i]),as.numeric(dlowRT[i,2]-(as.numeric(dlowRT[i,3]))),length=0.05, angle=90, code=3)
+}
+gamblePlot(dlow,orig=T,ylimit=c(35,50),title="test")
 #Speed
 #Still need to figure out errorBars
 #plot(dlowRT$seconds,dlowRT$medianSpeed,xlim = c(0,8),ylim=c(),main=paste("Group data; Low mag; median Speed with sd; n =",toString(sum(dlow2$gambleCount)),"trials;"),
