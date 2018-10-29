@@ -550,8 +550,8 @@ dBehavioral<-dgamble %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-
-hist(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall propensity to gamble; n =",toString(nrow(dgamble[dgamble$gambleDelay!=0,]))," possible trials;",nParticipants,"subj"),xlab="Percentage of time gambled")
+#minute
+hist(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall propensity to gamble; n =",toString(nrow(dgamble[dgamble$gambleDelay!=0,]))," possible trials;",nParticipants,"subj"),xlab="Percentage of time gambled",col='red')
 boxplot(dBehavioral$percentageGambled,ylim=c(0,100),main=paste("Distribution of gambling percentages across everyone; mean G % = ",toString(mean(dBehavioral$percentageGambled))),ylab="Percentage gambled (per participant)")
 
 #Remaking behavioral histograms
@@ -749,7 +749,8 @@ dBehavioralLow<-dlow %>%
             percentageGambled=round(gambleCount/trials*100))
 
 #How much did each participant choose to gamble
-hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on low-mag gambles; n =",toString(sum(dBehavioralLow$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on low-mag gambles; n =",toString(sum(dBehavioralLow$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
+
 #RTs histogram
 hist(setdiff(dlow$gambleRT,0),xlim=c(0,1300),breaks=50,main=paste("RT low mag gambles; n =",toString(sum(dBehavioralLow$gambleCount)),"gambled trials;",toString(length(dBehavioralLow$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
@@ -1457,10 +1458,10 @@ t.test(slopeDF$rtSlopes)
 #SUMMARY GRAPHS
 #SUBGROUP 1 - excelsior
 
-summaryMagFilter=FALSE
+summaryMagFilter=F
   summaryMagCond='high'
-summaryOddsFilter=F
-  summaryOddsCond='midp'
+summaryOddsFilter=T
+  summaryOddsCond='highp'
   
 #New way which is better
  d5<-dgamble[dgamble$uniqueid %in% rtn,]
@@ -1472,12 +1473,12 @@ summaryOddsFilter=F
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 
 #This is if you want intersection of two groups
-d5<-dgamble[dgamble$uniqueid %in% intersect(catchSuccessId,highGamblers),]
+#d5<-dgamble[dgamble$uniqueid %in% intersect(catchSuccessId,highGamblers),]
 
 
 
-gamblePlot(d5,orig=T,ylimit=c(40,50),title='Male')
-rtPlot(d5,type='raw',eb='stderr',title="Male")
+gamblePlot(d5,orig=T,ylimit=c(55,75),title='failCatch')
+rtPlot(d5,type='raw',eb='stderr',title="failCatch")
 
 
 
