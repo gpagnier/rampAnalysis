@@ -2191,3 +2191,9 @@ t.test((1/rtsub1$outcomeRT),(1/rtsub2$outcomeRT))
 
 d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
 
+hist(acf1,breaks=50,main="ACF constants for each participant, lag of 1",xlim=c(-1,1))
+hist(acf2,breaks=50,main="ACF constants for each participant, lag of 2",xlim=c(-1,1))
+hist(acf3,breaks=50,main="ACF constants for each participant, lag of 3",xlim=c(-1,1))
+hist(acf4,breaks=50,main="ACF constants for each participant, lag of 4",xlim=c(-1,1))
+hist(acf5,breaks=50,main="ACF constants for each participant, lag of 5",xlim=c(-1,1))
+
