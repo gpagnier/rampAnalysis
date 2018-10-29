@@ -19,6 +19,7 @@ library(plotrix)
 library(VennDiagram)
 source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
 source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
@@ -550,7 +551,7 @@ dBehavioral<-dgamble %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 
-hist(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall propensity to gamble; n =",toString(sum(dBehavioral$trials))," possible trials;",nParticipants,"subj"),xlab="Percentage of time gambled")
+hist(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall propensity to gamble; n =",toString(nrow(dgamble[dgamble$gambleDelay!=0,]))," possible trials;",nParticipants,"subj"),xlab="Percentage of time gambled")
 boxplot(dBehavioral$percentageGambled,ylim=c(0,100),main=paste("Distribution of gambling percentages across everyone; mean G % = ",toString(mean(dBehavioral$percentageGambled))),ylab="Percentage gambled (per participant)")
 
 #Remaking behavioral histograms
@@ -670,6 +671,7 @@ plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),main=paste("Group data; total dat
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']+(as.numeric(dRT[i,'sdSpeed']))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']-(as.numeric(dRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
 }
+rtPlot(d,type="speed",eb='stderr',ylimit=c(600,900))
 
 #Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant)
 d2p$binsTime<-as.factor(d2p$binsTime)
@@ -725,6 +727,7 @@ dTest<-d2p %>%
 plot(dTest$seconds,dTest$medianPercentageGambled,xlim = c(0,7.5),ylim = c(35,50),
      main=paste("Propensity to gamble vs. gamble interruption time"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
+gamblePlot(d,orig=T,eb='stderr',ylimit=c(40,50))
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
@@ -744,47 +747,35 @@ dBehavioralLow<-dlow %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
+
 #How much did each participant choose to gamble
 hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on low-mag gambles; n =",toString(sum(dBehavioralLow$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 #RTs histogram
 hist(setdiff(dlow$gambleRT,0),xlim=c(0,1300),breaks=50,main=paste("RT low mag gambles; n =",toString(sum(dBehavioralLow$gambleCount)),"gambled trials;",toString(length(dBehavioralLow$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
-dlow2<-dlow %>% 
-  group_by(binsTime) %>% 
-  summarise(trials=length(trialNumber),
-            gambleCount=sum(response=="gamble"),
-            didNotGamble=sum(response=="fail"|response=="success"),
-            percentageGambled=round(gambleCount/trials*100),
-            medianRT=median(setdiff(gambleRT,0)),
-            sdRT=sd(setdiff(gambleRT,0)))
-dlow2$seconds<-dlow2$binsTime
-
-
-#Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
-plot(dlow2$seconds,dlow2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
-     main=paste("Low mag; Gamble propensity; n =",toString(sum(dlow2$gambleCount)),"trials;"),
-     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
-
+gamblePlot(dlow,orig=T,ylimit=c(35,50),title="Low Mag")
+gamblePlot(dlow,orig=F,eb='sem',ylimit=c(35,50),title="Low Mag")
+rtPlot(dlow,type="raw",eb="stderr")
 
 #Plotting RTs with sd
 dlowRT<-filter(dlow,response=='gamble') %>%
   group_by(binsTime) %>%
   summarise(medianRT=mean(gambleRT),
-            sdRT=std.error(gambleRT),
+            sterrRT=std.error(gambleRT),
             medianSpeed=mean(NgambleRT),
             sdSpeed=sd(NgambleRT),
             medianRtz=median(gambleRTz),
             sdRtz=sd(gambleRTz))
 
 dlowRT$seconds<-dlowRT$binsTime
-plot(dlowRT$seconds,dlowRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; Low mag; median RT with sd; n =",toString(sum(dlow2$gambleCount)),"trials;"),
+plot(dlowRT$seconds,dlowRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; Low mag; median RT with stderr; n =",toString(sum(dlow2$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 
 
 for(i in 1:length(dlowRT$seconds)){
   arrows(as.numeric(dlowRT$seconds[i]),as.numeric(dlowRT[i,2]+(as.numeric(dlowRT[i,3]))),as.numeric(dlowRT$seconds[i]),as.numeric(dlowRT[i,2]-(as.numeric(dlowRT[i,3]))),length=0.05, angle=90, code=3)
 }
-gamblePlot(dlow,orig=T,ylimit=c(35,50),title="test")
+
 #Speed
 #Still need to figure out errorBars
 #plot(dlowRT$seconds,dlowRT$medianSpeed,xlim = c(0,8),ylim=c(),main=paste("Group data; Low mag; median Speed with sd; n =",toString(sum(dlow2$gambleCount)),"trials;"),
@@ -811,37 +802,26 @@ hist(dBehavioralMid$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main
 #RTs histogram
 hist(setdiff(dmid$gambleRT,0),xlim=c(0,1200),breaks=50,main=paste("RT mid mag gambles; n =",toString(sum(dBehavioralMid$gambleCount)),"gambled trials; ",toString(length(dBehavioralLow$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
-dmid2<-dmid %>% 
-  group_by(binsTime) %>% 
-  summarise(trials=length(trialNumber),
-            gambleCount=sum(response=="gamble"),
-            didNotGamble=sum(response=="fail"|response=="success"),
-            percentageGambled=round(gambleCount/trials*100),
-            medianRT=median(setdiff(gambleRT,0)),
-            sdRT=sd(setdiff(gambleRT,0)))
-dmid2$seconds<-dmid2$binsTime
-
-#Interesting plot of gambleDelay vs propensity to gamble. Add sds? May be meaningless..
-plot(dmid2$seconds,dmid2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
-     main=paste("Mid mag; Gamble propensity; n =",toString(sum(dmid2$gambleCount)),"trials;"),
-     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
-
+gamblePlot(dmid,orig=T,ylimit=c(40,50),title='Mid Mag')
+gamblePlot(dmid,orig=F,eb='sem',ylimit=c(40,50),title='Mid Mag')
+rtPlot(dmid,type='raw',eb='stderr',title="Mid Mag")
 #Plotting RTs with sd
 dmidRT<-filter(dmid,gambleRT!=0) %>%
   group_by(binsTime) %>%
   summarise(medianRT=median(gambleRT),
-            sdRT=sd(gambleRT),
+            sterrRT=std.error(gambleRT),
             medianSpeed=median(NgambleRT),
             sdSpeed=sd(NgambleRT),
             medianRtz=median(gambleRTz),
             sdRtz=sd(gambleRTz))
 
 dmidRT$seconds<-dmidRT$binsTime
-plot(dmidRT$seconds,dmidRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; Mid mag; median RT with sd; n =",toString(sum(dmid2$gambleCount)),"trials;"),
+plot(dmidRT$seconds,dmidRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; Mid mag; median RT with stderr; n =",toString(length(dmid$response[dmid$response=='gamble'])),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-# for(i in 1:length(dmidRT$seconds)){
-#   arrows(as.numeric(dmidRT$seconds[i]),as.numeric(dmidRT[i,'medianRT']+(as.numeric(dmidRT[i,'sdRT']))),as.numeric(dmidRT$seconds[i]),as.numeric(dmidRT[i,'medianRT']-(as.numeric(dmidRT[i,'sdRT']))),length=0.05, angle=90, code=3)
-# }
+ for(i in 1:length(dmidRT$seconds)){
+   arrows(as.numeric(dmidRT$seconds[i]),as.numeric(dmidRT[i,'medianRT']+(as.numeric(dmidRT[i,'sterrRT']))),as.numeric(dmidRT$seconds[i]),as.numeric(dmidRT[i,'medianRT']-(as.numeric(dmidRT[i,'sterrRT']))),length=0.05, angle=90, code=3)
+ }
+rtPlotFun(dmid,type='raw',eb='stderr',line=T)
 #Speed
 #Still need to figure out errorBars / how to average
 #plot(dmidRT$seconds,dmidRT$medianSpeed,xlim = c(0,8),ylim=c(),main=paste("Group data; Mid mag; median Speed with sd; n =",toString(sum(dmidRT$gambleCount)),"trials;"),
@@ -885,19 +865,19 @@ dhigh2$seconds<-dhigh2$binsTime
 plot(dhigh2$seconds,dhigh2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
      main=paste("High mag; Gamble propensity; n =",toString(sum(dhigh2$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
-
+gamblePlot(dhigh,orig=F,eb='sem',ylimit=c(35,50),title='High Mag')
 #Plotting RTs with sd
 dhighRT<-filter(dhigh,response=='gamble') %>%
   group_by(binsTime) %>%
   summarise(medianRT=median(gambleRT),
-            sdRT=sd(gambleRT),
+            sterrRT=std.error(gambleRT),
             medianSpeed=median(NgambleRT),
             sdSpeed=sd(NgambleRT),
             medianRtz=median(gambleRTz),
             sdRtz=sd(gambleRTz))
 
 dhighRT$seconds<-dhighRT$binsTime
-plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; High mag; median RT with sd; n =",toString(sum(dhigh2$gambleCount)),"trials;"),
+plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; High mag; median RT with sterr; n =",toString(sum(dhigh2$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 #for(i in 1:length(dhighRT$seconds)){
 #  arrows(as.numeric(dhighRT$seconds[i]),as.numeric(dhighRT[i,'medianRT']+(as.numeric(dhighRT[i,'sdRT']))),as.numeric(dhighRT$seconds[i]),as.numeric(dhighRT[i,'medianRT']-(as.numeric(dhighRT[i,'sdRT']))),length=0.05, angle=90, code=3)
@@ -912,7 +892,8 @@ plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("
 
 
 
-
+gamblePlot(dhigh,orig=T,ylimit=c(40,50),title='High Mag')
+rtPlot(dhigh,type='raw',eb='stderr',title="High Mag")
 
 
 
@@ -959,6 +940,8 @@ plot(dlow2p$seconds,dlow2p$percentageGambled,xlim = c(0,8),ylim = c(15,30),
      main=paste("Low odds; Gamble propensity; n =",toString(sum(dlow2p$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
+gamblePlot(dlowp,orig=T,eb='sem',ylimit=c(15,30),title='Low Value Trials')
+gamblePlot(dlowp,orig=F,eb='sem',ylimit=c(0,100),title='Low Value Trials')
 #Plotting RTs with sd
 dlowpRT<-filter(dlowp,response=='gamble') %>%
   group_by(binsTime) %>%
@@ -983,6 +966,9 @@ plot(dlowpRT$seconds,dlowpRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("
 #  arrows(as.numeric(dlowpRT$seconds[i]),as.numeric(dlowpRT[i,'medianSpeed']+(as.numeric(dlowpRT[i,'sdSpeed']))),as.numeric(dlowpRT$seconds[i]),as.numeric(dlowpRT[i,'medianSpeed']-(as.numeric(dlowpRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
 #}
 
+
+gamblePlot(dlowp,orig=T,ylimit=c(20,30),title='Low value')
+rtPlot(dlowp,type='raw',eb='stderr',title="Low value")
 
 
 
@@ -1018,6 +1004,8 @@ dmid2p$seconds<-dmid2p$binsTime
 plot(dmid2p$seconds,dmid2p$percentageGambled,xlim = c(0,8),ylim = c(35,50),
      main=paste("Mid odds; Gamble propensity; n =",toString(sum(dmid2p$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+gamblePlot(dmidp,orig=T,ylimit=c(35,50))
+gamblePlot(dmidp,orig=F,eb='sem',ylimit=c(35,50))
 
 #Plotting RTs with sd
 dmidpRT<-filter(dmidp,response=='gamble') %>%
@@ -1042,6 +1030,13 @@ plot(dmidpRT$seconds,dmidpRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("
 # for(i in 1:length(dmidpRT$seconds)){
 #   arrows(as.numeric(dmidpRT$seconds[i]),as.numeric(dmidpRT[i,'medianSpeed']+(as.numeric(dmidpRT[i,'sdSpeed']))),as.numeric(dmidpRT$seconds[i]),as.numeric(dmidpRT[i,'medianSpeed']-(as.numeric(dmidpRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
 # }
+
+
+gamblePlot(dmidp,orig=T,ylimit=c(35,50),title='Mid value')
+rtPlot(dmidp,type='raw',eb='stderr',title="Mid value")
+
+
+
 
 
 ##High odds
@@ -1075,6 +1070,9 @@ plot(dhigh2p$seconds,dhigh2p$percentageGambled,xlim = c(0,8),ylim = c(60,75),
      main=paste("High odds; Gamble propensity; n =",toString(sum(dhigh2p$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
+gamblePlot(dhighp,orig=T,ylimit=c(60,75))
+gamblePlot(dhighp,orig=F,eb='sem',ylimit=c(40,50))
+
 #Plotting RTs with sd
 dhighpRT<-filter(dhighp,response=='gamble') %>%
   group_by(binsTime) %>%
@@ -1088,6 +1086,11 @@ dhighpRT<-filter(dhighp,response=='gamble') %>%
 dhighpRT$seconds<-dhighpRT$binsTime
 plot(dhighpRT$seconds,dhighpRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; High odds; median RT with sd; n =",toString(sum(dhigh2p$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+
+
+gamblePlot(dhighp,orig=T,ylimit=c(60,75),title='High value')
+rtPlot(dhighp,type='raw',eb='stderr',title="High value")
+
 # for(i in 1:length(dhighpRT$seconds)){
 #   arrows(as.numeric(dhighpRT$seconds[i]),as.numeric(dhighpRT[i,2]+(as.numeric(dhighpRT[i,3]))),as.numeric(dhighpRT$seconds[i]),as.numeric(dhighpRT[i,2]-(as.numeric(dhighpRT[i,3]))),length=0.05, angle=90, code=3)
 # }
@@ -1102,7 +1105,7 @@ plot(dhighpRT$seconds,dhighpRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste
 #####################################################################################
 #RPE
 #Change the 3 here to whatever you want to do and just rerun it; it's a lot simpler
-drpe<-filter(dgamble,dgamble$rpe3>0)
+drpe<-filter(dgamble,dgamble$rpe2<0)
 c("Number of trials that they gambled on: ",length(drpe$gambleRT[drpe$gambleRT!=0]))
 c("Number of trials that they had the chance to gamble on: ",length(drpe$gambleDelay))
 #By uniqueId
@@ -1113,7 +1116,7 @@ dBehavioralRpe<-drpe %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 #How much did each participant choose to gamble
-hist(dBehavioralRpe$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on RPE mag gambles; n =",toString(sum(dBehavioralRpe$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+hist(dBehavioralRpe$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on low RPE gambles; n =",toString(sum(dBehavioralRpe$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 #RTs histogram
 hist(setdiff(drpe$gambleRT,0),xlim=c(0,1200),breaks=50,main=paste("RT RPE mag gambles; n =",toString(sum(dBehavioralRpe$gambleCount)),"gambled trials;",toString(length(dBehavioralRpe$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
@@ -1131,6 +1134,7 @@ drpe2$seconds<-drpe2$binsTime
 plot(drpe2$seconds,drpe2$percentageGambled,xlim = c(0,8),ylim = c(20,35),
      main=paste("RPE mag; Gamble propensity; n =",toString(sum(drpe2$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+gamblePlot(drpe,orig=F,eb='sem',title='RPE',ylimit=c(40,50))
 
 #Plotting RTs with sd
 drpeRT<-filter(drpe,response=='gamble') %>%
@@ -1156,6 +1160,8 @@ plot(drpeRT$seconds,drpeRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Gr
 #  arrows(as.numeric(drpeRT$seconds[i]),as.numeric(drpeRT[i,'medianSpeed']+(as.numeric(drpeRT[i,'sdSpeed']))),as.numeric(drpeRT$seconds[i]),as.numeric(drpeRT[i,'medianSpeed']-(as.numeric(drpeRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
 #}
 
+gamblePlot(drpe,orig=T,ylimit=c(35,50),title='Low rpe')
+rtPlot(drpe,type='raw',eb='stderr',title="Low rpe")
 
 
 #####################################################################################################################################################################################################################################################################################################################
@@ -1446,27 +1452,34 @@ t.test(slopeDF$rtSlopes)
 
 ########Looking into subsets of participants, high mag preferetial, odds, etc.
 
-
+#Shenhav1
 #THIS IS WHATEVER SUBGROUP YOU WANT TO LOOK AT
 #SUMMARY GRAPHS
 #SUBGROUP 1 - excelsior
 
 summaryMagFilter=FALSE
   summaryMagCond='high'
-summaryOddsFilter=FALSE
-  summaryOddsCond='highp'
+summaryOddsFilter=F
+  summaryOddsCond='midp'
   
 #New way which is better
  d5<-dgamble[dgamble$uniqueid %in% rtn,]
 # d5<-dgamble[dgamble$uniqueid %in% Participants,]
  d5<-dgamble[dgamble$uniqueid %in% intN,]
  d5<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
- d5<-dgamble[dgamble$uniqueid %in% oddsN,]
+ d5<-dgamble[dgamble$uniqueid %in% male,]
  d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 
 #This is if you want intersection of two groups
-d5<-dgamble[dgamble$uniqueid %in% intersect(failCatchId,oddsN),]
+d5<-dgamble[dgamble$uniqueid %in% intersect(catchSuccessId,highGamblers),]
+
+
+
+gamblePlot(d5,orig=T,ylimit=c(40,50),title='Male')
+rtPlot(d5,type='raw',eb='stderr',title="Male")
+
+
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1603,6 +1616,10 @@ summaryOddsCond='highp'
 # d5prime<-dgamble[dgamble$uniqueid %in% fail5,]
 # d5prime<-dgamble[dgamble$uniqueid %in% truehigh,]
 
+ gamblePlot(d5prime,orig=T,ylimit=c(40,55),title='failedCatch')
+ rtPlot(d5prime,type='raw',eb='stderr',title="failedCatch")
+ 
+ 
 d5prime<-filter(d5prime,gamblePrevTrial==1) 
  
 #This filters summary d5prime by odds/mag if specified above via T/F
@@ -1709,20 +1726,20 @@ abline(v=median(rtall$gambleRT),col="red",lwd=2)
 hist(rtsub2$gambleRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
 abline(v=median(rtsub2$gambleRT),col="blue",lwd=2)
 t.test((1/rtsub1$gambleRT),(1/rtsub2$gambleRT))
-
+#Shenhav2
 #Venn diagram between all all participants, d5, and d5prime
 grid.newpage()
 draw.triple.venn(area1=length(Participants),area2=length(unique(d5$uniqueid)),area3=length(unique(d5prime$uniqueid)),
                  n12=length(intersect(Participants,unique(d5$uniqueid))),n23=length(intersect(unique(d5$uniqueid),unique(d5prime$uniqueid))),
                  n13=length(intersect(Participants,unique(d5prime$uniqueid))),n123=length(intersect(intersect(Participants,unique(d5$uniqueid)),unique(d5prime$uniqueid))),
-                 fill=c(' cornflower blue',"red","springgreen"),category=c("All participants","GambleRampers","ParticipantsFailedCatch"),
+                 fill=c(' cornflower blue',"red","springgreen"),category=c("All participants","highGamblers","ParticipantsFailedCatch"),
                    alpha=c(.3,.3,.3),cat.pos=c(0,0,0))
 
 
 ##############################################################################################################################
 ##############################################################################################################################
 
-#excelsior2
+#shenhav3
 #Looping through subgroups to get INDIVIDUAL graphs 
 #indivd5<-failCatchId
 
@@ -1746,7 +1763,7 @@ MagFilter<-FALSE
 
   
 #Subgroup 1
-for(i in intN){
+for(i in male){
   print(i)
   dsub<-filter(d,uniqueid==i)
   
@@ -1872,7 +1889,7 @@ subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
  # indivd5prime<-intN
 
   subplotRT=FALSE
-  subplotGD=TRUE
+  subplotGD=F
   soddsN=NULL
   oddsScoreKnob=FALSE
   magScoreKnob=FALSE
@@ -2036,10 +2053,13 @@ subslope2DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 # }else {
 #   disp("error????")
 # }
-
+#Shenhav4
 #Subplot dot plot
 #Adding colors to overall plot of gambleSlopes (only 1 of the two subgroups)
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=131 failCatch (n=82) highlighted',xlim=c(-1,1),ylim=c(-90,50))
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=131 male (n=73) highlighted',xlim=c(-1,1),ylim=c(-90,50))
+abline(v=0,col='black')
+abline(h=0,col='black')
+
 par(new=TRUE)
 plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
 abline(v=0,col="blue")
@@ -2158,7 +2178,7 @@ lowGamblers<-filter(dBehavioral,percentageGambled<30)$uniqueid
 
 highInterest<-filter(dsurvey,interest>7)$uniqueid
 
-
+male<-filter(dsurvey,gender==1)$uniqueid
 
 #This plots the two subgroups histograms against one another
 par(new=FALSE)
