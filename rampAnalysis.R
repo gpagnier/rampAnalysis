@@ -17,13 +17,13 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 #d0<-read.csv(file="C:/Users//Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -1446,7 +1446,7 @@ summary(m1)
 par(bty="7")
 hist(slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Frequency',pch=16,cex=0.8,main='Individual Gamble slopes; n=88',
      breaks=50,xlim=c(-.7,.7),bty='7',col='black')
-abline(v=0,col="green")
+abline(v=0,col="black")
 t.test(slopeDF$gambleSlopes)
 
 
@@ -1455,7 +1455,7 @@ t.test(slopeDF$gambleSlopes)
 #POSTER graph
 #POSTER5
 hist(slopeDF$rtSlopes,xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,main='Individual RT slopes; n=88',breaks=50,xlim=c(-150,150),col='black')
-abline(v=0,col="blue")
+abline(v=0,col="black")
 t.test(slopeDF$rtSlopes)
 
 
@@ -1603,7 +1603,7 @@ draw.pairwise.venn(length(Participants),length(unique(d5$uniqueid)),length(uniqu
                    alpha=c(.5,.5),cat.pos=c(0,0),cat.dist=rep(-0.025,2))
 
 hist(rtall$outcomeRT,col=rgb(1,0,0,0.5), main='RTs when accepting sure thing', xlab='RT',breaks=40,xlim=c(0,1300))
-abline(v=median(rtall$outcomeRT),col="red",lwd=2)
+abline(v=median(rtall$outcomeRT),col="black",lwd=2)
 hist(rtsub$outcomeRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
 abline(v=median(rtsub$outcomeRT),col="blue",lwd=2)
 t.test((1/rtall$outcomeRT),(1/rtsub$outcomeRT))
@@ -1901,11 +1901,11 @@ for(i in failCatchId){
 
   
 #sfnhist
-#subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
+subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 par(bty="7")
-hist(subslope1DF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Frequency',pch=16,cex=0.8,main='Individual Gamble slopes; FailCatch; n=82',
+hist(subslope1DF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Frequency',pch=16,cex=0.8,main='Individual Gamble slopes; SuccessCatch; n=58',
      breaks=50,xlim=c(-1,1),bty='7',col='black')
-
+abline(v=0,col='black')
 
 par(new=T)
 
@@ -1913,8 +1913,9 @@ hist(subslope1DF$gambleSlopes[subslope1DF$gambleSlopes>0],pch=16,cex=0.8,
      breaks=50,xlim=c(-1,1),bty='7',col='green',axes=F,xlab="",ylab="",main="")
 
 par(bty="7")
-hist(subslope1DF$rtSlopes,xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,main='Individual RT slopes; n=88',breaks=50,xlim=c(-100,100),col='black')
-
+hist(subslope1DF$rtSlopes,xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,
+     main='Individual RT slopes; n=58',breaks=50,xlim=c(-100,100),col='black')
+abline(v=0,col='black')
 par(new=T)
 hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,main='Individual RT slopes; n=88',breaks=50,xlim=c(-100,100),col='green')
 
@@ -1939,14 +1940,14 @@ hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms
   subslope2DF<-NULL
 
   #Want to look at subgroups of participants?
-  oddsFilter<-FALSE
+  oddsFilter<-T
   subOddsCond<-'highp'
-  MagFilter<-FALSE
+  MagFilter<-F
   subMagCond<-'low'
 
 
 #Subgroup 2
-for(i in catchSuccessId){
+for(i in failCatchId){
     print(i)
     dsub<-filter(d,uniqueid==i)
 
@@ -2059,38 +2060,38 @@ subslope2DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 
 
 
-# #Making vectors for barplots of gambleSlopes and RTslopes
-# if(oddsFilter & subOddsCond=='lowp'){
-#   lowvaluegambleslopes<-subslope2DF$gambleSlopes
-#   lowvaluertslopes<-subslope2DF$rtSlopes
-#   lowvaluegamblepropensity<-subslope2DF$gambleMeans
-# }else if(oddsFilter & subOddsCond=='midp'){
-#   midvaluegambleslopes<-subslope2DF$gambleSlopes
-#   midvaluertslopes<-subslope2DF$rtSlopes
-#   midvaluegamblepropensity<-subslope2DF$gambleMeans
-# }else if(oddsFilter & subOddsCond=='highp'){
-#   highvaluegambleslopes<-subslope2DF$gambleSlopes
-#   highvaluertslopes<-subslope2DF$rtSlopes
-#   highvaluegamblepropensity<-subslope2DF$gambleMeans
-# }else if(MagFilter & subMagCond=='low'){
-#   lowmaggambleslopes<-subslope2DF$gambleSlopes
-#   lowmagrtslopes<-subslope2DF$rtSlopes
-#   lowmaggamblepropensity<-subslope2DF$gambleMeans
-# }else if(MagFilter & subMagCond=='mid'){
-#   midmaggambleslopes<-subslope2DF$gambleSlopes
-#   midmagrtslopes<-subslope2DF$rtSlopes
-#   midmaggamblepropensity<-subslope2DF$gambleMeans
-# }else if(MagFilter & subMagCond=='high'){
-#   highmaggambleslopes<-subslope2DF$gambleSlopes
-#   highmagrtslopes<-subslope2DF$rtSlopes
-#   highmaggamblepropensity<-subslope2DF$gambleMeans
-# }else if (MagFilter==FALSE & oddsFilter==FALSE){
-#   totalgambleslopes<-subslope2DF$gambleSlopes
-#   totalrtslopes<-subslope2DF$rtSlopes
-#   totalgamblepropensity<-subslope2DF$gambleMeans
-# }else {
-#   disp("error????")
-# }
+#Making vectors for barplots of gambleSlopes and RTslopes
+if(oddsFilter & subOddsCond=='lowp'){
+  lowvaluegambleslopes<-subslope2DF$gambleSlopes
+  lowvaluertslopes<-subslope2DF$rtSlopes
+  lowvaluegamblepropensity<-subslope2DF$gambleMeans
+}else if(oddsFilter & subOddsCond=='midp'){
+  midvaluegambleslopes<-subslope2DF$gambleSlopes
+  midvaluertslopes<-subslope2DF$rtSlopes
+  midvaluegamblepropensity<-subslope2DF$gambleMeans
+}else if(oddsFilter & subOddsCond=='highp'){
+  highvaluegambleslopes<-subslope2DF$gambleSlopes
+  highvaluertslopes<-subslope2DF$rtSlopes
+  highvaluegamblepropensity<-subslope2DF$gambleMeans
+}else if(MagFilter & subMagCond=='low'){
+  lowmaggambleslopes<-subslope2DF$gambleSlopes
+  lowmagrtslopes<-subslope2DF$rtSlopes
+  lowmaggamblepropensity<-subslope2DF$gambleMeans
+}else if(MagFilter & subMagCond=='mid'){
+  midmaggambleslopes<-subslope2DF$gambleSlopes
+  midmagrtslopes<-subslope2DF$rtSlopes
+  midmaggamblepropensity<-subslope2DF$gambleMeans
+}else if(MagFilter & subMagCond=='high'){
+  highmaggambleslopes<-subslope2DF$gambleSlopes
+  highmagrtslopes<-subslope2DF$rtSlopes
+  highmaggamblepropensity<-subslope2DF$gambleMeans
+}else if (MagFilter==FALSE & oddsFilter==FALSE){
+  totalgambleslopes<-subslope2DF$gambleSlopes
+  totalrtslopes<-subslope2DF$rtSlopes
+  totalgamblepropensity<-subslope2DF$gambleMeans
+}else {
+  disp("error????")
+}
 
 #sfn3
 #Subplot dot plot
@@ -2133,7 +2134,7 @@ sds<-c(rep(sd(successfulCatchM$gambleSlopes),length(successfulCatchM$gambleSlope
 #Gamble propensity does though - Mag
 bpCol<- rgb(200, 200, 200, max = 255, alpha = 125, names = "blue50")
 magMeans<-c(mean(lowmaggamblepropensity),mean(midmaggamblepropensity),mean(highmaggamblepropensity))
-pg6<-barplot(magMeans,names.arg = c("Low magnitude","Mid magnitude","High magnitude"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol, main="Effect of Magnitude on Gamble propensity")
+pg6<-barplot(magMeans,names.arg = c("Low magnitude","Mid magnitude","High magnitude"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol, main="Effect of Magnitude on Gamble propensity for failCatch (n=82)")
 magSems<-c((std.error(lowmaggamblepropensity)),(std.error(midmaggamblepropensity)),(std.error(highmaggamblepropensity)))
 magSds<-c((sd(lowmaggamblepropensity)),(sd(midmaggamblepropensity)),(sd(highmaggamblepropensity)))
 arrows(pg6,magMeans-magSems,pg6,magMeans+magSems,lwd=2,angle=90,code=3)
@@ -2142,7 +2143,7 @@ arrows(pg6,magMeans-magSems,pg6,magMeans+magSems,lwd=2,angle=90,code=3)
 #To do gamble propensity Value
 #POSTER7
 valueMeans<-c(mean(lowvaluegamblepropensity),mean(midvaluegamblepropensity),mean(highvaluegamblepropensity))
-pg7<-barplot(valueMeans,names.arg = c("Low value","Mid value","High value"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol,main="Effect of Value on Gamble propensity")
+pg7<-barplot(valueMeans,names.arg = c("Low value","Mid value","High value"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol,main="Effect of Value on Gamble propensity for failCatch (n=82)")
 valueSems<-c((sd(lowvaluegamblepropensity)/sqrt(length(lowvaluegamblepropensity))),(sd(midvaluegamblepropensity)/sqrt(length(midvaluegamblepropensity))),(sd(highvaluegamblepropensity)/sqrt(length(highvaluegamblepropensity))))
 valueSds<-c((sd(lowvaluegamblepropensity)),(sd(midvaluegamblepropensity)),(sd(highvaluegamblepropensity)))
 arrows(pg7,valueMeans-valueSems,pg7,valueMeans+valueSems,lwd=2,angle=90,code=3)
