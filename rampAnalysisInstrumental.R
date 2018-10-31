@@ -1,6 +1,6 @@
-###Ramp analysis
-###Rewritten/organized 9.4.2018
-###Updated 10.1.2018
+###Ramp analysis Instrumental
+###Started 10.30
+
 
 #Things to do
 #Get sd bars to work
@@ -23,14 +23,14 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/3rampInstr.csv",sep=",")
 #d0<-read.csv(file="C:/Users//Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
-d0<-d0[5836:length(d0$viewTime),]
+#d0<-d0[5836:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -71,14 +71,14 @@ table(as.integer(dsurvey$design))
 #Gender: 1 male, 2 is female 4: decline to answer
 table(as.integer(dsurvey$gender))
 #interest: 1 is no way; 10 is absolutely yes
-hist(as.integer(dsurvey$interest),breaks=50,ylim=c(0,100),main="interest; 10 is very interesting")
+hist(as.integer(dsurvey$interest),breaks=50,ylim=c(0,100),main="interest; 10 is absolutely")
 
 
 #Warning! CSV needs to be in exact column order:
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
 #Need to replace uniqueid with numbers and clean out columns that aren't useful
-d<-d0[,c("Trialid","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
+d<-d0[,c("Trialid","gambleDelay","gambleRT","ignoreRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
 d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
 d<-subset(d,d$response!="")
 d$engagement<-NULL
@@ -87,7 +87,7 @@ d$length<-NULL
 d$design<-NULL
 d$gender<-NULL
 d$interest<-NULL
-d$expTime
+d$expTime<-NULL
 
 #Adding survey answers
 d2=NULL
@@ -106,7 +106,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=401
+seed=501
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -135,7 +135,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(498)
+removeIds=c()
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -454,7 +454,7 @@ nParticipants
 ##Reaction time
 #Whenever they gambled
 gambleRTs<-d$gambleRT[d$gambleRT!=0]
-hist(gambleRTs,main="Aggregated gamble RTs",breaks=70)
+hist(gambleRTs,main="Aggregated gamble RTs",breaks=700,xlim=c(0,10))
 #Whenever they claimed 'boring' reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
 hist(outcomeRTs,main=c("Aggregated outcome RTs; number of trials:",length(outcomeRTs)),breaks=70)
@@ -511,12 +511,10 @@ dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
 dcatchidFinish<-dcatch[dcatch$Trialid==86,] %>% 
   group_by(uniqueid) %>% 
   summarise(FailTrials=sum(response=="gamble"|response=='earlyFail'))
-imp<-filter(dcatchidFinish,FailTrials>0)$uniqueid
 
 dcatchidGamble<-dcatch[dcatch$Trialid==75,] %>% 
   group_by(uniqueid) %>% 
   summarise(FailTrials=sum(response=="fail"|response=='success'|response=='earlyFail'))
-l<-filter(dcatchidGamble,FailTrials>0)$uniqueid
 
 dcatchscore<-data.frame(dcatchidFinish$uniqueid)
 colnames(dcatchscore)[1]='uniqueid'
@@ -582,8 +580,8 @@ hist(dTrials$ntrials,breaks=50,xlim=c(0,140),main=paste("Number of trials per pa
 #Statistics
 #Logistic regression models to predict gambled
 #Need to figure out which one to use
-mlog<-glm(gambled~contOdds,
-          data=dgamblelate,family="binomial");
+mlog<-glm(gambled~oddsCond+gambleDelay,
+          data=dgamble,family="binomial");
 summary(mlog)
 
 mlog2<-glm(gambled~gambleDelay+oddsCond+interest,
@@ -612,10 +610,10 @@ gamblePlot(d5success,orig=T,title="shouldGamble")
 rtPlot(d5success,type='raw',eb='stderr',ylimit=c(400,1000),title="ShouldGamble")
 
 library(lme4)
- # dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
- #  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
- #           data=dgamble,family="binomial");
- #  summary(mlmerog)
+ dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
+  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
+           data=dgamble,family="binomial");
+  summary(mlmerog)
 
 # d5primegamble[,'oddsCondf'] <- as.factor(d5primegamble[,'oddsCond'])
 # d5primegamble[,'gamblePrevTrialf'] <- as.factor(d5primegamble[,'gamblePrevTrial'])
@@ -674,7 +672,7 @@ abline(lm(d2$percentageGambled~d2$seconds))
 dRT<-filter(dgamble,response=='gamble') %>%
   group_by(binsTime) %>%
   summarise(medianRT=median(gambleRT),
-            sdRT=std.error(gambleRT),
+            sdRT=sd(gambleRT),
             medianSpeed=median(NgambleRT),
             sdSpeed=sd(NgambleRT),
             medianRTz=median(gambleRTz),
@@ -682,20 +680,18 @@ dRT<-filter(dgamble,response=='gamble') %>%
 dRT$seconds<-dRT$binsTime
 summary(m2RT<-glm(dRT$medianRT~dRT$binsTime))
 #This is raw RT
-plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(650,800),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
-rtPlot(d,type="raw",eb='stderr',ylimit=c(600,900))
-
 #This is Speed
 plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),main=paste("Group data; total data; median Speed with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']+(as.numeric(dRT[i,'sdSpeed']))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']-(as.numeric(dRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
 }
-rtPlot(d,type="raw",eb='stderr',ylimit=c(600,900))
+rtPlot(d,type="speed",eb='stderr',ylimit=c(600,900))
 
 #Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant)
 d2p$binsTime<-as.factor(d2p$binsTime)
@@ -731,7 +727,7 @@ summary(lm(d2$percentageGambled~d2$seconds))
 #Andrew2
 pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+
               stat_summary(geom="errorbar",fun.data=mean_se)+theme_bw()+
-              xlim(1,7.5)+ylim(770,790)+xlab("Seconds into trial")+
+              xlim(1,7.5)+ylim(735,825)+xlab("Seconds into trial")+
               ggtitle("Total group data; Reaction Time; n = 13654 trials; 121 participants")+ylab("Mean RT")+
               theme(plot.title = element_text(hjust = 0.5,face="bold",size=14))+
               geom_smooth(method='lm',se=FALSE,color='black',size=.4)+
@@ -740,7 +736,7 @@ pRT<-ggplot(d2p,aes(seconds,medianRT))+stat_summary(geom="point",fun.y=mean)+
 pRT
 
 
-#Another way of getting interesting gamble graph once you have d2p (summarize by uniqueid and bins Time)
+#Another way of getting interesting graph once you have d2p (summarize by uniqueid and bins Time)
 dTest<-d2p %>%
   group_by(seconds) %>%
   summarise(meanPercentageGambled=mean(percentageGambled),
@@ -1209,7 +1205,7 @@ highOdds<-c(31:36)
 
 ####The following is to just get one participant's data
 #INDIVIDUAL
-p=370
+p=504
 
 plotZscore<-FALSE
 
@@ -1418,8 +1414,6 @@ oddsN<-oddsN[(length(oddsN)/2):(length(oddsN))]
 #POSTER graph
 #POSTER3
 
-par(bty='n')
-box(which="plot",lty='solid')
 plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=141',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 abline(v=0,col="black")
 abline(h=0,col="black")
@@ -1446,7 +1440,7 @@ summary(m1)
 par(bty="7")
 hist(slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Frequency',pch=16,cex=0.8,main='Individual Gamble slopes; n=88',
      breaks=50,xlim=c(-.7,.7),bty='7',col='black')
-abline(v=0,col="green")
+abline(v=0,col="blue")
 t.test(slopeDF$gambleSlopes)
 
 
@@ -1488,7 +1482,7 @@ summaryMagFilter=F
   summaryMagCond='high'
 summaryOddsFilter=F
   summaryOddsCond='highp'
-#sfn1  
+  
 #New way which is better
  d5<-dgamble[dgamble$uniqueid %in% rtn,]
 # d5<-dgamble[dgamble$uniqueid %in% Participants,]
@@ -1497,15 +1491,14 @@ summaryOddsFilter=F
  d5<-dgamble[dgamble$uniqueid %in% male,]
  d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
-d5<-dgamble[dgamble$uniqueid %in% imp,]
 
 #This is if you want intersection of two groups
 #d5<-dgamble[dgamble$uniqueid %in% inters bect(catchSuccessId,highGamblers),]
 
 
 d5gamble<-filter(d5,gambleDelay!=0)
-gamblePlot(d5,orig=T,ylimit=c(35,50),title='catchSuccess',line=T)
-rtPlot(d5,type='raw',eb='stderr',title='catchSuccess',ylimit=c(600,900),line=T)
+gamblePlot(d5,orig=T,ylimit=c(55,75),title='failCatch')
+rtPlot(d5,type='raw',eb='stderr',title="failCatch")
 
 
 
@@ -1547,7 +1540,7 @@ d52$seconds<-d52$binsTime
       main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount))," gambled trials;"),
       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(50,70),
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(40,75),
      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1569,12 +1562,14 @@ d5behavioralHigh<-d5high %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
+
 d5behavioralLow<-d5low %>% 
   group_by(uniqueid) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
+
 oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
 oddsScore
 
@@ -1635,15 +1630,15 @@ summaryOddsCond='highp'
 # d5prime<-dgamble[dgamble$uniqueid %in% rtn,]
 # d5prime<-dgamble[dgamble$uniqueid %in% Participants,]
 # d5prime<-dgamble[dgamble$uniqueid %in% intN,]
- d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
+# d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 # d5prime<-dgamble[dgamble$uniqueid %in% oddsN,]
 # d5prime<-dgamble[dgamble$uniqueid %in% highGamblers,]
-#d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
+ d5prime<-dgamble[dgamble$uniqueid %in% failCatchId,]
 # d5prime<-dgamble[dgamble$uniqueid %in% fail5,]
 # d5prime<-dgamble[dgamble$uniqueid %in% truehigh,]
 
- gamblePlot(d5prime,orig=T,ylimit=c(35,50),title='CatchSuccess')
- rtPlot(d5prime,type='raw',eb='stderr',title="CatchSuccess")
+ gamblePlot(d5prime,orig=T,ylimit=c(40,55),title='failedCatch')
+ rtPlot(d5prime,type='raw',eb='stderr',title="failedCatch")
  
  
 d5prime<-filter(d5prime,gamblePrevTrial==1) 
@@ -1789,7 +1784,7 @@ MagFilter<-FALSE
 
   
 #Subgroup 1
-for(i in failCatchId){
+for(i in male){
   print(i)
   dsub<-filter(d,uniqueid==i)
   
@@ -1900,24 +1895,12 @@ for(i in failCatchId){
 }
 
   
-#sfnhist
-#subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
-par(bty="7")
-hist(subslope1DF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Frequency',pch=16,cex=0.8,main='Individual Gamble slopes; FailCatch; n=82',
-     breaks=50,xlim=c(-1,1),bty='7',col='black')
+  
+subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 
-
-par(new=T)
-
-hist(subslope1DF$gambleSlopes[subslope1DF$gambleSlopes>0],pch=16,cex=0.8,
-     breaks=50,xlim=c(-1,1),bty='7',col='green',axes=F,xlab="",ylab="",main="")
-
-par(bty="7")
-hist(subslope1DF$rtSlopes,xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,main='Individual RT slopes; n=88',breaks=50,xlim=c(-100,100),col='black')
-
-par(new=T)
-hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms/seconds)',ylab='Frequency',pch=16,cex=0.8,main='Individual RT slopes; n=88',breaks=50,xlim=c(-100,100),col='green')
-
+  
+  
+  
   
   
   
@@ -1946,7 +1929,7 @@ hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms
 
 
 #Subgroup 2
-for(i in catchSuccessId){
+for(i in failCatchId){
     print(i)
     dsub<-filter(d,uniqueid==i)
 
@@ -2091,27 +2074,25 @@ subslope2DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 # }else {
 #   disp("error????")
 # }
-
-#sfn3
+#Shenhav4
 #Subplot dot plot
 #Adding colors to overall plot of gambleSlopes (only 1 of the two subgroups)
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants gambleSlopes vs. rtSlopes n=140',xlim=c(-1,1),ylim=c(-90,50),pch=16,col='red')
-
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants n=131 male (n=73) highlighted',xlim=c(-1,1),ylim=c(-90,50))
 abline(v=0,col='black')
 abline(h=0,col='black')
 
 par(new=TRUE)
-plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='red',pch=16)
+plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
+abline(v=0,col="blue")
 par(new=TRUE)
-plot(subslope2DF$rtSlopes~subslope2DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=16)
+plot(subslope2DF$rtSlopes~subslope2DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=18)
 par(new=TRUE)
 plot(fail3df$rtSlopes~fail3df$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='maroon',pch=18)
 par(new=TRUE)
 plot(fail4df$rtSlopes~fail4df$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='orange',pch=18)
 par(new=TRUE)
 plot(fail5df$rtSlopes~fail5df$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='red',pch=18)
-#legend(.5,40,legend=c("1","2","3","4","5"),col=c("blue","green","maroon","orange","red"),title="Number of catch Trials failed",pch=18)
-legend(.5,55,cex=.7, bty = "n",legend=c("Failed at least one catch trial","Passed all the catch trials"),col=c("red","blue"),title="",pch=16)
+legend(.5,40,legend=c("1","2","3","4","5"),col=c("blue","green","maroon","orange","red"),title="Number of catch Trials failed",pch=18)
 
 with(subslope2DF, text(subslope2DF$rtSlopes~subslope2DF$gambleSlopes, labels = subslope2DF$run,cex=.6), pos = 2)
 with(subslope1DF, text(subslope1DF$rtSlopes~subslope1DF$gambleSlopes, labels = subslope1DF$run,cex=.6), pos = 2)
@@ -2237,12 +2218,3 @@ hist(acf3,breaks=50,main="ACF constants for each participant, lag of 3",xlim=c(-
 hist(acf4,breaks=50,main="ACF constants for each participant, lag of 4",xlim=c(-1,1))
 hist(acf5,breaks=50,main="ACF constants for each participant, lag of 5",xlim=c(-1,1))
 
-#sfngprt
-gamblePlot(d,orig=T,eb=F,ylimit=c(35,50),title='All participants',line=T)
-rtPlot(d,type='raw',eb='stderr',title='All participants',ylimit=c(600,900),line=F)
-
-gamblePlot(d5,orig=T,eb=F,ylimit=c(40,55),title='catchFail',line=T)
-rtPlot(d5,type='raw',eb='stderr',title='catchFail',ylimit=c(600,900),line=F)
-
-gamblePlot(d5prime,orig=T,eb=F,ylimit=c(35,50),title='catchSuccess',line=T)
-rtPlot(d5prime,type='raw',eb='stderr',title='catchSuccess',ylimit=c(600,900),line=F)

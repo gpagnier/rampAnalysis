@@ -15,7 +15,7 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
   d2fun$seconds<-d2fun$binsTime
   if(orig){
       plot(d2fun$seconds,d2fun$percentageGambled,xlim = c(0,8),ylim = ylimit,
-       main=paste("Gamble propensity",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
+       main=paste("Gamble propensity",title, "n =",toString(length(data$response[data$response=='gamble'])),
                   "trials;",toString(length(unique(data$uniqueid))),"participants"),
        xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
     if(line){
