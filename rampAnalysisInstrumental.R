@@ -17,20 +17,20 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/3rampInstr.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/20rampInstr.csv",sep=",")
 #d0<-read.csv(file="C:/Users//Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
-#d0<-d0[5836:length(d0$viewTime),]
+
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -127,7 +127,7 @@ d$uniqueID=NULL
 #"trialid" #"expTime" "gambleDelay" "gambleRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
 d[d==""] <- NA
-d$gambleDelay<-d$gambleDelay/1000
+#d$gambleDelay<-d$gambleDelay/1000
 d$binsTime=0;
 
 #Clearing pictures
@@ -179,19 +179,20 @@ a10tail<-unlist(lapply(delayValues[10],tail,1),use.names=FALSE)
 #Manually setting bins
 #For totalRampv3
 #For 6 bins
-a1head<-1.4
-a1tail<-1.999999
-a2head<-2
-a2tail<-2.5
+a1head<-1.75
+a1tail<-2.001
+a2head<-2.002
+a2tail<-2.25
 a3head<-3.75
 a3tail<-3.999999
 a4head<-4
-a4tail<-4.5
+a4tail<-4.25
 a5head<-5.8
-a5tail<-6.24
-a6head<-6.24000000001
-a6tail<-6.8
-
+a5tail<-6.22
+a6head<-6.2200001
+a6tail<-6.5
+a7head<-6.500001
+a7tail<-7.5
 #For 3 bins
 # a1head<-1.4
 # a1tail<-3.5
@@ -216,8 +217,8 @@ binTimeCalc<-function(d,row){
   {return(mean(c(a5head,a5tail)))}
   else if (d[row,'gambleDelay']>=a6head&d[row,'gambleDelay']<=a6tail)
   {return(mean(c(a6head,a6tail)))}
-  # else if (d[row,'gambleDelay']>=a7head&d[row,'gambleDelay']<=a7tail)
-  # {return(mean(c(a7head,a7tail)))}
+  else if (d[row,'gambleDelay']>=a7head&d[row,'gambleDelay']<=a7tail)
+  {return(mean(c(a7head,a7tail)))}
   # else if (d[row,'gambleDelay']>=a8head&d[row,'gambleDelay']<=a8tail)
   # {return(mean(c(a8head,a8tail)))}
   # else if (d[row,'gambleDelay']>=a9head&d[row,'gambleDelay']<=max(d$gambleDelay))
@@ -540,6 +541,10 @@ nParticipants
 #Clearing pictures
 graphics.off()
 
+#Filtering any trials with absurd outliers
+d<-filter(d,gambleRT<5000 & ignoreRT<5000)
+
+
 #Behavioral analyses
 dgamble<-filter(d,gambleDelay!=0)
 
@@ -549,6 +554,7 @@ dBehavioral<-dgamble %>%
             trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
+            ignored=sum(response=="success"&gambleDelay!=0),
             percentageGambled=round(gambleCount/trials*100))
 
 hist(dBehavioral$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall propensity to gamble; n =",toString(nrow(dgamble[dgamble$gambleDelay!=0,]))," possible trials;",nParticipants,"subj"),xlab="Percentage of time gambled",col='red')
@@ -558,6 +564,11 @@ boxplot(dBehavioral$percentageGambled,ylim=c(0,100),main=paste("Distribution of 
 #Whenever they gambled
 gambleRTs<-dgamble$gambleRT[dgamble$gambleRT!=0]
 hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=70)
+c("Numberof trials that they gambled on: ",toString(sum(dBehavioral$gambleCount)))
+
+#Whenever they ignored gamble
+gambleRTs<-dgamble$ignoreRT[dgamble$ignoreRT!=0]
+hist(gambleRTs,main=paste("Aggregated ignore RTs; ",toString(sum(dBehavioral$ignored)),"trials ignored"),breaks=70)
 c("Numberof trials that they gambled on: ",toString(sum(dBehavioral$gambleCount)))
 
 #Whenever they claimed guaranteed reward
@@ -609,11 +620,11 @@ d5success<-filter(d5,Trialid==75)
 gamblePlot(d5success,orig=T,title="shouldGamble")
 rtPlot(d5success,type='raw',eb='stderr',ylimit=c(400,1000),title="ShouldGamble")
 
-library(lme4)
- dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
-  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
-           data=dgamble,family="binomial");
-  summary(mlmerog)
+# library(lme4)
+#  dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
+#   mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
+#            data=dgamble,family="binomial");
+#   summary(mlmerog)
 
 # d5primegamble[,'oddsCondf'] <- as.factor(d5primegamble[,'oddsCond'])
 # d5primegamble[,'gamblePrevTrialf'] <- as.factor(d5primegamble[,'gamblePrevTrial'])
@@ -662,7 +673,7 @@ head(d2p)
 
 #Interesting plot of gambleDelay vs propensity to gamble. NEED TO ADD SDS HERE
 #Andrew1
-plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(25,40),
      main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$trials)),
                 "trials;",toString(length(Participants)),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
@@ -680,7 +691,7 @@ dRT<-filter(dgamble,response=='gamble') %>%
 dRT$seconds<-dRT$binsTime
 summary(m2RT<-glm(dRT$medianRT~dRT$binsTime))
 #This is raw RT
-plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(1500,2500),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
@@ -747,7 +758,9 @@ dTest<-d2p %>%
 plot(dTest$seconds,dTest$medianPercentageGambled,xlim = c(0,7.5),ylim = c(35,50),
      main=paste("Propensity to gamble vs. gamble interruption time"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
-gamblePlot(d,orig=T,eb='stderr',ylimit=c(40,50))
+gamblePlot(d,orig=T,eb='stderr',ylimit=c(30,45))
+rtPlot(d,type='raw',eb='stderr',ylimit=c(1500,2500))
+
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
@@ -1291,8 +1304,8 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
-plotRT=FALSE
-plotGD=FALSE
+plotRT=T
+plotGD=T
 #Add in knobs for different sub categories (though this number is very small....)
 
 #Participants is default (all participants)
@@ -1365,7 +1378,7 @@ for(i in Participants){
   d4RT$seconds<-d4RT$binsTime
   
   if (plotRT){
-    plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
+    plot(d4RT$seconds,d4RT$medianRT,xlim = c(0,8),ylim=c(1500,3500),
          main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
          xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
   }

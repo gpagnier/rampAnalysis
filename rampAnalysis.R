@@ -17,13 +17,15 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/odddsScoreMeanFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/odddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 #d0<-read.csv(file="C:/Users//Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -142,7 +144,7 @@ for(i in removeIds){
 unique(d$uniqueid)
 
 #Where did gambles interrupt
-hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the progress bar?",xlab="Seconds into trial gamble appeared",col='black',ylab="Total number of trials",ylim=c(0,2000))
+hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the progress bar?",xlab="Seconds into trial gamble appeared",col='black',ylab="Total number of trials",ylim=c(0,2500))
 
 
 #How many points do you want on the gambleDelay?
@@ -752,13 +754,23 @@ plot(dTest$seconds,dTest$medianPercentageGambled,xlim = c(0,7.5),ylim = c(35,50)
      main=paste("Propensity to gamble vs. gamble interruption time"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
 gamblePlot(d5,orig=T,eb='sem',ylimit=c(0,100))
-gamblePlot(d,orig=F,eb='sem',ylimit=c(40,60))
-gamblePlot(d5,orig=F,eb='sem',ylimit=c(40,60))
-gamblePlot(d5prime,orig=F,eb='sem',ylimit=c(40,60))
 
+gamblePlot(d,orig=T,eb='sem',ylimit=c(40,55))
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(40,55))
+gamblePlot(d5prime,orig=T,eb='sem',ylimit=c(35,50))
+
+gamblePlot(d,orig=F,eb='',ylimit=c(40,55),line=T)
+gamblePlot(d5,orig=F,eb='',ylimit=c(40,55),line=T)
+gamblePlot(d5prime,orig=F,eb='',ylimit=c(35,50),line=T)
+
+rtPlot(d,type="raw",eb="stderr",ylimit=c(600,800),title="All participants n=140",line=T)
+rtPlot(d5,type="raw",eb="stderr",ylimit=c(600,800),title="failCatch n=87",line=T)
+rtPlot(d5prime,type="raw",eb="stderr",ylimit=c(600,800),,title="successCatch n=53",line=T)
 
 
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
+d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
+
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
@@ -1511,8 +1523,8 @@ d5<-dgamble[dgamble$uniqueid %in% imp,]
 
 
 d5gamble<-filter(d5,gambleDelay!=0)
-gamblePlot(d5,orig=T,ylimit=c(35,50),title='catchSuccess',line=T)
-rtPlot(d5,type='raw',eb='stderr',title='catchSuccess',ylimit=c(600,900),line=T)
+gamblePlot(d5,orig=T,ylimit=c(40,60),title='failCatch',line=T)
+rtPlot(d5,type='raw',eb='stderr',title='failCatch',ylimit=c(600,900),line=F)
 
 
 
@@ -1554,7 +1566,7 @@ d52$seconds<-d52$binsTime
       main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount))," gambled trials;"),
       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(50,70),
+plot(d52$seconds,d52$percentageGambled,xlim = c(0,8),ylim = c(40,60),
      main=paste("Gamble propensity; n =",toString(sum(d52$gambleCount)),"gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1596,32 +1608,36 @@ d6<-filter(d5,response=='gamble')
 
 #Overlaying RT histograms of d over d5 of sure thing and gamble
 #d5 should be defined above
-rtall<-filter(d,response=='success')
-rtsub<-filter(d5,response=='success')
+rtall<-filter(d5,response=='success')
+rtsub<-filter(d5prime,response=='success')
 
 #Making venn diagrams of overlapping participants
 #setdiff(a,b)
 #Things that are in A but not in B
-grid.newpage()
-#draw.single.venn(length(Participants),category="All participants",fill=c('cornflower blue'),alpha=.5)
-grid.newpage()
-draw.pairwise.venn(length(Participants),length(unique(d5$uniqueid)),length(unique(d5$uniqueid)),
-                   fill=c(' cornflower blue',"red"),category=c("All participants","subgroup"),
-                   alpha=c(.5,.5),cat.pos=c(0,0),cat.dist=rep(-0.025,2))
+# grid.newpage()
+# #draw.single.venn(length(Participants),category="All participants",fill=c('cornflower blue'),alpha=.5)
+# grid.newpage()
+# draw.pairwise.venn(length(Participants),length(unique(d5$uniqueid)),length(unique(d5$uniqueid)),
+#                    fill=c(' cornflower blue',"red"),category=c("All participants","subgroup"),
+#                    alpha=c(.5,.5),cat.pos=c(0,0),cat.dist=rep(-0.025,2))
 
-hist(rtall$outcomeRT,col=rgb(1,0,0,0.5), main='RTs when accepting sure thing', xlab='RT',breaks=40,xlim=c(0,1300))
-abline(v=median(rtall$outcomeRT),col="black",lwd=2)
-hist(rtsub$outcomeRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
-abline(v=median(rtsub$outcomeRT),col="blue",lwd=2)
+hist(rtall$outcomeRT,col=rgb(0,0,1,0.5), main='Reaction Times when accepting sure thing', xlab='Reaction Time (ms)',breaks=40,xlim=c(0,800),ylim=c(0,350))
+abline(v=median(rtall$outcomeRT),col="blue",lwd=2)
+hist(rtsub$outcomeRT,col=rgb(1,0,0,0.5), add=T,breaks=40)
+abline(v=median(rtsub$outcomeRT),col="red",lwd=2)
+legend(600,350,cex=.7, bty = "n",legend=c("Failed at least one catch trial","Passed all the catch trials"),col=c("blue","red"),title="",pch=15)
+
 t.test((1/rtall$outcomeRT),(1/rtsub$outcomeRT))
 
-rtall<-filter(d,response=='gamble')
-rtsub<-filter(d5,response=='gamble')
+rtall<-filter(d5,response=='gamble',gambleRT!=0)
+rtsub<-filter(d5prime,response=='gamble',gambleRT!=0)
 
-hist(rtall$gambleRT,col=rgb(1,0,0,0.5), main='RTs when gambling', xlab='RT',breaks=40,xlim=c(0,1300))
-abline(v=median(rtall$gambleRT),col="red",lwd=2)
-hist(rtsub$gambleRT,col=rgb(0,0,1,0.5), add=T,breaks=40)
-abline(v=median(rtsub$gambleRT),col="blue",lwd=2)
+hist(rtall$gambleRT,col=rgb(0,0,1,0.5), main='Reaction Times when gambling', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1300),ylim=c(0,200))
+abline(v=median(rtall$gambleRT),col="blue",lwd=2)
+hist(rtsub$gambleRT,col=rgb(1,0,0,0.5), add=T,breaks=50)
+abline(v=median(rtsub$gambleRT),col="red",lwd=2)
+legend(900,200,cex=.7, bty = "n",legend=c("Failed at least one catch trial","Passed all the catch trials"),col=c("blue","red"),title="",pch=15)
+
 t.test((1/rtall$gambleRT),(1/rtsub$gambleRT))
 
 
@@ -1649,7 +1665,7 @@ summaryOddsCond='highp'
 # d5prime<-dgamble[dgamble$uniqueid %in% fail5,]
 # d5prime<-dgamble[dgamble$uniqueid %in% truehigh,]
 
- gamblePlot(d5prime,orig=T,ylimit=c(35,50),title='CatchSuccess')
+ gamblePlot(d5prime,orig=F,ylimit=c(35,50),title='CatchSuccess')
  rtPlot(d5prime,type='raw',eb='stderr',title="CatchSuccess")
  
  
@@ -1696,7 +1712,7 @@ plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount))," gambled trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(55,80),
+plot(d5prime2$seconds,d5prime2$percentageGambled,xlim = c(0,8),ylim = c(35,50),
      main=paste("Gamble propensity; n =",toString(sum(d5prime2$gambleCount)),"gambled trials;",toString(length(unique(d5prime$uniqueid))),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
@@ -1947,14 +1963,14 @@ hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms
   subslope2DF<-NULL
 
   #Want to look at subgroups of participants?
-  oddsFilter<-T
+  oddsFilter<-F
   subOddsCond<-'highp'
   MagFilter<-F
   subMagCond<-'low'
 
 
 #Subgroup 2
-for(i in failCatchId){
+for(i in catchSuccessId){
     print(i)
     dsub<-filter(d,uniqueid==i)
 
@@ -2254,3 +2270,44 @@ rtPlot(d5,type='raw',eb='stderr',title='catchFail',ylimit=c(600,900),line=F)
 
 gamblePlot(d5prime,orig=T,eb=F,ylimit=c(35,50),title='catchSuccess',line=T)
 rtPlot(d5prime,type='raw',eb='stderr',title='catchSuccess',ylimit=c(600,900),line=F)
+
+
+#sfnValueChange
+#All participants
+compMeans<-c(oddsScoreMean(d,time='early'),oddsScoreMean(d,time='mid'),oddsScoreMean(d,time='late'))
+compSds<-c(oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'))
+
+pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
+             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity; All participants")
+arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
+
+#FailCatch (d5)
+compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
+compSds<-c(oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'))
+
+pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
+             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity;FailCatch; n=87 participants")
+arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
+
+#SuccessCatch (d5prime)
+compMeans<-c(oddsScoreMean(d5prime,time='early'),oddsScoreMean(d5prime,time='mid'),oddsScoreMean(d5prime,time='late'))
+compSds<-c(oddsScoreEb(d5prime,type='sem'),oddsScoreEb(d5prime,type='sem'),oddsScoreEb(d5prime,type='sem'))
+
+pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
+             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity; catchSuccess; n=53 participants")
+arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
+
+#sfnGambleSlopes
+#2)Gamble slopes of infrequent vs frequent
+compMeans<-c(mean(slopeDF$gambleSlopes),mean(subslope1DF$gambleSlopes),mean(subslope2DF$gambleSlopes))
+pg10<-barplot(compMeans,names.arg = c("All participants","catchFail","successCatch"),ylab="Gamble Slopes",ylim=c(-.15,.15),main="Gamble Slopes of subgroups")
+compSems<-c(std.error(slopeDF$gambleSlopes),std.error(subslope1DF$gambleSlopes),std.error(subslope2DF$gambleSlopes))
+compSds<-c((sd(subslope1DF$gambleSlopes)),(sd(subslope2DF$gambleSlopes)))
+arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
+
+#3)RT slopes of infrequent vs frequent
+compMeans<-c(mean(slopeDF$rtSlopes),mean(subslope1DF$rtSlopes),mean(subslope2DF$rtSlopes))
+pg10<-barplot(compMeans,names.arg = c("All participants","catchFail","successCatch"),ylab="RT Slopes",ylim=c(-25,0),main="RT Slopes of subgroups")
+compSems<-c(std.error(slopeDF$rtSlopes),std.error(subslope1DF$rtSlopes),std.error(subslope2DF$rtSlopes))
+arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
+
