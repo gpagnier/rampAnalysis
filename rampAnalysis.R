@@ -17,13 +17,13 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 #d0<-read.csv(file="C:/Users//Documents/GitHub/rampAnalysis/Totalrampv04.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -147,7 +147,7 @@ hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the pr
 
 #How many points do you want on the gambleDelay?
 d$binsTme=NULL
-bins=6
+bins=3
 
 ninbins=round((length(d$Trialid)/bins))
 
@@ -193,12 +193,12 @@ a6head<-6.24000000001
 a6tail<-6.8
 
 #For 3 bins
-# a1head<-1.4
-# a1tail<-3.5
-# a2head<-3.6
-# a2tail<-4.7
-# a3head<-5.8
-# a3tail<-6.5
+a1head<-1.5
+a1tail<-2.5
+a2head<-3.5
+a2tail<-4.5
+a3head<-5.75
+a3tail<-6.75
 
 #This is the function that creates gambleBins
 binTimeCalc<-function(d,row){
@@ -210,12 +210,12 @@ binTimeCalc<-function(d,row){
   {return(mean(c(a2head,a2tail)))}
   else if (d[row,'gambleDelay']>=a3head&d[row,'gambleDelay']<=a3tail)
   {return(mean(c(a3head,a3tail)))}
-  else if (d[row,'gambleDelay']>=a4head&d[row,'gambleDelay']<=a4tail)
-  {return(mean(c(a4head,a4tail)))}
-  else if (d[row,'gambleDelay']>=a5head&d[row,'gambleDelay']<=a5tail)
-  {return(mean(c(a5head,a5tail)))}
-  else if (d[row,'gambleDelay']>=a6head&d[row,'gambleDelay']<=a6tail)
-  {return(mean(c(a6head,a6tail)))}
+  # else if (d[row,'gambleDelay']>=a4head&d[row,'gambleDelay']<=a4tail)
+  # {return(mean(c(a4head,a4tail)))}
+  # else if (d[row,'gambleDelay']>=a5head&d[row,'gambleDelay']<=a5tail)
+  # {return(mean(c(a5head,a5tail)))}
+  # else if (d[row,'gambleDelay']>=a6head&d[row,'gambleDelay']<=a6tail)
+  # {return(mean(c(a6head,a6tail)))}
   # else if (d[row,'gambleDelay']>=a7head&d[row,'gambleDelay']<=a7tail)
   # {return(mean(c(a7head,a7tail)))}
   # else if (d[row,'gambleDelay']>=a8head&d[row,'gambleDelay']<=a8tail)
@@ -751,7 +751,14 @@ dTest<-d2p %>%
 plot(dTest$seconds,dTest$medianPercentageGambled,xlim = c(0,7.5),ylim = c(35,50),
      main=paste("Propensity to gamble vs. gamble interruption time"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
-gamblePlot(d,orig=T,eb='stderr',ylimit=c(40,50))
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(0,100))
+gamblePlot(d,orig=F,eb='sem',ylimit=c(40,60))
+gamblePlot(d5,orig=F,eb='sem',ylimit=c(40,60))
+gamblePlot(d5prime,orig=F,eb='sem',ylimit=c(40,60))
+
+
+
+d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 

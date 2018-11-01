@@ -23,7 +23,7 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
     }
     summary(lm(d2fun$percentageGambled~d2fun$seconds))
   }else{
-    d2pfun<-filter(d,gambleDelay!=0) %>% 
+    d2pfun<-filter(data,gambleDelay!=0) %>% 
       group_by(binsTime,uniqueid) %>% 
       summarise(trials=length(trialNumber),
                 gambleCount=sum(response=="gamble"),
