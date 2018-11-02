@@ -20,8 +20,8 @@ library(VennDiagram)
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/odddsScoreMeanFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/odddsScoreEbFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
@@ -723,8 +723,9 @@ for(i in 1:nrow(d2p)){
   #         panel.grid.minor = element_blank())
   # pGD  
   # 
-plot(d2$seconds,d2$percentageGambled,xlim = c(0,7.5),ylim = c(35,50),
-     main=paste("Propensity to gamble vs. gamble interruption time"),
+#SFN
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,7.5),ylim = c(40,50),
+     main=paste("Propensity to gamble vs. gamble interruption time; n=140 participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
 abline(lm(d2$percentageGambled~d2$seconds))
 summary(lm(d2$percentageGambled~d2$seconds))
@@ -763,9 +764,9 @@ gamblePlot(d,orig=F,eb='',ylimit=c(40,55),line=T)
 gamblePlot(d5,orig=F,eb='',ylimit=c(40,55),line=T)
 gamblePlot(d5prime,orig=F,eb='',ylimit=c(35,50),line=T)
 
-rtPlot(d,type="raw",eb="stderr",ylimit=c(600,800),title="All participants n=140",line=T)
-rtPlot(d5,type="raw",eb="stderr",ylimit=c(600,800),title="failCatch n=87",line=T)
-rtPlot(d5prime,type="raw",eb="stderr",ylimit=c(600,800),,title="successCatch n=53",line=T)
+rtPlot(d,type="raw",eb="stderr",ylimit=c(600,800),title="n=140 participants",line=T)
+rtPlot(d5,type="raw",eb="stderr",ylimit=c(600,800),title="n=87 participants",line=T)
+rtPlot(d5prime,type="raw",eb="stderr",ylimit=c(600,800),,title="n=53 participants",line=T)
 
 
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
@@ -1923,7 +1924,7 @@ for(i in failCatchId){
 }
 
   
-#sfnhist
+#histograms of slopes 
 subslope1DF<-data.frame(cbind(run,rtSlopes,gambleSlopes,gambleMeans))
 par(bty="7")
 hist(subslope1DF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Frequency',pch=16,cex=0.8,main='Individual Gamble slopes; SuccessCatch; n=58',
@@ -1963,14 +1964,14 @@ hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms
   subslope2DF<-NULL
 
   #Want to look at subgroups of participants?
-  oddsFilter<-F
+  oddsFilter<-T
   subOddsCond<-'highp'
   MagFilter<-F
   subMagCond<-'low'
 
 
 #Subgroup 2
-for(i in catchSuccessId){
+for(i in Participants){
     print(i)
     dsub<-filter(d,uniqueid==i)
 
@@ -2166,7 +2167,7 @@ arrows(pg6,magMeans-magSems,pg6,magMeans+magSems,lwd=2,angle=90,code=3)
 #To do gamble propensity Value
 #POSTER7
 valueMeans<-c(mean(lowvaluegamblepropensity),mean(midvaluegamblepropensity),mean(highvaluegamblepropensity))
-pg7<-barplot(valueMeans,names.arg = c("Low value","Mid value","High value"),ylim=c(0,80),ylab="Gamble Propensity",col=bpCol,main="Effect of Value on Gamble propensity for failCatch (n=82)")
+pg7<-barplot(valueMeans,names.arg = c("Low EV","Mid EV","High EV"),ylim=c(0,80),ylab="Gamble Propensity",main="Effect of Expected Value (EV) on gamble propensity; n=53")
 valueSems<-c((sd(lowvaluegamblepropensity)/sqrt(length(lowvaluegamblepropensity))),(sd(midvaluegamblepropensity)/sqrt(length(midvaluegamblepropensity))),(sd(highvaluegamblepropensity)/sqrt(length(highvaluegamblepropensity))))
 valueSds<-c((sd(lowvaluegamblepropensity)),(sd(midvaluegamblepropensity)),(sd(highvaluegamblepropensity)))
 arrows(pg7,valueMeans-valueSems,pg7,valueMeans+valueSems,lwd=2,angle=90,code=3)
@@ -2278,7 +2279,7 @@ compMeans<-c(oddsScoreMean(d,time='early'),oddsScoreMean(d,time='mid'),oddsScore
 compSds<-c(oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'))
 
 pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
-             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity; All participants")
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; All participants",cex.main=.9,cex.axis = .9,cex.lab=.9)
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 #FailCatch (d5)
@@ -2286,7 +2287,7 @@ compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsSco
 compSds<-c(oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'))
 
 pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
-             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity;FailCatch; n=87 participants")
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; n=87 participants")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 #SuccessCatch (d5prime)
@@ -2294,20 +2295,19 @@ compMeans<-c(oddsScoreMean(d5prime,time='early'),oddsScoreMean(d5prime,time='mid
 compSds<-c(oddsScoreEb(d5prime,type='sem'),oddsScoreEb(d5prime,type='sem'),oddsScoreEb(d5prime,type='sem'))
 
 pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
-             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity; catchSuccess; n=53 participants")
+             ylab="Proportion of high value trials - low value trials",main="Value Sensitivity; n=53 participants")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 #sfnGambleSlopes
 #2)Gamble slopes of infrequent vs frequent
 compMeans<-c(mean(slopeDF$gambleSlopes),mean(subslope1DF$gambleSlopes),mean(subslope2DF$gambleSlopes))
-pg10<-barplot(compMeans,names.arg = c("All participants","catchFail","successCatch"),ylab="Gamble Slopes",ylim=c(-.15,.15),main="Gamble Slopes of subgroups")
+pg10<-barplot(compMeans,names.arg = c("All participants","catchFail","catchSuccess"),ylab="Gamble Slopes (% / second)",ylim=c(-.15,.15),main="Gamble Slopes")
 compSems<-c(std.error(slopeDF$gambleSlopes),std.error(subslope1DF$gambleSlopes),std.error(subslope2DF$gambleSlopes))
-compSds<-c((sd(subslope1DF$gambleSlopes)),(sd(subslope2DF$gambleSlopes)))
 arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
 
 #3)RT slopes of infrequent vs frequent
 compMeans<-c(mean(slopeDF$rtSlopes),mean(subslope1DF$rtSlopes),mean(subslope2DF$rtSlopes))
-pg10<-barplot(compMeans,names.arg = c("All participants","catchFail","successCatch"),ylab="RT Slopes",ylim=c(-25,0),main="RT Slopes of subgroups")
+pg10<-barplot(compMeans,names.arg = c("All participants","catchFail","catchSuccess"),ylab="RT Slopes (ms / second)",ylim=c(-25,0),main="RT Slopes")
 compSems<-c(std.error(slopeDF$rtSlopes),std.error(subslope1DF$rtSlopes),std.error(subslope2DF$rtSlopes))
 arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
 

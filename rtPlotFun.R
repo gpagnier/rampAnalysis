@@ -13,8 +13,9 @@ rtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),title="",
   
   if(type=='raw'){
     plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,
-         main=paste("RT raw",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
-        "trials;",toString(length(unique(data$uniqueid))),"participants"),
+         main=paste("Reaction Time vs. gamble interruption time;",title),
+        # main=paste("Reaction Time vs. gamble interruption time",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
+        #            "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab=ylabel,pch=19)
     if(eb=='sd'){
       for(i in 1:length(dRT$seconds)){
