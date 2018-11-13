@@ -9,7 +9,9 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
     summarise(trials=length(trialNumber),
               gambleCount=sum(response=="gamble"),
               didNotGamble=sum(response=="fail"|response=="success"),
-              percentageGambled=round(gambleCount/trials*100))
+              percentageGambled=round(gambleCount/trials*100),
+              medianRT=median(setdiff(gambleRT,0)),
+              sdRT=sd(gambleRT))
   d2fun$seconds<-d2fun$binsTime
   if(orig){
       plot(d2fun$seconds,d2fun$percentageGambled,xlim = c(0,8),ylim = ylimit,
@@ -26,7 +28,9 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
       summarise(trials=length(trialNumber),
                 gambleCount=sum(response=="gamble"),
                 didNotGamble=sum(response=="fail"|response=="success"),
-                percentageGambled=round(gambleCount/trials*100))
+                percentageGambled=round(gambleCount/trials*100),
+                medianRT=median(setdiff(gambleRT,0)),
+                semRT=sd(setdiff(gambleRT,0))/sqrt(length(setdiff(gambleRT,0))))
     
     d2pfun$seconds<-d2pfun$binsTime
     dTestfun<-d2pfun %>%

@@ -1,20 +1,20 @@
-gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),title="",ylabel="Reaction Time (ms)"){
-  dRT<-filter(data,response=='gamble',gambleDelay!=0) %>%
+ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),title="",ylabel="Reaction Time (ms)"){
+  dRT<-filter(data,response=='success',gambleDelay!=0) %>%
     group_by(binsTime) %>%
-    summarise(medianRT=median(gambleRT),
-              stderrRT=std.error(gambleRT),
-              sdRT=sd(gambleRT),
-              medianSpeed=median(NgambleRT),
-              stderrSpeed=std.error(NgambleRT),
-              sdSpeed=sd(NgambleRT),
-              medianRtz=median(gambleRTz),
-              sdRtz=sd(gambleRTz))
+    summarise(medianRT=median(ignoreRT),
+              stderrRT=std.error(ignoreRT),
+              sdRT=sd(ignoreRT),
+              medianSpeed=median(NignoreRT),
+              stderrSpeed=std.error(NignoreRT),
+              sdSpeed=sd(NignoreRT),
+              medianRtz=median(ignoreRTz),
+              sdRtz=sd(ignoreRTz))
   dRT$seconds<-dRT$binsTime
   
   if(type=='raw'){
     plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,
-         main=paste("Reaction Time vs. gamble interruption time;",title),
-        # main=paste("Reaction Time vs. gamble interruption time",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
+         main=paste("Reaction Time vs. ignore interruption time;",title),
+        # main=paste("Reaction Time vs. ignore interruption time",title,";", "n =",toString(length(data$response[data$response=='success'])),
         #            "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab=ylabel,pch=19)
     if(eb=='sd'){
@@ -34,7 +34,7 @@ gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),tit
   }
   if(type=='speed'){
     plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(0.0005,.0025),
-         main=paste("RT speed",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
+         main=paste("IgnoreRT speed",title,";", "n =",toString(length(data$response[data$response=='ignore'])),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab="Speed",pch=19)
     if(eb=='sd'){

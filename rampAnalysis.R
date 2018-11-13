@@ -19,7 +19,7 @@ library(plotrix)
 library(VennDiagram)
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
