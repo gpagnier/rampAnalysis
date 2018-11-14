@@ -17,16 +17,16 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ramp.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/ramp.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/50ramp9.13.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
@@ -138,7 +138,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c(516)
+removeIds=c()
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -484,7 +484,10 @@ dBehavioralTotal<-dgamble0 %>%
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
-            percentageGambled=round(gambleCount/trials*100))
+            percentageGambled=round(gambleCount/trials*100),
+            failedTrials=sum(response=="fail"|response=="earlyFail"))
+dBehavioralTotal
+
 
 #head(dBehavioralTotal)
 #Overall preference for gambling
@@ -495,10 +498,12 @@ noGamblers<-dlowG$uniqueid
 dhighg<-filter(dBehavioralTotal,percentageGambled>95)
 allGamblers<-dhighg$uniqueid
 lowTrials<-filter(dBehavioralTotal,trials<50)$uniqueid
+failures<-filter(dBehavioralTotal,failedTrials>(round(15/trials*100)))$uniqueid
+
 removeIds<-c(noGamblers,allGamblers,lowTrials)
 
 #Removing fastRTers
-removeIds<-c(removeIds,fastRTers)
+removeIds<-c(removeIds,fastRTers,failures)
 #Removing any subjects from dataset, using unique ids in vector removeIds
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
@@ -519,7 +524,7 @@ imp<-filter(dcatchidFinish,FailTrials>0)$uniqueid
 dcatchidGamble<-dcatch[dcatch$Trialid==75,] %>% 
   group_by(uniqueid) %>% 
   summarise(FailTrials=sum(response=="fail"|response=='success'|response=='earlyFail'))
-l<-filter(dcatchidGamble,FailTrials>0)$uniqueid
+ra<-filter(dcatchidGamble,FailTrials>0)$uniqueid
 
 dcatchscore<-data.frame(dcatchidFinish$uniqueid)
 colnames(dcatchscore)[1]='uniqueid'
@@ -619,11 +624,11 @@ summary(mlog2)
 # gamblePlot(d5success,orig=T,title="shouldGamble")
 # ignoreRtPlot(d5success,type='raw',eb='stderr',ylimit=c(400,1000),title="ShouldGamble")
 
-#library(lme4)
- # dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
- #  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
- #           data=dgamble,family="binomial");
- #  summary(mlmerog)
+library(lme4)
+dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
+ mlmerog<-glmer(gambled~scale(gambleDelay)*scale(numFailedTrial)+contOdds+(scale(gambleDelay)+contOdds|uniqueid),
+          data=dgamble,family="binomial");
+ summary(mlmerog)
 
 # d5primegamble[,'oddsCondf'] <- as.factor(d5primegamble[,'oddsCond'])
 # d5primegamble[,'gamblePrevTrialf'] <- as.factor(d5primegamble[,'gamblePrevTrial'])
@@ -802,7 +807,7 @@ hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main
 #RTs histogram
 hist(setdiff(dlow$ignoreRT,0),xlim=c(0,1300),breaks=50,main=paste("RT low mag gambles; n =",toString(sum(dBehavioralLow$gambleCount)),"gambled trials;",toString(length(dBehavioralLow$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
-gamblePlot(dlow,orig=T,ylimit=c(20,50),title="Low Mag")
+gamblePlot(dlow,orig=T,ylimit=c(50,60),title="Low Mag")
 gamblePlot(dlow,orig=F,eb='sem',ylimit=c(40,60),title="Low Mag")
 ignoreRtPlot(dlow,type="raw",eb="stderr")
 
@@ -851,8 +856,8 @@ hist(dBehavioralMid$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main
 #RTs histogram
 hist(setdiff(dmid$ignoreRT,0),xlim=c(0,1200),breaks=50,main=paste("RT mid mag gambles; n =",toString(sum(dBehavioralMid$gambleCount)),"gambled trials; ",toString(length(dBehavioralLow$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
-gamblePlot(dmid,orig=T,ylimit=c(0,50),title='Mid Mag')
-gamblePlot(dmid,orig=F,eb='sem',ylimit=c(20,50),title='Mid Mag')
+gamblePlot(dmid,orig=T,ylimit=c(40,60),title='Mid Mag')
+gamblePlot(dmid,orig=F,eb='sem',ylimit=c(20,60),title='Mid Mag')
 ignoreRtPlot(dmid,type='raw',eb='stderr',title="Mid Mag")
 #Plotting RTs with sd
 dmidRT<-filter(dmid,ignoreRT!=0) %>%
@@ -941,7 +946,7 @@ plot(dhighRT$seconds,dhighRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("
 
 
 
-gamblePlot(dhigh,orig=T,ylimit=c(20,50),title='High Mag')
+gamblePlot(dhigh,orig=T,ylimit=c(45,65),title='High Mag')
 ignoreRtPlot(dhigh,type='raw',eb='stderr',title="High Mag")
 
 
@@ -989,7 +994,7 @@ plot(dlow2p$seconds,dlow2p$percentageGambled,xlim = c(0,8),ylim = c(15,30),
      main=paste("Low odds; Gamble propensity; n =",toString(sum(dlow2p$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-gamblePlot(dlowp,orig=T,eb='sem',ylimit=c(0,30),title='Low Value Trials')
+gamblePlot(dlowp,orig=T,eb='sem',ylimit=c(25,35),title='Low Value Trials')
 gamblePlot(dlowp,orig=F,eb='sem',ylimit=c(0,100),title='Low Value Trials')
 #Plotting RTs with sd
 dlowpRT<-filter(dlowp,response=='gamble') %>%
@@ -1081,7 +1086,7 @@ plot(dmidpRT$seconds,dmidpRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("
 # }
 
 
-gamblePlot(dmidp,orig=T,ylimit=c(10,40),title='Mid value')
+gamblePlot(dmidp,orig=T,ylimit=c(40,60),title='Mid value')
 ignoreRtPlot(dmidp,type='raw',eb='stderr',title="Mid value")
 
 
@@ -1119,8 +1124,8 @@ plot(dhigh2p$seconds,dhigh2p$percentageGambled,xlim = c(0,8),ylim = c(60,90),
      main=paste("High odds; Gamble propensity; n =",toString(sum(dhigh2p$gambleCount)),"trials;"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 
-gamblePlot(dhighp,orig=T,ylimit=c(60,90))
-gamblePlot(dhighp,orig=F,eb='sem',ylimit=c(40,50))
+gamblePlot(dhighp,orig=T,ylimit=c(70,80))
+gamblePlot(dhighp,orig=F,eb='sem',ylimit=c(70,80))
 
 #Plotting RTs with sd
 dhighpRT<-filter(dhighp,response=='gamble') %>%
@@ -1233,12 +1238,12 @@ highOdds<-c(31:36)
 
 ####The following is to just get one participant's data
 #INDIVIDUAL
-p=516
+p=526
 
 plotZscore<-FALSE
 
 dsub<-d[d$uniqueid==p,]
-dsubgambled<-filter(dsub,response=="gamble")
+dsubignored<-filter(dsub,response=="success")
 d3<-dsub %>% 
   group_by(binsTime) %>% 
   summarise(trials=length(trialNumber),
@@ -1278,7 +1283,7 @@ if(plotZscore){
   }
 }
 
-msubRT<-lm(dsubgambled$ignoreRT~dsubgambled$gambleDelay)
+msubRT<-lm(dsubignored$ignoreRT~dsubignored$gambleDelay)
 abline(msubRT)
 summary(msubRT)
 
@@ -1328,7 +1333,8 @@ plotGD=FALSE
 for(i in Participants){
   print(i)
   dsub<-d[d$uniqueid==i,]
-  dsubgambled<-filter(dsub,response=="gamble")
+  dsubgamble<-filter(dsub,gambleDelay!=0)
+  dsubignored<-filter(dsub,response=="success",gambleDelay!=0)
   dsubhigh<-filter(dsub,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
   dsublow<-filter(dsub,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
   #Breaking down by subFilter
@@ -1400,7 +1406,7 @@ for(i in Participants){
   #This is top check for gamble ramp
   mlogtemp<-glm(gambled~gambleDelay,data=filter(dsub,gambleDelay!=0),family="binomial")
   #This is glm for RT by gamble Delay
-  mtempRT<-lm(d4RT$medianRT~d4RT$seconds)
+  mtempRT<-lm(dsubignored$ignoreRT~dsubignored$gambleDelay)
   
   #This checks to see if any participant is gamble ramping
   if(summary(mlogtemp)$coefficients[8]<.1 & summary(mlogtemp)$coefficients[2]>0){
@@ -1411,6 +1417,8 @@ for(i in Participants){
     botN<-c(botN,i)
   }
   #Check to see if participant has a downwards decreasing RT ramp
+  print(summary(mtempRT)$coefficients[8]<.1)
+  print(summary(mtempRT)$coefficients[2]<0)
 
   if(summary(mtempRT)$coefficients[8]<.1 & summary(mtempRT)$coefficients[2]<0){
     rtn<-c(rtn,i)
@@ -1444,7 +1452,7 @@ oddsN<-oddsN[(length(oddsN)/2):(length(oddsN))]
 
 par(bty='n')
 box(which="plot",lty='solid')
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=29',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=24',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 abline(v=0,col="black")
 abline(h=0,col="black")
 #with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
@@ -1522,14 +1530,16 @@ summaryOddsFilter=F
  d5<-dgamble[dgamble$uniqueid %in% highGamblers,]
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 d5<-dgamble[dgamble$uniqueid %in% imp,]
+d5<-dgamble[dgamble$uniqueid %in% ra,]
+d5<-dgamble[dgamble$uniqueid %in% oddsN,]
 
 #This is if you want intersection of two groups
 #d5<-dgamble[dgamble$uniqueid %in% inters bect(catchSuccessId,highGamblers),]
 
 
 d5gamble<-filter(d5,gambleDelay!=0)
-gamblePlot(d5,orig=T,ylimit=c(0,60),title='failCatch',line=F)
-ignoreRtPlot(d5,type='raw',eb='stderr',title='failCatch',ylimit=c(600,900),line=F)
+gamblePlot(d5,orig=T,ylimit=c(50,65),title='RiskSeeking',line=F)
+ignoreRtPlot(d5,type='raw',eb='stderr',title='RiskAverse',ylimit=c(600,900),line=F)
 
 
 
@@ -1613,18 +1623,18 @@ d6<-filter(d5,response=='gamble')
 
 #Overlaying RT histograms of d over d5 of sure thing and gamble
 #d5 should be defined above
-rtall<-filter(d5,response=='success')
-rtsub<-filter(d5prime,response=='success')
+rtall<-filter(dgamble,response=='success')
+rtsub<-filter(d5gamble,response=='success')
 
 #Making venn diagrams of overlapping participants
 #setdiff(a,b)
 #Things that are in A but not in B
 # grid.newpage()
 # #draw.single.venn(length(Participants),category="All participants",fill=c('cornflower blue'),alpha=.5)
-# grid.newpage()
-# draw.pairwise.venn(length(Participants),length(unique(d5$uniqueid)),length(unique(d5$uniqueid)),
-#                    fill=c(' cornflower blue',"red"),category=c("All participants","subgroup"),
-#                    alpha=c(.5,.5),cat.pos=c(0,0),cat.dist=rep(-0.025,2))
+grid.newpage()
+draw.pairwise.venn(length(Participants),length(unique(d5$uniqueid)),length(unique(d5$uniqueid)),
+                   fill=c(' cornflower blue',"red"),category=c("All participants","subgroup"),
+                   alpha=c(.5,.5),cat.pos=c(0,0),cat.dist=rep(-0.025,2))
 
 hist(rtall$outcomeRT,col=rgb(0,0,1,0.5), main='Reaction Times when accepting sure thing', xlab='Reaction Time (ms)',breaks=40,xlim=c(0,800),ylim=c(0,350))
 abline(v=median(rtall$outcomeRT),col="blue",lwd=2)
@@ -1816,10 +1826,10 @@ MagFilter<-FALSE
 
   
 #Subgroup 1
-for(i in failCatchId){
+for(i in ra){
   print(i)
   dsub<-filter(d,uniqueid==i)
-  
+  dsubignored<-filter(dsub,response=="success",gambleDelay!=0)
   if(oddsFilter){
     dsub<-filter(dsub,oddsCond==subOddsCond)
   }
@@ -1909,7 +1919,7 @@ for(i in failCatchId){
     
     tempRTdf<-filter(dsub,response=='gamble')
     
-    mtempRT<-lm(d4RT$medianRT~d4RT$seconds)
+    mtempRT<-lm(dsubignored$ignoreRT~dsubignored$gambleDelay)
     
     #This is tracking all the RT slopes of everyone in subgroup
     
@@ -1977,6 +1987,7 @@ hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms
 for(i in Participants){
     print(i)
     dsub<-filter(d,uniqueid==i)
+    dsubignoredfilter(dsub,response=="success",gambleDelay!=0)
 
     if(oddsFilter){
       dsub<-filter(dsub,oddsCond==subOddsCond)
@@ -2067,7 +2078,7 @@ for(i in Participants){
 
       tempRTdf<-filter(dsub,response=='gamble')
 
-      mtempRT<-lm(d4RT$medianRT~d4RT$seconds)
+      mtempRT<-lm(dsubignored$ignoreRT~dsubignored$gambleDelay)
 
       #This is tracking all the RT slopes of everyone in subgroup
 
@@ -2123,13 +2134,15 @@ if(oddsFilter & subOddsCond=='lowp'){
 #sfn3
 #Subplot dot plot
 #Adding colors to overall plot of gambleSlopes (only 1 of the two subgroups)
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants gambleSlopes vs. rtSlopes n=140',xlim=c(-1,1),ylim=c(-90,50),pch=16,col='red')
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',main='All Participants gambleSlopes vs. rtSlopes n=24',xlim=c(-1,1),ylim=c(-90,50),pch=16,col='red')
 
 abline(v=0,col='black')
 abline(h=0,col='black')
 
 par(new=TRUE)
-plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='red',pch=16)
+plot(subslope1DF$rtSlopes~subslope1DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='green',pch=16)
+legend(.5,55,cex=.7, bty = "n",legend=c("All Participants","Risk Averse CatchFail"),col=c("red","green"),title="",pch=16)
+
 par(new=TRUE)
 plot(subslope2DF$rtSlopes~subslope2DF$gambleSlopes,xlab='gambleSlopes',ylab='rtSlopes',xlim=c(-1,1),ylim=c(-90,50),col='blue',pch=16)
 par(new=TRUE)
