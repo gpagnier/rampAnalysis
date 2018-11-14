@@ -17,11 +17,11 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gnoreRtPlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
@@ -109,7 +109,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=401
+seed=501
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -138,7 +138,7 @@ graphics.off()
 
 ##Some basic behavioral metrics and filtering participants and adding gamble delay
 #Intitial filtering of participants
-removeIds=c()
+removeIds=c(516)
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
 }
@@ -585,7 +585,7 @@ hist(dTrials$ntrials,breaks=50,xlim=c(0,140),main=paste("Number of trials per pa
 #Statistics
 #Logistic regression models to predict gambled
 #Recoding
-dgamble$contOdds<-recode(d$oddsCond,lowp=1,midp=2,highp=3)
+dgamble$contOdds<-recode(dgamble$oddsCond,lowp=1,midp=2,highp=3)
 
 
 
@@ -619,7 +619,7 @@ summary(mlog2)
 # gamblePlot(d5success,orig=T,title="shouldGamble")
 # ignoreRtPlot(d5success,type='raw',eb='stderr',ylimit=c(400,1000),title="ShouldGamble")
 
-library(lme4)
+#library(lme4)
  # dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
  #  mlmerog<-glmer(gambled~scale(gambleDelay)+oddsCondf+(scale(gambleDelay)+oddsCondf|uniqueid),
  #           data=dgamble,family="binomial");
@@ -672,7 +672,7 @@ head(d2p)
 
 #Interesting plot of gambleDelay vs propensity to gamble. NEED TO ADD SDS HERE
 #Andrew1
-plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(20,50),
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(40,60),
      main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$trials)),
                 "trials;",toString(length(Participants)),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
@@ -803,7 +803,7 @@ hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main
 hist(setdiff(dlow$ignoreRT,0),xlim=c(0,1300),breaks=50,main=paste("RT low mag gambles; n =",toString(sum(dBehavioralLow$gambleCount)),"gambled trials;",toString(length(dBehavioralLow$uniqueid)),"participants"),xlab="Reaction time")
 #By GambleDelay
 gamblePlot(dlow,orig=T,ylimit=c(20,50),title="Low Mag")
-gamblePlot(dlow,orig=F,eb='sem',ylimit=c(20,50),title="Low Mag")
+gamblePlot(dlow,orig=F,eb='sem',ylimit=c(40,60),title="Low Mag")
 ignoreRtPlot(dlow,type="raw",eb="stderr")
 
 #Plotting RTs with sd
@@ -1233,7 +1233,7 @@ highOdds<-c(31:36)
 
 ####The following is to just get one participant's data
 #INDIVIDUAL
-p=370
+p=516
 
 plotZscore<-FALSE
 
@@ -1444,7 +1444,7 @@ oddsN<-oddsN[(length(oddsN)/2):(length(oddsN))]
 
 par(bty='n')
 box(which="plot",lty='solid')
-plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=141',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
+plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main='Gamble slopes vs. RT slopes; n=29',xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 abline(v=0,col="black")
 abline(h=0,col="black")
 #with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
