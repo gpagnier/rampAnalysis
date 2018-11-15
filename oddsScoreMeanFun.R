@@ -21,12 +21,15 @@ oddsScoreMean<-function(data,time=NULL){
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-d5behavioralLow<-d5low %>% 
+  
+  d5behavioralLow<-d5low %>% 
   group_by(uniqueid) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
-oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
-return(oddsScore)
+  
+  oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
+
+  return(oddsScore)
 }

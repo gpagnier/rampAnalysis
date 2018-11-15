@@ -17,15 +17,15 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ramp.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/50ramp9.13.csv",sep=",")
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/50ramp9.13.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -493,7 +493,7 @@ dBehavioralTotal
 #Overall preference for gambling
 hist(dBehavioralTotal$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity(everyone) to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 
-dlowG<-filter(dBehavioralTotal,percentageGambled<6)
+dlowg<-filter(dBehavioralTotal,percentageGambled<6)
 noGamblers<-dlowG$uniqueid
 dhighg<-filter(dBehavioralTotal,percentageGambled>95)
 allGamblers<-dhighg$uniqueid
@@ -540,6 +540,36 @@ fail3<-unique(dcatchscore$uniqueid[dcatchscore$failScore==3])
 fail4<-unique(dcatchscore$uniqueid[dcatchscore$failScore==4])
 fail5<-unique(dcatchscore$uniqueid[dcatchscore$failScore==5])
 fail6<-unique(dcatchscore$uniqueid[dcatchscore$failScore==6])
+
+
+#Now this is refined number of participants
+nParticipants<- length(unique(d$uniqueid))
+Participants<-unique(d$uniqueid)
+
+d$failedTrials<-NULL
+d2=d[0,]
+#Adding d column of number of failed trials
+for (i in Participants){
+  dsub<-filter(d,uniqueid==i)
+  if(is.element(unique(dsub$uniqueid),fail1)){
+    dsub$failedTrials<-1
+  }else if(is.element(unique(dsub$uniqueid),fail2)){
+    dsub$failedTrials<-2
+  }else if(is.element(unique(dsub$uniqueid),fail3)){
+    dsub$failedTrials<-3
+  }else if(is.element(unique(dsub$uniqueid),fail4)){
+    dsub$failedTrials<-4
+  }else if(is.element(unique(dsub$uniqueid),fail5)){
+    dsub$failedTrials<-5
+  }else if(is.element(unique(dsub$uniqueid),fail6)){
+    dsub$failedTrials<-6
+    }else{
+    dsub$failedTrials<-0
+    }
+  d2<-rbind(d2,dsub)
+}
+d<-d2
+    
 
 #Now this is refined number of participants
 nParticipants<- length(unique(d$uniqueid))
@@ -625,8 +655,8 @@ summary(mlog2)
 # ignoreRtPlot(d5success,type='raw',eb='stderr',ylimit=c(400,1000),title="ShouldGamble")
 
 library(lme4)
-dgamble[,'oddsCondf'] <- as.factor(dgamble[,'oddsCond'])
- mlmerog<-glmer(gambled~scale(gambleDelay)*scale(numFailedTrial)+contOdds+(scale(gambleDelay)+contOdds|uniqueid),
+
+ mlmerog<-glmer(gambled~scale(gambleDelay)*scale(failedTrials)+scale(contOdds)+(scale(gambleDelay)+contOdds|uniqueid),
           data=dgamble,family="binomial");
  summary(mlmerog)
 
@@ -1417,8 +1447,6 @@ for(i in Participants){
     botN<-c(botN,i)
   }
   #Check to see if participant has a downwards decreasing RT ramp
-  print(summary(mtempRT)$coefficients[8]<.1)
-  print(summary(mtempRT)$coefficients[2]<0)
 
   if(summary(mtempRT)$coefficients[8]<.1 & summary(mtempRT)$coefficients[2]<0){
     rtn<-c(rtn,i)
@@ -2289,7 +2317,7 @@ gamblePlot(d5prime,orig=T,eb=F,ylimit=c(35,50),title='catchSuccess',line=T)
 ignoreRtPlot(d5prime,type='raw',eb='stderr',title='catchSuccess',ylimit=c(600,900),line=F)
 
 
-#sfnValueChange
+#sfnValueSensitivity
 #All participants
 compMeans<-c(oddsScoreMean(d,time='early'),oddsScoreMean(d,time='mid'),oddsScoreMean(d,time='late'))
 compSds<-c(oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'))
