@@ -17,11 +17,11 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
@@ -347,7 +347,10 @@ fastRTers<-NULL
 #rpe3 is the sure thing of t - whatever was chosen in t-1 but the highest gamble option instead of average
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
-  if(nrow(dsub)<50){
+  if(nrow(dsub)<50|length(setdiff(dsub$ignoreRT,0))<10){
+    next()
+  }
+  if(sum(dsub$response=='gamble')<10|sum(dsub$response=='success')<10){
     next()
   }
   dsub[1,"rpe1"]=dsub[1,"standardGamble"]
@@ -429,33 +432,6 @@ for(i in 1:length(d$response)){
 nParticipants<- length(unique(d$uniqueid))
 nParticipants
 
-# #Check for catch trials
-# #75 should gamble; 86 should success/fail; 2 catch trials - moved to 6
-# #Check for catch trials
-# dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
-# #dcatch[order(dcatch$Trialid),]
-# dcatchGamble<-dcatch[dcatch$Trialid==75,]
-# failCatchId<-dcatchGamble[dcatchGamble$response=='success'|dcatchGamble$response=='fail',]$uniqueid
-# 
-# dcatchSuccess<-dcatch[dcatch$Trialid==86,]
-# 
-# failCatchId<-unique(c(failCatchId,dcatchSuccess[dcatchSuccess$response=='gamble',]$uniqueid))
-# catchSuccessId<-setdiff(Participants,failCatchId)
-# 
-# #Differential analysis of failCatch
-# #Called what they SHOULD do
-# dcatchidFinish<-dcatch[dcatch$Trialid==86,] %>% 
-#   group_by(uniqueid) %>% 
-#   summarise(FailTrials=sum(response=="gamble"|response=='earlyFail'))
-# 
-# dcatchidGamble<-dcatch[dcatch$Trialid==75,] %>% 
-#   group_by(uniqueid) %>% 
-#   summarise(FailTrials=sum(response=="fail"|response=='success'|response=='earlyFail'))
-# 
-# dcatchscore<-data.frame(dcatchidFinish$uniqueid)
-# colnames(dcatchscore)[1]='uniqueid'
-# dcatchscore$failScore<-dcatchidFinish$FailTrials+dcatchidGamble$FailTrials
-
 ###Behavioral analyses
 ##Reaction time
 #Whenever they gambled
@@ -503,10 +479,9 @@ allGamblers<-dhighg$uniqueid
 lowTrials<-filter(dBehavioralTotal,trials<50)$uniqueid
 failures<-filter(dBehavioralTotal,failedTrials>(round(15/trials*100)))$uniqueid
 
-removeIds<-c(noGamblers,allGamblers,lowTrials)
+removeIds<-c(noGamblers,allGamblers,lowTrials,fastRTers,failures)
 
-#Removing fastRTers
-removeIds<-c(removeIds,fastRTers,failures)
+
 #Removing any subjects from dataset, using unique ids in vector removeIds
 for(i in removeIds){
   d<-d[!(d$uniqueid==i),]
@@ -578,7 +553,7 @@ d<-d2
 nParticipants<- length(unique(d$uniqueid))
 Participants<-unique(d$uniqueid)
 nParticipants
-
+Participants
 #######################################################################################################
 #Clearing pictures
 graphics.off()
@@ -622,17 +597,18 @@ hist(dTrials$ntrials,breaks=50,xlim=c(0,140),main=paste("Number of trials per pa
 
 #Statistics
 #Logistic regression models to predict gambled
+
+
 #Recoding
 dgamble$contOdds<-recode(dgamble$oddsCond,lowp=1,midp=2,highp=3)
-
-
+dgamble$contMag<-recode(dgamble$magCond,low=1,mid=2,high=3)
 
 #Need to figure out which one to use
 mlog<-glm(gambled~contOdds,
           data=dgamble,family="binomial");
 summary(mlog)
 
-mlog2<-glm(gambled~gambleDelay+contOdds,
+mlog2<-glm(gambled~gambleDelay*contOdds+trialNumber+contMag+contMag:gambleDelay,
            data=dgamble,family="binomial");
 summary(mlog2)
 
@@ -1272,7 +1248,7 @@ highOdds<-c(31:36)
 
 ####The following is to just get one participant's data
 #INDIVIDUAL
-p=526
+p=594
 
 plotZscore<-FALSE
 
@@ -1570,7 +1546,7 @@ d5<-dgamble[dgamble$uniqueid %in% oddsN,]
 
 
 d5gamble<-filter(d5,gambleDelay!=0)
-gamblePlot(d5,orig=T,ylimit=c(50,70),title='RiskSeeking',line=F)
+gamblePlot(d5,orig=T,ylimit=c(20,70),title='RiskSeeking',line=F)
 ignoreRtPlot(d5,type='raw',eb='stderr',title='RiskSeeking',ylimit=c(400,800),line=F)
 
 
