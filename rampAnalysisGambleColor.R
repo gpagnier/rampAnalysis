@@ -25,7 +25,7 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/80ramp11.16.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/80ramp11.16.csv",sep=",")''
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/10ramp11.29.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -440,7 +440,7 @@ nParticipants
 #Whenever they gambled
 ignoreRTs<-d$ignoreRT[d$ignoreRT!=0]
 gambleRTs<-d$gambleRT[d$gambleRT!=0]
-hist(ignoreRTs,main="Aggregated gamble RTs",breaks=70,xlim=c(0,1600))
+hist(ignoreRTs,main="Aggregated ignore RTs",breaks=70,xlim=c(0,1600))
 hist(gambleRTs,main="Aggregated gamble RTs",breaks=70,xlim=c(0,1600))
 
 #Whenever they claimed 'boring' reward
@@ -459,9 +459,9 @@ dsurvey<-d %>%
             length=unique(length),
             design=unique(design),
             gender=unique(gender),
-            interest=unique(interest),
-            orange=sum(#trialType))
+            interest=unique(interest))
 dsurvey<-dsurvey[!(is.na(dsurvey$gender)|dsurvey$gender==""),]
+dsurvey
 #Removing participants who gambled too much/not enough
 dgamble0<-filter(d,gambleDelay!=0)
 
@@ -471,9 +471,13 @@ dBehavioralTotal<-dgamble0 %>%
             gambleCount=sum(response=="gamble"),
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100),
-            failedTrials=sum(response=="fail"|response=="earlyFail"))
+            failedTrials=sum(response=="fail"|response=="earlyFail"),
+            activeTrials=sum(trialType=='activeTrial'),
+            ignoreTrials=sum(trialType=='ignoreTrial'))
 dBehavioralTotal
 
+#Checking to see if there were similar numbers of orange/blue trials
+boxplot(dBehavioralTotal$activeTrials/dBehavioralTotal$ignoreTrials,ylim=c(.6,1.3))
 
 #head(dBehavioralTotal)
 #Overall preference for gambling
@@ -585,6 +589,11 @@ ignoreRTs<-dgamble$ignoreRT[dgamble$ignoreRT!=0]
 hist(ignoreRTs,main=paste("Aggregated ignore RTs; ",toString(sum(dBehavioral$didNotGamble)),"trials ignored"),breaks=70)
 c("Numberof trials that they ignored: ",toString(sum(dBehavioral$didNotGamble)))
 
+#Whenever they gambled - RT
+gambleRTs<-dgamble$gambleRT[dgamble$gambleRT!=0]
+hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=50)
+c("Numberof trials that they ignored: ",toString(sum(dBehavioral$didNotGamble)))
+
 #Whenever they claimed ignored and claimed guaranteed reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
 hist(outcomeRTs,main=paste("Aggregated outcome RTs; ",toString(length(outcomeRTs)),"trials accepted sure thing"),breaks=70)
@@ -656,15 +665,15 @@ library(lme4)
 c("Number of trials that they gambled on: ",length(dgamble$response[dgamble$response=='gamble']))
 c("Number of trials that they had the chance to gamble on: ",length(dgamble$response))
 
-#By GambleDelay
+#By GambleDelay, blue and orange trials combined
 d2<-filter(d,gambleDelay!=0) %>% 
   group_by(binsTime) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
-            didNotGamble=sum(response=="fail"|response=="success"),
+            didNotGamble=sum(response!="gamble"),
             percentageGambled=round(gambleCount/trials*100),
-            medianRT=median(setdiff(ignoreRT,0)),
-            sdRT=sd(ignoreRT))
+            medianRT=median(setdiff(gambleRT,0)),
+            sdRT=sd(gambleRT))
 
 d2$seconds<-d2$binsTime
 d2=filter(d2,binsTime!=0)
@@ -674,7 +683,7 @@ d2p<-filter(d,gambleDelay!=0) %>%
   group_by(binsTime,uniqueid) %>% 
   summarise(trials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
-            didNotGamble=sum(response=="fail"|response=="success"),
+            didNotGamble=sum(response!="gamble"),
             percentageGambled=round(gambleCount/trials*100),
             medianRT=median(setdiff(ignoreRT,0)),
             semRT=sd(setdiff(ignoreRT,0))/sqrt(length(setdiff(ignoreRT,0))))
@@ -693,36 +702,95 @@ head(d2p)
 
 #Interesting plot of gambleDelay vs propensity to gamble. NEED TO ADD SDS HERE
 #Andrew1
-plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(40,60),
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(40,50),
      main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$trials)),
                 "trials;",toString(length(Participants)),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 abline(lm(d2$percentageGambled~d2$seconds))
 
-#Plotting gamble RTs with sd
-dRT<-filter(dgamble,response=='success') %>%
+#Plotting gamble RTs with sd Overall
+dRT<-filter(dgamble,response=='gamble') %>%
   group_by(binsTime) %>%
-  summarise(medianRT=median(ignoreRT),
-            sdRT=std.error(ignoreRT),
-            medianSpeed=median(NignoreRT),
-            sdSpeed=sd(NignoreRT),
-            medianRTz=median(ignoreRTz),
-            sdRTz=sd(ignoreRTz))
+  summarise(medianRT=median(setdiff(gambleRT,0)),
+            sdRT=std.error(setdiff(gambleRT,0)))
 dRT$seconds<-dRT$binsTime
 summary(m2RT<-glm(dRT$medianRT~dRT$binsTime))
+
 #This is raw RT
-plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(400,900),main=paste("Group data; total data; median RT with sd; n =",toString(sum(d2$trials)),"trials;"),
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(800,1200),main=paste("Group data; total data; median gambling T with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
 
-#This is Speed
-plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),main=paste("Group data; total data; median Speed with sd; n =",toString(sum(d2$trials)),"trials;"),
+
+#Gambling on orange trials but can graph ignore trials
+#Press spacebar to NOT gamble so theres no gambleRT in this case
+#By GambleDelay
+d2<-filter(d,gambleDelay!=0,trialType=='ignoreTrial') %>% 
+  group_by(binsTime) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response!="gamble"),
+            percentageGambled=round(gambleCount/trials*100))
+
+d2$seconds<-d2$binsTime
+d2=filter(d2,binsTime!=0)
+d2
+
+
+#Interesting plot of gambleDelay vs propensity to gamble. NEED TO ADD SDS HERE
+#Andrew1
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(30,60),
+     main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$trials)),
+                "trials;",toString(length(Participants)),"participants"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,col='orange')
+abline(lm(d2$percentageGambled~d2$seconds))
+
+#By GambleDelay BLUE TRIALS i.e. activetrials - spacebar to gamble
+d2<-filter(d,gambleDelay!=0,trialType=='activeTrial') %>% 
+  group_by(binsTime) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            didNotGamble=sum(response!="gamble"),
+            percentageGambled=round(gambleCount/trials*100),
+            medianRT=median(setdiff(gambleRT,0)),
+            sdRT=sd(gambleRT))
+
+d2$seconds<-d2$binsTime
+d2=filter(d2,binsTime!=0)
+d2
+
+#Interesting plot of gambleDelay vs propensity to gamble. NEED TO ADD SDS HERE
+#Andrew1
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(30,50),
+     main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$trials)),
+                "trials;",toString(length(Participants)),"participants"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,col='blue')
+abline(lm(d2$percentageGambled~d2$seconds))
+
+#Plotting gamble RTs with sd Overall
+dRT<-filter(dgamble,response=='gamble') %>%
+  group_by(binsTime) %>%
+  summarise(medianRT=median(setdiff(gambleRT,0)),
+            sdRT=std.error(setdiff(gambleRT,0)))
+dRT$seconds<-dRT$binsTime
+summary(m2RT<-glm(dRT$medianRT~dRT$binsTime))
+
+#This is raw RT
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(800,1200),main=paste("Group data; total data; median gambling T with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
-  arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']+(as.numeric(dRT[i,'sdSpeed']))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']-(as.numeric(dRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
+  arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
 }
+
+
+
+
+
+
+
+
 
 #Formatting to get subj mean and grand mean and making new df d2poster that does the calculation (very elegant)
 d2p$binsTime<-as.factor(d2p$binsTime)
@@ -1342,7 +1410,7 @@ gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
 plotRT=FALSE
-plotGD=FALSE
+plotGD=T
 #Add in knobs for different sub categories (though this number is very small....)
 
 #Participants is default (all participants)
@@ -1351,7 +1419,7 @@ for(i in Participants){
   print(i)
   dsub<-d[d$uniqueid==i,]
   dsubgamble<-filter(dsub,gambleDelay!=0)
-  dsubignored<-filter(dsub,response=="success",gambleDelay!=0)
+  dsubignored<-filter(dsub,response=="ignore",gambleDelay!=0)
   dsubhigh<-filter(dsub,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
   dsublow<-filter(dsub,Trialid==21|Trialid==22|Trialid==23|Trialid==24|Trialid==25|Trialid==26)
   #Breaking down by subFilter
@@ -1423,7 +1491,7 @@ for(i in Participants){
   #This is top check for gamble ramp
   mlogtemp<-glm(gambled~gambleDelay,data=filter(dsub,gambleDelay!=0),family="binomial")
   #This is glm for RT by gamble Delay
-  mtempRT<-lm(dsubignored$ignoreRT~dsubignored$gambleDelay)
+  #mtempRT<-lm(dsubignored$ignoreRT~dsubignored$gambleDelay)
   
   #This checks to see if any participant is gamble ramping
   if(summary(mlogtemp)$coefficients[8]<.1 & summary(mlogtemp)$coefficients[2]>0){
@@ -1435,9 +1503,9 @@ for(i in Participants){
   }
   #Check to see if participant has a downwards decreasing RT ramp
 
-  if(summary(mtempRT)$coefficients[8]<.1 & summary(mtempRT)$coefficients[2]<0){
-    rtn<-c(rtn,i)
-  }
+  #if(summary(mtempRT)$coefficients[8]<.1 & summary(mtempRT)$coefficients[2]<0){
+   # rtn<-c(rtn,i)
+  #}
   
   
   #Making acf coefficient vectors
@@ -1449,7 +1517,7 @@ for(i in Participants){
   
   #Making df of gambleSlopes, rtSlopes, and i (who was just analyzed)
   
-  rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
+  #rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
   gambleSlopes<-c(gambleSlopes,summary(mlogtemp)$coefficients[2])
   run<-c(run,i)
 }
