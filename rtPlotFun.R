@@ -1,5 +1,5 @@
 gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),title="",ylabel="Reaction Time (ms)"){
-  dRT<-filter(data,response=='gamble',gambleDelay!=0) %>%
+  dRT<-filter(data,response=='gamble',gambleDelay!=0,gambleRT!=0) %>%
     group_by(binsTime) %>%
     summarise(medianRT=median(gambleRT),
               stderrRT=std.error(gambleRT),
