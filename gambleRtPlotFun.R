@@ -1,21 +1,23 @@
-gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),title="",ylabel="Reaction Time (ms)"){
-  dRT<-filter(data,response=='gamble',gambleDelay!=0) %>%
+gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(800,1200),title="",ylabel="Reaction Time (ms)"){
+  data<-filter(data,Trialid!=75|86,trialType=='activeTrial',gambleRT!=0)
+  dRT<-data %>%
     group_by(binsTime) %>%
     summarise(medianRT=median(gambleRT),
               stderrRT=std.error(gambleRT),
-              sdRT=sd(gambleRT),
-              medianSpeed=median(NgambleRT),
-              stderrSpeed=std.error(NgambleRT),
-              sdSpeed=sd(NgambleRT),
-              medianRtz=median(gambleRTz),
-              sdRtz=sd(gambleRTz))
+              sdRT=sd(gambleRT)
+             # medianSpeed=median(NgambleRT),
+             # stderrSpeed=std.error(NgambleRT),
+              #sdSpeed=sd(NgambleRT),
+             # medianRtz=median(gambleRTz),
+             # sdRtz=sd(gambleRTz)
+             )
   dRT$seconds<-dRT$binsTime
   
   if(type=='raw'){
-    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,
-         main=paste("Reaction Time vs. gamble interruption time;",title),
-        # main=paste("Reaction Time vs. gamble interruption time",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
-        #            "trials;",toString(length(unique(data$uniqueid))),"participants"),
+    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,col='blue',
+         #main=paste("Reaction Time vs. gamble interruption time;",title),
+         main=paste(" GambleRT vs. gambleDelay;",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
+                   "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab=ylabel,pch=19)
     if(eb=='sd'){
       for(i in 1:length(dRT$seconds)){

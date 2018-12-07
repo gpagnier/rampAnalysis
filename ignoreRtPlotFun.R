@@ -1,21 +1,23 @@
-ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,900),title="",ylabel="Reaction Time (ms)"){
-  dRT<-filter(data,response=='success',gambleDelay!=0) %>%
+ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(800,1200),title="",ylabel="Reaction Time (ms)"){
+  data<-filter(data,trialType=='ignoreTrial',ignoreRT!=0,Trialid!=75|86)
+  dRT<-data %>%
     group_by(binsTime) %>%
     summarise(medianRT=median(ignoreRT),
               stderrRT=std.error(ignoreRT),
-              sdRT=sd(ignoreRT),
-              medianSpeed=median(NignoreRT),
-              stderrSpeed=std.error(NignoreRT),
-              sdSpeed=sd(NignoreRT),
-              medianRtz=median(ignoreRTz),
-              sdRtz=sd(ignoreRTz))
+              sdRT=sd(ignoreRT)
+              #medianSpeed=median(NignoreRT),
+              #stderrSpeed=std.error(NignoreRT),
+              #sdSpeed=sd(NignoreRT),
+              #medianRtz=median(ignoreRTz),
+              #sdRtz=sd(ignoreRTz)
+              )
   dRT$seconds<-dRT$binsTime
   
   if(type=='raw'){
-    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,
-         main=paste("Reaction Time vs. ignore interruption time;",title),
-        # main=paste("Reaction Time vs. ignore interruption time",title,";", "n =",toString(length(data$response[data$response=='success'])),
-        #            "trials;",toString(length(unique(data$uniqueid))),"participants"),
+    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,col='orange',
+         #main=paste("Reaction Time vs. ignore interruption time;",title),
+         main=paste("IgnoreRT vs. gambleDelay",title,";", "n =",toString(nrow(data)),
+                    "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab=ylabel,pch=19)
     if(eb=='sd'){
       for(i in 1:length(dRT$seconds)){

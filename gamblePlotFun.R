@@ -3,19 +3,44 @@
 #EB is on eof 3 options: false, sem, std
 #Line says if you want best fit line or not
 
-gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""){
-  d2fun<-filter(data,gambleDelay!=0,Trialid!=75|86) %>% 
+gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title="",trialType=""){
+  if(trialType==""){
+    color="black"
+    data<-filter(data,gambleDelay!=0,Trialid!=75|86)
+    d2fun<-data %>% 
     group_by(binsTime) %>% 
     summarise(trials=length(trialNumber),
               gambleCount=sum(response=="gamble"),
               didNotGamble=sum(response=="fail"|response=="success"),
-              percentageGambled=round(gambleCount/trials*100))
+              percentageGambled=round(gambleCount/trials*100))}
+  else if(trialType=="ignore"){
+    color="orange"
+    data<-filter(data,gambleDelay!=0,Trialid!=75|86,trialType=='ignoreTrial')
+    d2fun<-data %>% 
+    group_by(binsTime) %>% 
+    summarise(trials=length(trialNumber),
+              gambleCount=sum(response=="gamble"),
+              didNotGamble=sum(response=="fail"|response=="success"),
+              percentageGambled=round(gambleCount/trials*100))}
+  else if(trialType=="active"){
+    color="blue"
+    data<-filter(data,gambleDelay!=0,Trialid!=75|86,trialType=='activeTrial')
+    d2fun<-data %>% 
+      group_by(binsTime) %>% 
+      summarise(trials=length(trialNumber),
+                gambleCount=sum(response=="gamble"),
+                didNotGamble=sum(response=="fail"|response=="success"),
+                percentageGambled=round(gambleCount/trials*100))
+  }
+  
+  
+  
   d2fun$seconds<-d2fun$binsTime
   if(orig){
       plot(d2fun$seconds,d2fun$percentageGambled,xlim = c(0,8),ylim = ylimit,
        main=paste("Gamble propensity",title, "n =",toString(length(data$response[data$response=='gamble'])),
-                  "trials;",toString(length(unique(data$uniqueid))),"participants"),
-       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+                  "gambled trials;",toString(length(unique(data$uniqueid))),"participants"),
+       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,col=color)
     if(line){
       abline(lm(d2fun$percentageGambled~d2fun$seconds))
     }
@@ -39,7 +64,7 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
     plot(dTestfun$seconds,dTestfun$meanPercentageGambled,xlim = c(0,8),ylim = ylimit,
          main=paste("Gamble propensity",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
-         xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
+         xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l',col=color)
     summary(lm(d2fun$percentageGambled~d2fun$seconds))
     if(line){
       abline(lm(dTestfun$meanPercentageGambled~dTestfun$seconds))

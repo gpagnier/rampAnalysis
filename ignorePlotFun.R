@@ -1,10 +1,11 @@
 #d is filtered data frame
+#Only takes in trials with trialType == ignoreTrial
 #group is boolean - indicates if averaging across participants(true) also know as orig
 #EB is on eof 3 options: false, sem, std
 #Line says if you want best fit line or not
 
 gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""){
-  d2fun<-filter(data,gambleDelay!=0) %>% 
+  d2fun<-filter(data,trialType=='ignoreTrial') %>% 
     group_by(binsTime) %>% 
     summarise(trials=length(trialNumber),
               gambleCount=sum(response=="gamble"),
