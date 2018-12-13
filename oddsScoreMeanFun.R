@@ -1,4 +1,4 @@
-oddsScoreMean<-function(data,time=NULL){
+oddsScoreMean<-function(data,time=""){
   
 #Breaking down by subFilter to get Odds score and mag score
   data<-filter(data,gambleDelay!=0)
@@ -10,6 +10,9 @@ oddsScoreMean<-function(data,time=NULL){
   }
   else if(time=='late'){
     data<-filter(data,binsTime>5)
+  }
+  else{
+    data=data
   }
   
   

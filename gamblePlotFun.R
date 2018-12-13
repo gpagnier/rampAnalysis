@@ -5,7 +5,7 @@
 
 gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title="",trialType=""){
   if(trialType==""){
-    color="black"
+    color="blue"
     data<-filter(data,gambleDelay!=0,Trialid!=75|86)
     d2fun<-data %>% 
     group_by(binsTime) %>% 
@@ -63,7 +63,7 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
     
     plot(dTestfun$seconds,dTestfun$meanPercentageGambled,xlim = c(0,8),ylim = ylimit,
          main=paste("Gamble propensity",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
-                    "trials;",toString(length(unique(data$uniqueid))),"participants"),
+                    "gambled trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l',col=color)
     summary(lm(d2fun$percentageGambled~d2fun$seconds))
     if(line){

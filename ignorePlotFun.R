@@ -1,65 +1,62 @@
 #d is filtered data frame
-#Only takes in trials with trialType == ignoreTrial
-#group is boolean - indicates if averaging across participants(true) also know as orig
-#EB is on eof 3 options: false, sem, std
-#Line says if you want best fit line or not
+#Do not use trialType with it 
 
-gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""){
-  d2fun<-filter(data,trialType=='ignoreTrial') %>% 
+ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""){
+  d2fun<-filter(data,gambleDelay!=0,oddsCond!='catch') %>% 
     group_by(binsTime) %>% 
     summarise(trials=length(trialNumber),
-              gambleCount=sum(response=="gamble"),
-              didNotGamble=sum(response=="fail"|response=="success"),
-              percentageGambled=round(gambleCount/trials*100),
-              medianRT=median(setdiff(gambleRT,0)),
-              sdRT=sd(gambleRT))
+              ignoreCount=sum(ignoreRT!=0),
+              didNotIgnore=sum(response=="fail"|response=="gamble"),
+              percentageIgnored=round(ignoreCount/trials*100),
+              medianRT=median(setdiff(ignoreRT,0)))
   d2fun$seconds<-d2fun$binsTime
   if(orig){
-      plot(d2fun$seconds,d2fun$percentageGambled,xlim = c(0,8),ylim = ylimit,
-       main=paste("Gamble propensity",title, "n =",toString(length(data$response[data$response=='gamble'])),
-                  "trials;",toString(length(unique(data$uniqueid))),"participants"),
-       xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+      plot(d2fun$seconds,d2fun$percentageIgnored,xlim = c(0,8),ylim = ylimit,
+       main=paste("Ignore propensity",title, "n =",toString(length(data$ignoreRT[data$ignoreRT!=0])),
+                  "ignored trials;",toString(length(unique(data$uniqueid))),"participants"),
+       xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,col='orange')
     if(line){
-      abline(lm(d2fun$percentageGambled~d2fun$seconds))
+      abline(lm(d2fun$percentageIgnored~d2fun$seconds))
     }
-    summary(lm(d2fun$percentageGambled~d2fun$seconds))
+    summary(lm(d2fun$percentageIgnored~d2fun$seconds))
   }else{
     d2pfun<-filter(data,gambleDelay!=0) %>% 
       group_by(binsTime,uniqueid) %>% 
       summarise(trials=length(trialNumber),
-                gambleCount=sum(response=="gamble"),
-                didNotGamble=sum(response=="fail"|response=="success"),
-                percentageGambled=round(gambleCount/trials*100),
-                medianRT=median(setdiff(gambleRT,0)),
-                semRT=sd(setdiff(gambleRT,0))/sqrt(length(setdiff(gambleRT,0))))
+                ignoreCount=sum(ignoreRT!=0),
+                didNotIgnore=sum(response=="fail"|response=="ignore"),
+                percentageIgnored=round(ignoreCount/trials*100),
+                medianRT=median(setdiff(ignoreRT,0)),
+                semRT=sd(setdiff(ignoreRT,0))/sqrt(length(setdiff(ignoreRT,0))))
     
     d2pfun$seconds<-d2pfun$binsTime
     dTestfun<-d2pfun %>%
       group_by(seconds) %>%
-      summarise(meanPercentageGambled=mean(percentageGambled),
-                medianPercentageGambled=median(percentageGambled),
-                sdPercentageGambled=sd(percentageGambled),
-                stdPercentageGambled=std.error(percentageGambled))
+      summarise(meanPercentageIgnored=mean(percentageIgnored),
+                medianPercentageIgnored=median(percentageIgnored),
+                sdPercentageIgnored=sd(percentageIgnored),
+                stdPercentageIgnored=std.error(percentageIgnored))
     
-    plot(dTestfun$seconds,dTestfun$meanPercentageGambled,xlim = c(0,8),ylim = ylimit,
+    plot(dTestfun$seconds,dTestfun$meanPercentageIgnored,xlim = c(0,8),ylim = ylimit,
          main=paste("Gamble propensity",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
-         xlab="Seconds into trial",ylab="Percentage Gambled",pch=19,bty='l')
-    summary(lm(d2fun$percentageGambled~d2fun$seconds))
+         xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,bty='l')
+    summary(lm(d2fun$percentageIgnored~d2fun$seconds))
     if(line){
-      abline(lm(dTestfun$meanPercentageGambled~dTestfun$seconds))
+      abline(lm(dTestfun$meanPercentageIgnored~dTestfun$seconds))
     }
     
   if(eb=='sem'){
     for(i in 1:length(dTestfun$seconds)){
-      arrows(as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageGambled']+(as.numeric(dTestfun[i,'stdPercentageGambled']))),as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageGambled']-(as.numeric(dTestfun[i,'stdPercentageGambled']))),length=0.05, angle=90, code=3)
+      arrows(as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageIgnored']+(as.numeric(dTestfun[i,'stdPercentageIgnored']))),as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageIgnored']-(as.numeric(dTestfun[i,'stdPercentageIgnored']))),length=0.05, angle=90, code=3)
     }
   }else if(eb=='std'){
     for(i in 1:length(dTestfun$seconds)){
-      arrows(as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageGambled']+(as.numeric(dTestfun[i,'sdPercentageGambled']))),as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageGambled']-(as.numeric(dTestfun[i,'sdPercentageGambled']))),length=0.05, angle=90, code=3)
+      arrows(as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageIgnored']+(as.numeric(dTestfun[i,'sdPercentageIgnored']))),as.numeric(dTestfun$seconds[i]),as.numeric(dTestfun[i,'meanPercentageIgnored']-(as.numeric(dTestfun[i,'sdPercentageIgnored']))),length=0.05, angle=90, code=3)
     }
   }
   
   }
 
 }
+

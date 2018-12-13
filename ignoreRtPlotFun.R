@@ -1,5 +1,5 @@
-ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(800,1200),title="",ylabel="Reaction Time (ms)"){
-  data<-filter(data,trialType=='ignoreTrial',ignoreRT!=0,Trialid!=75|86)
+ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1500),title="",ylabel="Reaction Time (ms)"){
+  data<-filter(data,ignoreRT!=0,Trialid!=75|86)
   dRT<-data %>%
     group_by(binsTime) %>%
     summarise(medianRT=median(ignoreRT),
@@ -37,7 +37,7 @@ ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(800,1200),ti
   if(type=='speed'){
     plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(0.0005,.0025),
          main=paste("IgnoreRT speed",title,";", "n =",toString(length(data$response[data$response=='ignore'])),
-                    "trials;",toString(length(unique(data$uniqueid))),"participants"),
+                    "ignored trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab="Speed",pch=19)
     if(eb=='sd'){
       for(i in 1:length(dRT$seconds)){

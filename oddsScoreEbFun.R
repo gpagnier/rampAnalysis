@@ -1,8 +1,19 @@
-oddsScoreEb<-function(data,type=NULL){
+oddsScoreEb<-function(data,type=NULL,time=""){
   
   #Breaking down by subFilter to get Odds score and mag score
   data<-filter(data,gambleDelay!=0)
-  
+  if(time=='early'){
+    data<-filter(data,binsTime<3)
+  }
+  else if(time=='mid'){
+    data<-filter(data,binsTime>3&binsTime<5)
+  }
+  else if(time=='late'){
+    data<-filter(data,binsTime>5)
+  }
+  else{
+    data=data
+  }
   
   
   d5high<-filter(data,Trialid==31|Trialid==32|Trialid==33|Trialid==34|Trialid==35|Trialid==36)
