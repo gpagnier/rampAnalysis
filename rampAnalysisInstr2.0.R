@@ -14,19 +14,19 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/totalPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Guillaume/gpagn/Documents/GitHub/rampAnalysis/1rampInstr2.0.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/40rampInstr2.0.csv",sep=",")
 d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/40rampInstr2.0.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -625,12 +625,12 @@ hist(ignoreRTs,main=paste("Aggregated ignore RTs; ",toString(sum(dBehavioral$ign
 
 #Whenever they gambled -RTGamble
 gambleRTs<-dgamble$gambleRT[dgamble$gambleRT!=0]
-hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=90,xlim=c(0,1600))
+hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=110,xlim=c(0,1600))
 
 
 #Whenever they  ignored and claimed guaranteed reward
 outcomeRTs<-dgamble$outcomeRT[dgamble$outcomeRT!=0]
-hist(outcomeRTs,main=paste("Aggregated outcome RTs; ",toString(length(outcomeRTs)),"trials accepted sure thing"),breaks=100,xlim=c(0,700))
+hist(outcomeRTs,main=paste("Aggregated outcome RTs; ",toString(length(outcomeRTs)),"trials accepted sure thing"),breaks=150,xlim=c(0,700))
 
 
 
@@ -650,7 +650,8 @@ head(dTrials)
 hist(dTrials$ntrials,breaks=50,xlim=c(0,140),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
 
 #Statistics
-
+#Resetting dgamble
+dgamble<-filter(d,gambleDelay!=0,Trialid!=75,Trialid!=86)
 #Logistic regression models to predict gambled
 
 #Recoding
@@ -701,7 +702,7 @@ mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+
 summary(mlmerog1)
  
  mlmerog2<-glmer(gambled~scale(contOdds)+scale(basePercentageGambled)*scale(gambleDelay)+
-                   scale(basePercentagePressed)*scale(gambleDelay)+scale(gamblePrevTrial)+
+                  scale(gamblePrevTrial)+scale(contMag)+scale(contMag):scale(gambleDelay)+
                    scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+
                    (scale(gambleDelay)+scale(gamblePrevTrial)+
                       scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+scale(contOdds)|uniqueid),
@@ -736,16 +737,16 @@ plot(d2$seconds,d2$percentageGambled,xlim = c(0,8),ylim = c(0,100),
 abline(lm(d2$percentageGambled~d2$seconds))
 
 
-gamblePlot(d,orig=T,eb='sem',ylimit=c(0,50))
+gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60))
 gamblePlot(d,orig=F,eb='sem',ylimit=c(40,50))
 gamblePlot(d,orig=F,eb='sem',ylimit=c(20,60))
-ignorePlot(d,orig=T,eb='sem',ylimit=c(50,100))
+ignorePlot(d,orig=T,eb='sem',ylimit=c(40,60))
 
-gamblePlot(d,orig=F,eb='sem',ylimit=c(0,100))
+gamblePlot(d,orig=F,eb='sem',ylimit=c(30,70))
 ignorePlot(d,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(d,eb='stderr',title="all data")
 ignoreRtPlot(d,eb='stderr',title="all data")
-totalRTPlot(d,line=T,ylimit=c(400,800),title="all data")
+totalRTPlot(d,line=T,ylimit=c(500,1000),title="all data")
 
 
 
@@ -1069,7 +1070,7 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
-plotRT=T
+plotRT=F
 plotGD=T
 #Add in knobs for different sub categories (though this number is very small....)
 
@@ -1262,11 +1263,11 @@ t.test(slopeDF$rtSlopes)
 #SUMMARY GRAPHS
 #SUBGROUP 1 - excelsior
 
-summaryMagFilter=F
-  summaryMagCond='high'
-summaryOddsFilter=F
-  summaryOddsCond='highp'
-#sfn1  
+summaryMagFilter=T
+  summaryMagCond='low'
+summaryOddsFilter=T
+  summaryOddsCond='lowp'
+  
 #New way which is better
  d5<-dgamble[dgamble$uniqueid %in% rtn,]
  d5<-dgamble[dgamble$uniqueid %in% Participants,]
@@ -1282,13 +1283,6 @@ d5<-dgamble[dgamble$uniqueid %in% highInterest,]
 
 #This is if you want intersection of two groups
 #d5<-dgamble[dgamble$uniqueid %in% intersect(catchSuccessId,oddsN),]
-
-
-d5gamble<-filter(d5,gambleDelay!=0)
-gamblePlot(d5,orig=T,ylimit=c(20,70),title='RiskSeeking',line=F)
-ignoreRtPlot(d5,type='raw',eb='stderr',title='RiskSeeking',ylimit=c(400,800),line=F)
-
-
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1312,28 +1306,21 @@ d5Behavioral<-d5 %>%
 #How much did each participant choose to gamble
 hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(50,90))
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(50,90))
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(20,50))
+totalRTPlot(d5,line=F,title="lowmaglowvalue")
 
-par(new=TRUE)
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(50,90),trialType="active")
-par(new=TRUE)
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(50,90),trialType="ignore")
-
-gambleRtPlot(d5,eb='stderr',title="Male")
-ignoreRtPlot(d5,eb='stderr',title="Male")
-
-ignoreGambleDiff(d5)
-
-d5<-filter(d5,trialType=='')
-
-#All participants
+#EV sensitivity early mid and late
 compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
-compSds<-c(oddsScoreEb(d5,type='sem',time='early'),oddsScoreEb(d5,type='sem',time='mid'),oddsScoreEb(d5,type='sem',time='late'))
+compSds<-c(oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'))
 
-pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),col='orange',
-             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; OJ Trials / ignore",cex.main=.9,cex.axis = .9,cex.lab=.9)
+pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; logical gamblers")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
+
+
+
+
+
 
 #RTs histogram
 #hist(setdiff(d5$ignoreRT,0),xlim=c(0,1500),breaks=50,main=paste("RT; n =",toString(sum(d5Behavioral$gambleCount)),"gambled trials;"),xlab="Reaction time")
@@ -2054,11 +2041,11 @@ ignoreRtPlot(d5prime,type='raw',eb='stderr',title='catchSuccess',ylimit=c(600,90
 d5<-filter(d,trialType=='ignoreTrial')
 #sfnValueSensitivity
 #All participants
-compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
-compSds<-c(oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'))
+compMeans<-c(oddsScoreMean(d,time='early'),oddsScoreMean(d,time='mid'),oddsScoreMean(d,time='late'))
+compSds<-c(oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'),oddsScoreEb(d,type='sem'))
 
-pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),col='orange',
-             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; OJ Trials / ignore",cex.main=.9,cex.axis = .9,cex.lab=.9)
+pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),col='gray',
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; all data",cex.main=.9,cex.axis = .9,cex.lab=.9)
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 #FailCatch (d5)
@@ -2092,8 +2079,8 @@ arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
 
 
 #People who gambled a lot
-highGamblers<-filter(dBehavioral,percentageGambled>50)$uniqueid
-lowGamblers<-filter(dBehavioral,percentageGambled<30)$uniqueid
+highGamblers<-filter(dBehavioral,percentageGambled>40)$uniqueid
+lowGamblers<-filter(dBehavioral,percentageGambled<40)$uniqueid
 
 highInterest<-filter(dBehavioral,percentagePressed>50)$uniqueid
 
