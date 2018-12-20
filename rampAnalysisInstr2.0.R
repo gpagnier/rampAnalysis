@@ -26,15 +26,15 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/totalPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/40rampInstr2.0.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/40rampInstr2.0.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/35rampInst2.5.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/35rampInst2.5.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
 
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
-d0<-d0[1:length(d0$viewTime),]
+#d0<-d0[6880:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -113,7 +113,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=801
+seed=901
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -348,16 +348,31 @@ for (i in Participants){
 
 #Adding vector to filter out fast RTers
 fastRTers<-NULL
+fewTrials<-NULL
+noIgnore<-NULL
+noSuccess<-NULL
+noGamble<-NULL
 #Adding RPE as a factor AND normalized RT z score
 #rpe1 is the sure thing of trial t- standard gamble of t-1
 #rpe2 is the sure thing of t - the average of whatever was chosen in t-1
 #rpe3 is the sure thing of t - whatever was chosen in t-1 but the highest gamble option instead of average
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
-  if(nrow(dsub)<50|length(setdiff(dsub$ignoreRT,0))<10){
+  
+  if(length(setdiff(dsub$ignoreRT,0))<10){
+    noIgnore<-c(noIgnore,unique(dsub$uniqueid))
     next()
   }
-  if(sum(dsub$response=='gamble')<10|sum(dsub$response=='success')<10){
+  if(nrow(dsub)<50){
+    fewTrials<-c(fewTrials,unique(dsub$uniqueid))
+    next()
+  }
+  if(sum(dsub$response=='success')<10){
+    noSuccess<-c(noSuccess,unique(dsub$uniqueid))
+    next()
+  }
+  if(sum(dsub$response=='gamble')<10){
+    noGamble<-c(noGamble,unique(dsub$uniqueid))
     next()
   }
   dsub[1,"rpe1"]=dsub[1,"standardGamble"]
@@ -432,6 +447,10 @@ for (i in Participants){
   
   d2=rbind(d2,dsub)
 }
+
+dgamble<-filter(d,gambleDelay!=0,Trialid!=75,Trialid!=86)
+d5<-dgamble[dgamble$uniqueid %in% noSuccess,]
+gamblePlot(d5,orig=T)
 d=d2
 
 #Normalized RT log(1/RT) to get speed
@@ -466,6 +485,15 @@ gambleRTs<-d$gambleRT[d$gambleRT!=0]
 hist(ignoreRTs,main="Aggregated ignore RTs",breaks=70,xlim=c(0,1600))
 hist(gambleRTs,main="Aggregated gamble RTs",breaks=70,xlim=c(0,1600))
 
+#Overlaying RT histograms of gamble and ignore RTs
+hist(ignoreRTs,col=rgb(0,0,1,0.5), main='Reaction Times at gamble time', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
+abline(v=median(ignoreRTs),col="blue",lwd=2)
+hist(gambleRTs,col=rgb(1,0,0,0.5), add=T,breaks=70)
+abline(v=median(gambleRTs),col="red",lwd=2)
+legend(200,35,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("blue","red"),title="",pch=15)
+t.test((1/ignoreRTs),(1/gambleRTs))
+
+
 #Whenever they claimed 'boring' reward
 outcomeRTs<-d$outcomeRT[d$outcomeRT!=0]
 hist(outcomeRTs,main=c("Aggregated outcome RTs; number of responses:",length(outcomeRTs)),breaks=70)
@@ -473,6 +501,10 @@ hist(outcomeRTs,main=c("Aggregated outcome RTs; number of responses:",length(out
 #Printing experiment times in minutes CONFIRM PSITURK TRACKS IN MILLISECONDS
 expTimes<-((unique(d$expTime,na.rm=TRUE)/1000)/60)
 hist(expTimes,main="Experiment Time (in minutes)",breaks=50,xlim=c(0,120))
+
+
+
+
 
 #Survey responses
 dsurvey<-d %>% 
@@ -521,20 +553,21 @@ for(i in removeIds){
 #Check for catch trials
 #75 should gamble; 86 should success/failOutcome; 6 catch trials
 #Check for catch trials
-dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid")]
-
+dcatch<-filter(d,Trialid==75|Trialid==86)[,c("Trialid","response","uniqueid","gambleDelay")]
+dcatchfinish<-filter(dcatch,Trialid==86,response=="gamble")
 #Differential analysis of failCatch
 #Called what they SHOULD do
 dcatchidFinish<-dcatch[dcatch$Trialid==86,] %>% 
   group_by(uniqueid) %>% 
-  summarise(FailTrials=sum(response=="gamble"|response=='earlyFail'))
+  summarise(FailTrials=sum(response=="gamble"))
 imp<-filter(dcatchidFinish,FailTrials>0)$uniqueid
-
+dcatchgamble<-filter(dcatch,Trialid==75,response=="fail"|response=='success')
 dcatchidGamble<-dcatch[dcatch$Trialid==75,] %>% 
   group_by(uniqueid) %>% 
   summarise(FailTrials=sum(response=="fail"|response=='success'|response=='earlyFail'))
 ra<-filter(dcatchidGamble,FailTrials>0)$uniqueid
 
+dcatchfail<-rbind(dcatchfinish,dcatchgamble)
 dcatchscore<-data.frame(dcatchidFinish$uniqueid)
 colnames(dcatchscore)[1]='uniqueid'
 dcatchscore$failScore<-dcatchidFinish$FailTrials+dcatchidGamble$FailTrials
@@ -606,7 +639,6 @@ boxplot(dBehavioral$percentageGambled,ylim=c(0,100),main=paste("Distribution of 
 
 #Adding propensity to gamble and propensity to press as possible predictors
 d$basePercentageGambled<-NULL
-d$basePercentagePressed<-NULL
 
 d2=d[0,]
 #Adding d column of number of failed trials
@@ -632,6 +664,13 @@ hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gam
 outcomeRTs<-dgamble$outcomeRT[dgamble$outcomeRT!=0]
 hist(outcomeRTs,main=paste("Aggregated outcome RTs; ",toString(length(outcomeRTs)),"trials accepted sure thing"),breaks=150,xlim=c(0,700))
 
+#Histogram of RTs and t test
+hist(ignoreRTs,col=rgb(0,0,1,0.5), main='Reaction Times at gamble time', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
+abline(v=median(ignoreRTs),col="blue",lwd=2)
+hist(gambleRTs,col=rgb(1,0,0,0.5), add=T,breaks=70)
+abline(v=median(gambleRTs),col="red",lwd=2)
+legend(200,15,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("blue","red"),title="",pch=15)
+t.test((1/ignoreRTs),(1/gambleRTs))
 
 
 
@@ -696,16 +735,17 @@ summary(mlmerog)
 mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+
                   scale(gamblePrevTrial)+
                   scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+
-                  (scale(gambleDelay)+scale(gamblePrevTrial)+
-                     scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+scale(contOdds)|uniqueid),
+                  (scale(gambleDelay)+scale(gamblePrevTrial)
+                     +scale(contOdds)|uniqueid),
                 data=dgamble,family="binomial");
 summary(mlmerog1)
  
- mlmerog2<-glmer(gambled~scale(contOdds)+scale(basePercentageGambled)*scale(gambleDelay)+
-                  scale(gamblePrevTrial)+scale(contMag)+scale(contMag):scale(gambleDelay)+
+ mlmerog2<-glmer(gambled~scale(contOdds)+scale(gambleDelay)*scale(contOdds)+scale(basePercentageGambled):scale(gambleDelay)+
+                  scale(gamblePrevTrial)+scale(contMag)+scale(contMag):scale(gambleDelay)+scale(failedTrials)+
+                   scale(failedTrials):scale(gambleDelay)+
                    scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+
                    (scale(gambleDelay)+scale(gamblePrevTrial)+
-                      scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+scale(contOdds)|uniqueid),
+                      scale(contOdds)|uniqueid),
                 data=dgamble,family="binomial");
  summary(mlmerog2)
 ##Total data
@@ -738,7 +778,7 @@ abline(lm(d2$percentageGambled~d2$seconds))
 
 
 gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60))
-gamblePlot(d,orig=F,eb='sem',ylimit=c(40,50))
+gamblePlot(d,orig=F,eb='sem',ylimit=c(40,50),title='all data')
 gamblePlot(d,orig=F,eb='sem',ylimit=c(20,60))
 ignorePlot(d,orig=T,eb='sem',ylimit=c(40,60))
 
@@ -746,7 +786,7 @@ gamblePlot(d,orig=F,eb='sem',ylimit=c(30,70))
 ignorePlot(d,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(d,eb='stderr',title="all data")
 ignoreRtPlot(d,eb='stderr',title="all data")
-totalRTPlot(d,line=T,ylimit=c(500,1000),title="all data")
+totalRTPlot(d,line=T,title="all data")
 
 
 
@@ -761,7 +801,7 @@ dRT$seconds<-dRT$binsTime
 summary(m2RT<-glm(dRT$medianRT~dRT$binsTime))
 
 #This is raw RT
-plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(0,1200),main=paste("Group data; total data; median gambling T with sd; n =",toString(sum(d2$trials)),"trials;"),
+plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=c(600,1200),main=paste("Group data; total data; median gambling T with sd; n =",toString(sum(d2$trials)),"trials;"),
      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
 for(i in 1:length(dRT$seconds)){
   arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]+(as.numeric(dRT[i,3]))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,2]-(as.numeric(dRT[i,3]))),length=0.05, angle=90, code=3)
@@ -798,7 +838,7 @@ d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 
 
 
-
+dbackup<-d
 ########################################################################################################################################
 ##Breaking down by 6 sub conditions - mag/odds
 
@@ -823,11 +863,20 @@ dBehavioralLow
 hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on low-mag gambles; n =",toString(sum(dBehavioralLow$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
 
 gamblePlot(dlow,orig=F,eb='sem',ylimit=c(0,100))
+gamblePlot(dlow,orig=F,eb='sem',ylimit=c(30,60))
+
 #ignorePlot(dlow,orig=T,eb='sem',ylimit=c(0,100))
 #gambleRtPlot(dlow,eb='stderr',title="all data")
 #ignoreRtPlot(dlow,eb='stderr',title="all data")
 totalRTPlot(dlow,line=T,ylimit=c(500,1000),title="low mag trials only")
 
+#Histogram of RTs and t test
+hist(ignoreRTs,col=rgb(0,0,1,0.5), main='Reaction Times at gamble time', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
+abline(v=median(ignoreRTs),col="blue",lwd=2)
+hist(gambleRTs,col=rgb(1,0,0,0.5), add=T,breaks=70)
+abline(v=median(gambleRTs),col="red",lwd=2)
+legend(1200,100,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("blue","red"),title="",pch=15)
+t.test((1/ignoreRTs),(1/gambleRTs))
 
 
 ##Mid mag
@@ -979,16 +1028,16 @@ totalRTPlot(drpe,line=T,ylimit=c(400,800),title="all data")
 
 ####The following is to just get one participant's data
 #INDIVIDUAL
-p=801
+p=916
 
 plotZscore<-FALSE
 
 dsub<-d[d$uniqueid==p,]
-gamblePlot(dsub,orig=F,eb='sem',ylimit=c(0,100))
+gamblePlot(dsub,orig=F,eb='sem',ylimit=c(50,90))
 ignorePlot(dsub,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(dsub,eb='stderr',title="all data")
 ignoreRtPlot(dsub,eb='stderr',title="all data")
-totalRTPlot(dsub,line=T,ylimit=c(400,800),title="all data")
+totalRTPlot(dsub,line=F,ylimit=c(400,1400),title="participant:916")
 
 dsubignored<-filter(dsub,ignoreRT!=0,Trialid!=75|86)
 d3<-dsub %>% 
@@ -1147,7 +1196,7 @@ for(i in Participants){
   d4RT$seconds<-d4RT$binsTime
   
   if (plotRT){
-    totalRTPlot(dsub,ylimit=c(200,1500),title='dsub')
+    totalRTPlot(dsub,ylimit=c(400,1500),title=paste("Indiv graph; Participant# ",toString(unique(dsub$uniqueid))))
     # plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
     #      main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
     #      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
@@ -1191,7 +1240,9 @@ a<-oddsN[order(oddsN$OddsGamblingScore),]
 #oddsN is the median split of people who respond well to odds
 oddsN<-as.integer(a$Participant[(length(a$Participant)/2):length(a$Participant)])
 #Quartile split
-oddsN<-oddsN[(length(oddsN)/2):(length(oddsN))]
+oddsN<-oddsNtable[(length(oddsNtable)/2):(length(oddsNtable))]
+#illogical Gamblers
+reverseOddsN<-as.integer(a[1:(nrow(a)/4),]$Participant)
 
 #Plot of gamble slopes vs. rtSlopes
 #POSTER graph
@@ -1202,7 +1253,7 @@ box(which="plot",lty='solid')
 plot(slopeDF$rtSlopes~slopeDF$gambleSlopes,xlab='Individual Gamble slopes (% change/second)',ylab='Individual RT Slopes (ms/second)',pch=16,cex=0.8,main=paste('Gamble slopes vs. RT slopes; n=',nrow(slopeDF)),xlim=c(-.7,.7),ylim=c(-80,50),bty='7')
 abline(v=0,col="black")
 abline(h=0,col="black")
-#with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
+with(slopeDF, text(slopeDF$rtSlopes~slopeDF$gambleSlopes, labels = slopeDF$run,cex=.8), pos = 2)
 m1<-lm(slopeDF$rtSlopes~slopeDF$gambleSlopes)
 #Make ggExtrav(ggMarginal)
 #Andrew3
@@ -1265,10 +1316,11 @@ t.test(slopeDF$rtSlopes)
 
 summaryMagFilter=T
   summaryMagCond='low'
-summaryOddsFilter=T
-  summaryOddsCond='lowp'
+summaryOddsFilter=F
+  summaryOddsCond='midp'
   
 #New way which is better
+  d5<-dgamble
  d5<-dgamble[dgamble$uniqueid %in% rtn,]
  d5<-dgamble[dgamble$uniqueid %in% Participants,]
  d5<-dgamble[dgamble$uniqueid %in% intN,]
@@ -1280,9 +1332,14 @@ d5<-dgamble[dgamble$uniqueid %in% imp,]
 d5<-dgamble[dgamble$uniqueid %in% ra,]
 d5<-dgamble[dgamble$uniqueid %in% oddsN,]
 d5<-dgamble[dgamble$uniqueid %in% highInterest,]
+d5<-dgamble[dgamble$uniqueid %in% reverseOddsN,]
+d5<-dgamble[dgamble$uniqueid %in% noProx,]
+d5<-dgamble[dgamble$uniqueid %in% dsub,]
+d5<-dgamble[dgamble$uniqueid %in% noIgnore,]
+
 
 #This is if you want intersection of two groups
-#d5<-dgamble[dgamble$uniqueid %in% intersect(catchSuccessId,oddsN),]
+d5<-dgamble[dgamble$uniqueid %in% intersect(highGamblers,noProx),]
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1294,8 +1351,6 @@ if(summaryOddsFilter){
 
 c("Number of trials that they gambled on:",length(d5$ignoreRT[d5$ignoreRT!=0]))
 c("Number of trials that they had the chance to gamble on:",length(d5$gambleDelay))
-
-
 #By uniqueId
 d5Behavioral<-d5 %>% 
   group_by(uniqueid) %>% 
@@ -1306,15 +1361,15 @@ d5Behavioral<-d5 %>%
 #How much did each participant choose to gamble
 hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(20,50))
-totalRTPlot(d5,line=F,title="lowmaglowvalue")
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(10,90),title='noIgnore')
+totalRTPlot(d5,line=F,title="p916")
 
 #EV sensitivity early mid and late
 compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
 compSds<-c(oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'))
 
-pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
-             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; logical gamblers")
+pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,90),
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; p916")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 
@@ -2079,10 +2134,89 @@ arrows(pg10,compMeans-compSems,pg10,compMeans+compSems,lwd=2,angle=90,code=3)
 
 
 #People who gambled a lot
-highGamblers<-filter(dBehavioral,percentageGambled>40)$uniqueid
+highGamblers<-filter(dBehavioral,percentageGambled>50)$uniqueid
 lowGamblers<-filter(dBehavioral,percentageGambled<40)$uniqueid
 
 highInterest<-filter(dBehavioral,percentagePressed>50)$uniqueid
 
 male<-filter(dsurvey,gender==1)$uniqueid
 highPressers<-filter()
+noProx<-c(981,976,975,972,960,947,933,932,927,910,905,904,897,893,876,874,854,852,830,827,826,824,821,818,816,804,802,801)
+#FailCatch analysis
+compMeans<-c(sum(dcatchfail$gambleDelay<3.5),sum(dcatchfail$gambleDelay>3.5&dcatchfail$gambleDelay<4.5),sum(dcatchfail$gambleDelay>4.5))
+pg11<-barplot(compMeans,names.arg = c("earlyFail","MidFail","LateFail"),ylab="# of catch trials failed",ylim=c(0,30),main="When did people fail catch trials?")
+
+
+
+
+
+
+
+
+
+
+
+#Odds mag analysis Lowodds
+
+summaryMagFilter=T
+summaryMagCond='low'
+summaryOddsFilter=F
+summaryOddsCond='lowp'
+
+#New way which is better
+d5<-dgamble
+
+#This filters summary d5 by odds/mag if specified above via T/F
+if(summaryMagFilter){
+  d5<-filter(d5,magCond==summaryMagCond)
+}
+if(summaryOddsFilter){
+  d5<-filter(d5,oddsCond==summaryOddsCond)
+}
+
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(60,80),title='LowMagAllValue')
+totalRTPlot(d5,line=F,title="LowMagAllValue")
+
+
+#Odds mag analysis Mid
+
+summaryMagFilter=T
+summaryMagCond='mid'
+summaryOddsFilter=F
+summaryOddsCond='midp'
+
+#New way which is better
+d5<-dgamble
+
+#This filters summary d5 by odds/mag if specified above via T/F
+if(summaryMagFilter){
+  d5<-filter(d5,magCond==summaryMagCond)
+}
+if(summaryOddsFilter){
+  d5<-filter(d5,oddsCond==summaryOddsCond)
+}
+
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(50,70),title='MidMagAllValue')
+totalRTPlot(d5,line=F,title="MidMagAllValue")
+
+
+#Odds mag analysis HighOdds
+
+summaryMagFilter=T
+summaryMagCond='high'
+summaryOddsFilter=F
+summaryOddsCond='highp'
+
+#New way which is better
+d5<-dgamble
+
+#This filters summary d5 by odds/mag if specified above via T/F
+if(summaryMagFilter){
+  d5<-filter(d5,magCond==summaryMagCond)
+}
+if(summaryOddsFilter){
+  d5<-filter(d5,oddsCond==summaryOddsCond)
+}
+
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(30,50),title='HighMagAllValue')
+#totalRTPlot(d5,line=F,title="HighMagAllValue")

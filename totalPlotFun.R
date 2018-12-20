@@ -1,5 +1,5 @@
 #Plots ignore and gamble propensities on same plot
-totalRTPlot<-function(data,line=FALSE,ylimit=c(200,1500),title=""){
+totalRTPlot<-function(data,line=FALSE,ylimit=c(600,1200),title=""){
   data<-filter(data,gambleDelay!=0,Trialid!=75|86)
   dgambleRT<-filter(data,gambleRT!=0) %>%
     group_by(binsTime) %>%
