@@ -449,7 +449,7 @@ for (i in Participants){
 }
 
 dgamble<-filter(d,gambleDelay!=0,Trialid!=75,Trialid!=86)
-d5<-dgamble[dgamble$uniqueid %in% noSuccess,]
+d5<-dgamble[dgamble$uniqueid %in% noIgnore,]
 gamblePlot(d5,orig=T)
 d=d2
 
