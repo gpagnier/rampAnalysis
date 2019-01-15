@@ -1,6 +1,6 @@
-###Ramp analysis; instrumental v2 - preview, 1.2 sec forced choice
+###Ramp analysis; instrumental responseMapping - no preview, 1.7 sec forced choice
 ###Rewritten/organized 9.4.2018
-###Updated 12.12.18 
+###Updated 1.15.189
 
 #Things to do
 
@@ -26,15 +26,15 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/totalPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/35rampInst2.5.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/35rampInst2.5.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/20rampRM.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/20rampRM.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
 
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
-#d0<-d0[6880:length(d0$viewTime),]
+d0<-d0[219:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -85,7 +85,7 @@ hist(as.integer(dsurvey$understand),breaks=50,main="interest; 10 is very easy to
 #"trialid" #"expTime" "gambleDelay" "ignoreRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
 #Need to replace uniqueid with numbers and clean out columns that aren't useful
-d<-d0[,c("Trialid","gambleDelay","ignoreRT","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid")]
+d<-d0[,c("Trialid","gambleDelay","ignoreRT","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid","trialType")]
 d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
 d<-subset(d,d$response!="")
 d$engagement<-NULL
@@ -113,7 +113,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=901
+seed=101
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -356,6 +356,7 @@ noGamble<-NULL
 #rpe1 is the sure thing of trial t- standard gamble of t-1
 #rpe2 is the sure thing of t - the average of whatever was chosen in t-1
 #rpe3 is the sure thing of t - whatever was chosen in t-1 but the highest gamble option instead of average
+
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
   
@@ -653,11 +654,11 @@ d<-d2
 #Remaking behavioral histograms
 #Whenever they ignored -RTIgnore
 ignoreRTs<-dgamble$ignoreRT[dgamble$ignoreRT!=0]
-hist(ignoreRTs,main=paste("Aggregated ignore RTs; ",toString(sum(dBehavioral$ignoredTrials)),"trials ignored"),breaks=90,xlim=c(0,1600))
+hist(ignoreRTs,main=paste("Aggregated ignore RTs; ",toString(sum(dBehavioral$ignoredTrials)),"trials ignored"),breaks=90,xlim=c(0,1700))
 
 #Whenever they gambled -RTGamble
 gambleRTs<-dgamble$gambleRT[dgamble$gambleRT!=0]
-hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=110,xlim=c(0,1600))
+hist(gambleRTs,main=paste("Aggregated gamble RTs; ",toString(sum(dBehavioral$gambleCount)),"trials gambled"),breaks=110,xlim=c(0,1700))
 
 
 #Whenever they  ignored and claimed guaranteed reward
@@ -741,10 +742,10 @@ summary(mlmerog1)
  
  mlmerog2<-glmer(gambled~scale(contOdds)+scale(gambleDelay)*scale(contOdds)+scale(basePercentageGambled):scale(gambleDelay)+
                   scale(gamblePrevTrial)+scale(contMag)+scale(contMag):scale(gambleDelay)+scale(failedTrials)+
-                   scale(failedTrials):scale(gambleDelay)+
-                   scale(gamblePrevTrial2)+scale(gamblePrevTrial3)+
-                   (scale(gambleDelay)+scale(gamblePrevTrial)+
-                      scale(contOdds)|uniqueid),
+                   scale(failedTrials):scale(gambleDelay)+as.factor(trialType)+scale(trialNumber)+
+                   
+                   (scale(gambleDelay)+scale(contMag)+scale(trialNumber)+
+                      scale(contOdds)+1|uniqueid),
                 data=dgamble,family="binomial");
  summary(mlmerog2)
 ##Total data

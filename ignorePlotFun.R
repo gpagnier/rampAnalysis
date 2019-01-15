@@ -1,7 +1,17 @@
 #d is filtered data frame
 #Do not use trialType with it 
 
-ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""){
+ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title="",trialType=""){
+  
+  color='black'
+  if(trialType=='gambleLeft'){
+    data<-filter(data,trialType=='gambleLeft')
+    color='purple'
+  }else if(trialType=='gambleRight'){
+    data<-filter(data,trialType=='gambleRight')
+    color='red'
+  }
+  
   d2fun<-filter(data,gambleDelay!=0,oddsCond!='catch') %>% 
     group_by(binsTime) %>% 
     summarise(trials=length(trialNumber),
@@ -14,7 +24,7 @@ ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
       plot(d2fun$seconds,d2fun$percentageIgnored,xlim = c(0,8),ylim = ylimit,
        main=paste("Ignore propensity",title, "n =",toString(length(data$ignoreRT[data$ignoreRT!=0])),
                   "ignored trials;",toString(length(unique(data$uniqueid))),"participants"),
-       xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,col='orange')
+       xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,col=color)
     if(line){
       abline(lm(d2fun$percentageIgnored~d2fun$seconds))
     }
@@ -40,7 +50,7 @@ ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
     plot(dTestfun$seconds,dTestfun$meanPercentageIgnored,xlim = c(0,8),ylim = ylimit,
          main=paste("Gamble propensity",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
-         xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,bty='l')
+         xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,bty='l',col=color)
     summary(lm(d2fun$percentageIgnored~d2fun$seconds))
     if(line){
       abline(lm(dTestfun$meanPercentageIgnored~dTestfun$seconds))

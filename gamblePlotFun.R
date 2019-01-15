@@ -5,7 +5,7 @@
 
 gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title="",trialType=""){
   if(trialType==""){
-    color="blue"
+    color="black"
     data<-filter(data,gambleDelay!=0,Trialid!=75|86)
     d2fun<-data %>% 
     group_by(binsTime) %>% 
@@ -13,18 +13,18 @@ gamblePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
               gambleCount=sum(response=="gamble"),
               didNotGamble=sum(response=="fail"|response=="success"),
               percentageGambled=round(gambleCount/trials*100))}
-  else if(trialType=="ignore"){
-    color="orange"
-    data<-filter(data,gambleDelay!=0,Trialid!=75|86,trialType=='ignoreTrial')
+  else if(trialType=="gambleLeft"){
+    color="purple"
+    data<-filter(data,gambleDelay!=0,Trialid!=75|86,trialType=='gambleLeft')
     d2fun<-data %>% 
     group_by(binsTime) %>% 
     summarise(trials=length(trialNumber),
               gambleCount=sum(response=="gamble"),
               didNotGamble=sum(response=="fail"|response=="success"),
               percentageGambled=round(gambleCount/trials*100))}
-  else if(trialType=="active"){
-    color="blue"
-    data<-filter(data,gambleDelay!=0,Trialid!=75|86,trialType=='activeTrial')
+  else if(trialType=="gambleRight"){
+    color="red"
+    data<-filter(data,gambleDelay!=0,Trialid!=75|86,trialType=='gambleRight')
     d2fun<-data %>% 
       group_by(binsTime) %>% 
       summarise(trials=length(trialNumber),

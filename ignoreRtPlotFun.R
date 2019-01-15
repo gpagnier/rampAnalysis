@@ -1,4 +1,12 @@
-ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1500),title="",ylabel="Reaction Time (ms)"){
+ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1500),title="",ylabel="Reaction Time (ms)",trialType=""){
+  color='black'
+  if(trialType=='gambleLeft'){
+    data<-filter(data,trialType=='gambleLeft')
+    color='purple'
+  }else if(trialType=='gambleRight'){
+    data<-filter(data,trialType=='gambleRight')
+    color='red'
+  }
   data<-filter(data,ignoreRT!=0,Trialid!=75|86)
   dRT<-data %>%
     group_by(binsTime) %>%
@@ -14,8 +22,8 @@ ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1500),ti
   dRT$seconds<-dRT$binsTime
   
   if(type=='raw'){
-    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,col='orange',
-         #main=paste("Reaction Time vs. ignore interruption time;",title),
+    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,col=color,
+         #main=paste("RT vs. ignore interruption time;",title),
          main=paste("IgnoreRT vs. gambleDelay",title,";", "n =",toString(nrow(data)),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab=ylabel,pch=19)
@@ -38,7 +46,7 @@ ignoreRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1500),ti
     plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(0.0005,.0025),
          main=paste("IgnoreRT speed",title,";", "n =",toString(length(data$response[data$response=='ignore'])),
                     "ignored trials;",toString(length(unique(data$uniqueid))),"participants"),
-         xlab="Seconds into trial",ylab="Speed",pch=19)
+         xlab="Seconds into trial",ylab="Speed",pch=19,col=color)
     if(eb=='sd'){
       for(i in 1:length(dRT$seconds)){
         arrows(as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']+(as.numeric(dRT[i,'sdSpeed']))),as.numeric(dRT$seconds[i]),as.numeric(dRT[i,'medianSpeed']-(as.numeric(dRT[i,'sdSpeed']))),length=0.05, angle=90, code=3)
