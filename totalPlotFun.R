@@ -1,5 +1,5 @@
 #Plots ignore and gamble propensities on same plot
-totalRTPlot<-function(data,line=FALSE,ylimit=c(600,1500),title=""){
+totalRTPlot<-function(data,line=FALSE,ylimit=c(700,1400),title=""){
   data<-filter(data,gambleDelay!=0,Trialid!=75|86)
   dgambleRT<-filter(data,gambleRT!=0) %>%
     group_by(binsTime) %>%
@@ -20,6 +20,7 @@ totalRTPlot<-function(data,line=FALSE,ylimit=c(600,1500),title=""){
        main=paste("GambleRT vs. gambleDelay;",title,";", "n =",toString(length(data$gambleRT[data$gambleRT!=0])),
                   "gambled;",toString(length(data$ignoreRT[data$ignoreRT!=0])),
                   "ignored"),xlab="Seconds into trial",ylab='RT (ms)',pch=19)
+  legend(2,900,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("orange","blue"),title="",pch=15)
   for(i in 1:length(dgambleRT$seconds)){
     arrows(as.numeric(dgambleRT$seconds[i]),as.numeric(dgambleRT[i,'medianRT']+(as.numeric(dgambleRT[i,'stderrRT']))),as.numeric(dgambleRT$seconds[i]),as.numeric(dgambleRT[i,'medianRT']-(as.numeric(dgambleRT[i,'stderrRT']))),length=0.05, angle=90, code=3)
   }

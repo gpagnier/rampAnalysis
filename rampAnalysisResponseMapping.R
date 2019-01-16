@@ -85,7 +85,7 @@ hist(as.integer(dsurvey$understand),breaks=50,main="interest; 10 is very easy to
 #"trialid" #"expTime" "gambleDelay" "ignoreRT" "outcomeRT" "response" "standardGamble" "trialNumber" "uniqueid"
 
 #Need to replace uniqueid with numbers and clean out columns that aren't useful
-d<-d0[,c("Trialid","gambleDelay","ignoreRT","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid","trialType")]
+d<-d0[,c("Trialid","gambleDelay","ignoreRT","gambleRT","ignoreRT","outcomeRT","response","standardGamble","trialNumber","uniqueid","trialType")]
 d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
 d<-subset(d,d$response!="")
 d$engagement<-NULL
@@ -798,9 +798,17 @@ ignorePlot(d,orig=T,eb='sem',ylimit=c(40,60))
 gamblePlot(d,orig=F,eb='sem',ylimit=c(30,70))
 ignorePlot(d,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(d,eb='stderr',title="gambleLeft",ylim=c(900,1100),trialType='gambleLeft')
+gambleRtPlot(d,eb='stderr',title="gambleRight",ylim=c(900,1100),trialType='gambleRight')
+
 ignoreRtPlot(d,eb='stderr',title="gambleRight",ylim=c(900,1100),trialType='gambleRight')
 totalRTPlot(d,line=T,title="all data")
 
+totalRTPlot(dlow,line=T,title="low mag")
+totalRTPlot(dmid,line=T,title="mid mag")
+totalRTPlot(dhigh,line=T,title="high mag")
+totalRTPlot(dlowp,line=T,title="low value")
+totalRTPlot(dmidp,line=T,title="mid value")
+totalRTPlot(dhighp,line=T,title="high value")
 
 
 
@@ -1186,8 +1194,8 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
-plotRT=F
-plotGD=T
+plotRT=T
+plotGD=F
 #Add in knobs for different sub categories (though this number is very small....)
 
 #Participants is default (all participants)
@@ -1263,7 +1271,7 @@ for(i in Participants){
   d4RT$seconds<-d4RT$binsTime
   
   if (plotRT){
-    totalRTPlot(dsub,ylimit=c(400,1500),title=paste("Indiv graph; Participant# ",toString(unique(dsub$uniqueid))))
+    totalRTPlot(dsub,line=T,title=paste("Indiv graph; Participant# ",toString(unique(dsub$uniqueid))))
     # plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
     #      main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
     #      xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
@@ -1787,9 +1795,10 @@ for(i in imp){
     d4RT$seconds<-d4RT$binsTime
     
     if (subplotRT){
-      plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
-           main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
-           xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+     # plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
+    #       main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
+    #       xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
+      totalRTPlot(dsub,line=T,title=paste("participant:",i))
     }
     
     #This is tracking all the gamble slopes of everyone in subgroup
@@ -1844,7 +1853,7 @@ hist(subslope1DF$rtSlopes[subslope1DF$rtSlopes<0],xlab='Individual RT Slopes (ms
   #Looping through subgroups to get INDIVIDUAL graphs
  # indivd5prime<-intN
 
-  subplotRT=FALSE
+  subplotRT=T
   subplotGD=F
   soddsN=NULL
   oddsScoreKnob=FALSE
@@ -1949,8 +1958,7 @@ for(i in Participants){
         plot(d4RT$seconds,d4RT$meanRT,xlim = c(0,8),ylim=c(400,1000),
              main=paste("Individual participant RT; n =",toString(sum(d4$trials)),"trials;","participant:",toString(unique(dsub$uniqueid))),
              xlab="Seconds into trial",ylab="Reaction time (seconds)",pch=19)
-      }
-
+        }
       #This is tracking all the gamble slopes of everyone in subgroup
       mlogtemp<-glm(gambled~gambleDelay,data=filter(dsub,gambleDelay!=0),family="binomial")
       gambleSlopes<-c(gambleSlopes,summary(mlogtemp)$coefficients[2])
