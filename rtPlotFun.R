@@ -1,4 +1,4 @@
-gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1600),title="",ylabel="Reaction Time (ms)"){
+gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(900,1200),title="",ylabel="Reaction Time (ms)",trialType=""){
   
   color='black'
   if(trialType=='gambleLeft'){
@@ -13,11 +13,12 @@ gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(400,1600),ti
     summarise(medianRT=median(gambleRT),
               stderrRT=std.error(gambleRT),
               sdRT=sd(gambleRT),
-              medianSpeed=median(NgambleRT),
-              stderrSpeed=std.error(NgambleRT),
-              sdSpeed=sd(NgambleRT),
-              medianRtz=median(gambleRTz),
-              sdRtz=sd(gambleRTz))
+              #medianSpeed=median(NgambleRT),
+              #stderrSpeed=std.error(NgambleRT),
+              #sdSpeed=sd(NgambleRT),
+              #medianRtz=median(gambleRTz),
+             # sdRtz=sd(gambleRTz)
+              )
   dRT$seconds<-dRT$binsTime
   
   if(type=='raw'){
