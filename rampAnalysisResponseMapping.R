@@ -52,6 +52,8 @@ colnames(bonusAmounts)[2]<-"ID"
 
 bonusAmounts<-unique(bonusAmounts)
 bonusAmounts
+#Export bonusAmount csv if you want
+write.csv(bonusAmounts,'bonusAmounts.csv')
 #If you want to see survey results
 dsurvey<-d0 %>% 
   group_by(uniqueid) %>% 
@@ -755,9 +757,9 @@ summary(mlmerog1)
  
  mlmerog2<-glmer(gambled~scale(contOdds)+scale(gambleDelay)*scale(contOdds)+scale(basePercentageGambled):scale(gambleDelay)+
                   scale(gamblePrevTrial)+scale(contMag)+scale(contMag):scale(gambleDelay)+scale(failedTrials)+
-                   scale(failedTrials):scale(gambleDelay)+as.factor(trialType)+scale(trialNumber)+
+                   scale(failedTrials):scale(gambleDelay)+as.factor(trialType)+scale(trialNumber)+scale(trialNumber):scale(gambleDelay)+
                    
-                   (scale(gambleDelay)+scale(contMag)+scale(trialNumber)+
+                   (scale(gambleDelay)+scale(contMag)+scale(trialNumber)+scale(trialNumber):scale(gambleDelay)+
                       scale(contOdds)+1|uniqueid),
                 data=dgamble,family="binomial");
  summary(mlmerog2)
@@ -854,9 +856,23 @@ d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 
 
+#Histograms to check for spacing out
+correctRThist(d,interruption="early",title="All corrrect responses, early mid and late")
+correctRThist(d,interruption="mid",addknob=T,)
+correctRThist(d,interruption="late",addknob=T,)
+legend(250,10,cex=.7, bty = "n",legend=c("early","mid","late"),col=c("blue","red","green"),title="",pch=15)
+
+correctRThist(d,interruption="early",title="All corrrect responses, early and late")
+correctRThist(d,interruption="late",addknob=T,)
+legend(250,10,cex=.7, bty = "n",legend=c("early","late"),col=c("blue","green"),title="",pch=15)
 
 
 
+hist(dmid$ignoreRT[dmid$ignoreRT!=0],col=rgb(0,0,1,0.5), main='Reaction Times at gamble time mid mag only', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
+abline(v=median(ignoreRTs),col="blue",lwd=2)
+hist(dmid$gambleRT[dmid$gambleRT!=0],col=rgb(1,0,0,0.5), add=T,breaks=70)
+abline(v=median(gambleRTs),col="red",lwd=2)
+legend(200,10,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("blue","red"),title="",pch=15)
 
 
 dbackup<-d
@@ -971,6 +987,13 @@ hist(dhigh$gambleRT[dhigh$gambleRT!=0],col=rgb(1,0,0,0.5), add=T,breaks=70)
 abline(v=median(gambleRTs),col="red",lwd=2)
 legend(200,10,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("blue","red"),title="",pch=15)
 t.test((1/ignoreRTs),(1/gambleRTs))
+
+
+
+
+
+
+
 
 
 
