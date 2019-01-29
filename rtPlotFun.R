@@ -22,7 +22,7 @@ gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(900,1200),ti
   dRT$seconds<-dRT$binsTime
   
   if(type=='raw'){
-    plot(dRT$seconds,dRT$medianRT,xlim = c(0,8),ylim=ylimit,
+    plot(dRT$seconds,dRT$medianRT,xlim = c(0,4),ylim=ylimit,
          main=paste("RT vs. gamble interruption time;",title),
         # main=paste("Reaction Time vs. gamble interruption time",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
         #            "trials;",toString(length(unique(data$uniqueid))),"participants"),
@@ -43,7 +43,7 @@ gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(900,1200),ti
     summary(lm(dRT$medianRT~dRT$seconds)) 
   }
   if(type=='speed'){
-    plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(0.0005,.0025),
+    plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,4),ylim=c(0.0005,.0025),
          main=paste("RT speed",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab="Speed",pch=19,col=color)
