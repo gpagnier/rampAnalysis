@@ -26,7 +26,7 @@ source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/totalPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/10rampRM.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/temprampRM.csv",sep=",")
 d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampRM.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
@@ -34,7 +34,7 @@ d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampRM.csv",
 
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
-d0<-d0[6957:length(d0$viewTime),]
+d0<-d0[9040:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -156,7 +156,7 @@ hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the pr
 
 #How many points do you want on the gambleDelay?
 d$binsTme=NULL
-bins=3
+bins=4
 
 ninbins=round((length(d$Trialid)/bins))
 
@@ -189,25 +189,28 @@ a10tail<-unlist(lapply(delayValues[10],tail,1),use.names=FALSE)
 #For totalRampv3
 #For 6 bins
 a1head<-1.4
-a1tail<-1.999999
-a2head<-2
-a2tail<-2.5
-a3head<-3.75
-a3tail<-3.999999
-a4head<-4
-a4tail<-4.5
-a5head<-5.8
-a5tail<-6.24
-a6head<-6.24000000001
-a6tail<-6.8
+a1tail<-.9
+a2head<-.90001
+a2tail<-1.55
+a3head<-1.5500001
+a3tail<-2.2
+a4head<-2.200001
+a4tail<-2.85
+a5head<-2.85000001
+a5tail<-3.5
+
 
 #For 3 bins
 a1head<-.25
-a1tail<-1.4
-a2head<-1.5
-a2tail<-3
-a3head<-3.1
-a3tail<-4
+a1tail<-1
+a2head<-1.00001
+a2tail<-1.75
+a3head<-2.50001
+a3tail<-3.25
+a4head<-3.25001
+a4tail<-2.9999
+a5head<-3
+a5tail<-4
 
 #This is the function that creates gambleBins
 binTimeCalc<-function(d,row){
@@ -219,11 +222,11 @@ binTimeCalc<-function(d,row){
   {return(mean(c(a2head,a2tail)))}
   else if (d[row,'gambleDelay']>=a3head&d[row,'gambleDelay']<=a3tail)
   {return(mean(c(a3head,a3tail)))}
-  # else if (d[row,'gambleDelay']>=a4head&d[row,'gambleDelay']<=a4tail)
-  # {return(mean(c(a4head,a4tail)))}
-  # else if (d[row,'gambleDelay']>=a5head&d[row,'gambleDelay']<=a5tail)
-  # {return(mean(c(a5head,a5tail)))}
-  # else if (d[row,'gambleDelay']>=a6head&d[row,'gambleDelay']<=a6tail)
+  else if (d[row,'gambleDelay']>=a4head&d[row,'gambleDelay']<=a4tail)
+  {return(mean(c(a4head,a4tail)))}
+  #else if (d[row,'gambleDelay']>=a5head&d[row,'gambleDelay']<=a5tail)
+  #{return(mean(c(a5head,a5tail)))}
+  #else if (d[row,'gambleDelay']>=a6head&d[row,'gambleDelay']<=a6tail)
   # {return(mean(c(a6head,a6tail)))}
   # else if (d[row,'gambleDelay']>=a7head&d[row,'gambleDelay']<=a7tail)
   # {return(mean(c(a7head,a7tail)))}
@@ -800,7 +803,7 @@ plot(d2$seconds,d2$percentageGambled,xlim = c(0,4),ylim = c(0,100),
 abline(lm(d2$percentageGambled~d2$seconds))
 
 
-gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60))
+gamblePlot(d,orig=T,eb='sem',ylimit=c(10,90))
 gamblePlot(d,orig=F,eb='sem',ylimit=c(40,50),title='all data')
 gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60),trialType="gambleRight")
 gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60),trialType="gambleLeft")
