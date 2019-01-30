@@ -21,7 +21,7 @@ ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
               medianRT=median(setdiff(ignoreRT,0)))
   d2fun$seconds<-d2fun$binsTime
   if(orig){
-      plot(d2fun$seconds,d2fun$percentageIgnored,xlim = c(0,8),ylim = ylimit,
+      plot(d2fun$seconds,d2fun$percentageIgnored,xlim = c(0,4),ylim = ylimit,
        main=paste("Ignore propensity",title, "n =",toString(length(data$ignoreRT[data$ignoreRT!=0])),
                   "ignored trials;",toString(length(unique(data$uniqueid))),"participants"),
        xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,col=color)
@@ -47,7 +47,7 @@ ignorePlot<-function(data,orig=TRUE,eb=FALSE,line=FALSE,ylimit=c(0,100),title=""
                 sdPercentageIgnored=sd(percentageIgnored),
                 stdPercentageIgnored=std.error(percentageIgnored))
     
-    plot(dTestfun$seconds,dTestfun$meanPercentageIgnored,xlim = c(0,8),ylim = ylimit,
+    plot(dTestfun$seconds,dTestfun$meanPercentageIgnored,xlim = c(0,4),ylim = ylimit,
          main=paste("Gamble propensity",title,";", "n =",toString(length(data$response[data$response=='gamble'])),
                     "trials;",toString(length(unique(data$uniqueid))),"participants"),
          xlab="Seconds into trial",ylab="Percentage Ignored",pch=19,bty='l',col=color)
