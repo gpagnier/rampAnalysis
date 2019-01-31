@@ -14,20 +14,20 @@
 library(mosaic)
 library(plotrix)
 library(VennDiagram)
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
-source("C:/Users/gpagn/Documents/GitHub/rampAnalysis/totalPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
-d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/temprampRM.csv",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rampRM.csv",sep=",")
+d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/50rampRMNew",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/50rampRMNew.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
@@ -115,7 +115,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=101
+seed=201
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -200,17 +200,16 @@ a5head<-2.85000001
 a5tail<-3.5
 
 
-#For 3 bins
+#For 4 bins #Use this for RM NEW
 a1head<-.25
-a1tail<-1
-a2head<-1.00001
-a2tail<-1.75
-a3head<-2.50001
-a3tail<-3.25
-a4head<-3.25001
-a4tail<-2.9999
-a5head<-3
-a5tail<-4
+a1tail<-1.25
+a2head<-1.25001
+a2tail<-2
+a3head<-2.00001
+a3tail<-2.75
+a4head<-2.75001
+a4tail<-3.5
+
 
 #This is the function that creates gambleBins
 binTimeCalc<-function(d,row){
@@ -803,10 +802,10 @@ plot(d2$seconds,d2$percentageGambled,xlim = c(0,4),ylim = c(0,100),
 abline(lm(d2$percentageGambled~d2$seconds))
 
 
-gamblePlot(d,orig=T,eb='sem',ylimit=c(10,90))
+gamblePlot(d,orig=T,eb='sem',ylimit=c(35,55))
 gamblePlot(d,orig=F,eb='sem',ylimit=c(40,50),title='all data')
-gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60),trialType="gambleRight")
-gamblePlot(d,orig=T,eb='sem',ylimit=c(40,60),trialType="gambleLeft")
+gamblePlot(d,orig=T,eb='sem',ylimit=c(35,55),trialType="gambleRight")
+gamblePlot(d,orig=T,eb='sem',ylimit=c(35,55),trialType="gambleLeft")
 
 ignorePlot(d,orig=T,eb='sem',ylimit=c(40,60))
 
