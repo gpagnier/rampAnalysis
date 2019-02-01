@@ -23,6 +23,7 @@ source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/correctRThist.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
@@ -326,6 +327,7 @@ for (i in 1:length(d$response)){
   }
 }
 
+#dbackup<-d
 #d<-dbackup
 
 #Adding prediction errors:
