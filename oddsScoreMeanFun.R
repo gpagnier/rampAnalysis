@@ -3,28 +3,13 @@ oddsScoreMean<-function(data,int="",time=""){
   #Time is within participant subjects
 #Breaking down by subFilter to get Odds score and mag score
   data<-filter(data,gambleDelay!=0)
-<<<<<<< HEAD
+
   if(int=='early'){
-    data<-filter(data,binsTime<3)
-  }
-  else if(int=='mid'){
-    data<-filter(data,binsTime>3&binsTime<5)
-  }
-  else if(int=='late'){
-    data<-filter(data,binsTime>5)
-=======
-  if(time=='early'){
-    data<-filter(data,binsTime<1)
-  }
-  else if(time=='mid'){
-    data<-filter(data,binsTime>1&binsTime<3)
-  }
-  else if(time=='late'){
-    data<-filter(data,binsTime>3)
->>>>>>> b3f4d30d2d7dd4ad3a1fbd4f01efa3a7887b627c
-  }
-  else{
-    data=data
+    data<-filter(data,binsTime<1.5)
+  } else if(int=='mid'){
+    data<-filter(data,binsTime>1.5&binsTime<2.5)
+  } else if(int=='late'){
+    data<-filter(data,binsTime>2.5)
   }
   
   if(time=='early'){
@@ -54,4 +39,5 @@ oddsScoreMean<-function(data,int="",time=""){
   oddsScore<-mean(d5behavioralHigh$percentageGambled)-mean(d5behavioralLow$percentageGambled)
 
   return(oddsScore)
+  }
 }

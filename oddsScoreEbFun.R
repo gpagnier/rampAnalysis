@@ -2,29 +2,23 @@ oddsScoreEb<-function(data,type=NULL,int="",time=""){
   
   #Breaking down by subFilter to get Odds score and mag score
   data<-filter(data,gambleDelay!=0)
-<<<<<<< HEAD
+
   if(int=='early'){
-    data<-filter(data,binsTime<3)
-  }
-  else if(int=='mid'){
-    data<-filter(data,binsTime>3&binsTime<5)
-  }
-  else if(int=='late'){
-    data<-filter(data,binsTime>5)
-=======
+    data<-filter(data,binsTime<1.5)
+  }else if(int=='mid'){
+    data<-filter(data,binsTime>1.5&binsTime<2.5)
+  }else if(int=='late'){
+    data<-filter(data,binsTime>3.5)
+    }
+  
   if(time=='early'){
     data<-filter(data,binsTime<1)
-  }
-  else if(time=='mid'){
+  }else if(time=='mid'){
     data<-filter(data,binsTime>1&binsTime<3)
-  }
-  else if(time=='late'){
+  }else if(time=='late'){
     data<-filter(data,binsTime>3)
->>>>>>> b3f4d30d2d7dd4ad3a1fbd4f01efa3a7887b627c
-  }
-  else{
-    data=data
-  }
+    }
+
   
   if(time=='early'){
     data=filter(data,trialNumber<46)
@@ -58,4 +52,5 @@ oddsScoreEb<-function(data,type=NULL,int="",time=""){
     eb=std.error(gambledTotal)
   }
   return(eb)
+  }
 }
