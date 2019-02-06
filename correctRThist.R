@@ -1,13 +1,13 @@
 correctRThist<-function(data,interruption='',time='',line=T,xlimit=c(0,1500),addknob=FALSE,title=paste("RT on correct responses; n =",toString(length(correctResp)),";","gamble interrupted:",toString(interruption))){
   color='grey'
   if(interruption=='early'){
-    data=filter(data,binsTime==2)
+    data=filter(data,gambleDelay<1.5)
     color=rgb(0,0,1,0.5)
   }else if(interruption=='mid'){
-    data=filter(data,binsTime==4)
+    data=filter(data,gambleDelay>1.5&gambleDelay<2.5)
     color=rgb(1,0,0,0.5)
   }else if(interruption=='late'){
-      data=filter(data,binsTime==6)
+      data=filter(data,gambleDelay>3.5)
       color=rgb(0,1,0,0.5)
   }
   if(time=='early'){

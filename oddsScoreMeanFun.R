@@ -40,4 +40,4 @@ oddsScoreMean<-function(data,int="",time=""){
 
   return(oddsScore)
   }
-}
+

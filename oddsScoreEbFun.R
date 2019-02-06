@@ -53,4 +53,4 @@ oddsScoreEb<-function(data,type=NULL,int="",time=""){
   }
   return(eb)
   }
-}
+
