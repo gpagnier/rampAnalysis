@@ -11,33 +11,33 @@
 #install.packages('plotrix')
 #install.packages('plotrix', dependencies=TRUE, repos='http://cran.rstudio.com/')
 
-library(mosaic)
-library(plotrix)
-library(VennDiagram)
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
+require(mosaic)
+require(plotrix)
+require(VennDiagram)
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/correctRThist.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/correctRThist.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/50rampRMNew",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/50rampRMNew.csv",sep=",")
+d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/75rampRM.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
 
 #d0<-read.csv(file.choose())
 #Cleaning data for totalrampv3
-d0<-d0[9040:length(d0$viewTime),]
+#d0<-d0[9040:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -118,7 +118,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=201
+seed=301
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -819,7 +819,7 @@ gambleRtPlot(d,eb='stderr',title="gambleLeft",ylim=c(800,1200),trialType='gamble
 gambleRtPlot(d,eb='stderr',title="gambleRight",ylim=c(800,1200),trialType='gambleRight')
 
 ignoreRtPlot(d,eb='stderr',title="gambleRight",ylim=c(900,1100),trialType='gambleRight')
-totalRTPlot(d,line=T,title="all data",ylimit = c(900,1200))
+totalRTPlot(d,line=T,title="all data",ylimit = c(900,1100))
 
 totalRTPlot(dlow,line=T,title="low mag")
 totalRTPlot(dmid,line=T,title="mid mag")
@@ -874,13 +874,15 @@ d5prime<-dgamble[dgamble$uniqueid %in% catchSuccessId,]
 
 #Histograms to check for spacing out
 correctRThist(d,interruption="early",title="All corrrect responses, early mid and late")
-correctRThist(d,interruption="mid",addknob=T,)
-correctRThist(d,interruption="late",addknob=T,)
+correctRThist(d,interruption="mid",addknob=T)
+correctRThist(d,interruption="late",addknob=T)
 legend(250,10,cex=.7, bty = "n",legend=c("early","mid","late"),col=c("blue","red","green"),title="",pch=15)
 
-correctRThist(d,interruption="early",title="All corrrect responses, early and late")
-correctRThist(d,interruption="late",addknob=T,)
-legend(250,10,cex=.7, bty = "n",legend=c("early","late"),col=c("blue","green"),title="",pch=15)
+correctRThist(d,time="early",title="All corrrect responses, early, mid, and late in session")
+correctRThist(d,time="mid",addknob=T)
+correctRThist(d,time="late",addknob=T)
+
+legend(250,10,cex=.7, bty = "n",legend=c("early","mid","late"),col=c("blue","red","green"),title="",pch=15)
 
 
 
@@ -917,7 +919,7 @@ hist(dBehavioralLow$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main
 
 gamblePlot(dlow,orig=F,eb='sem',ylimit=c(0,100))
 gamblePlot(dlow,orig=F,eb='sem',ylimit=c(30,60))
-gamblePlot(dlow,orig=T,eb='sem',ylimit=c(30,50))
+gamblePlot(dlow,orig=T,eb='sem',ylimit=c(40,60))
 
 #ignorePlot(dlow,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(dlow,eb='stderr',title="low mag trials only",ylim=c(800,1200))
@@ -961,15 +963,15 @@ gamblePlot(dmid,orig=F,eb='sem',ylimit=c(40,60))
 gamblePlot(dmid,orig=T,eb='sem',ylimit=c(40,60))
 
 #ignorePlot(dmid,orig=T,eb='sem',ylimit=c(0,100))
-gambleRtPlot(dmid,eb='stderr',title="midMag")
+#gambleRtPlot(dmid,eb='stderr',title="midMag",ylimit=c(800,1050))
 #ignoreRtPlot(dmid,eb='stderr',title="all data")
-#totalRTPlot(dmid,line=T,ylimit=c(500,1000),title="mid mag trials only")
+totalRTPlot(dmid,line=T,ylimit=c(800,1200),title="mid mag trials only")
 
 #Histogram of RTs and t test
 hist(dmid$ignoreRT[dmid$ignoreRT!=0],col=rgb(0,0,1,0.5), main='Reaction Times at gamble time mid mag only', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
-abline(v=median(ignoreRTs),col="blue",lwd=2)
+abline(v=median(dmid$ignoreRT[dmid$ignoreRT!=0]),col="blue",lwd=2)
 hist(dmid$gambleRT[dmid$gambleRT!=0],col=rgb(1,0,0,0.5), add=T,breaks=70)
-abline(v=median(gambleRTs),col="red",lwd=2)
+abline(v=median(dmid$gambleRT[dmid$gambleRT!=0]),col="red",lwd=2)
 legend(200,10,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("blue","red"),title="",pch=15)
 t.test((1/ignoreRTs),(1/gambleRTs))
 
@@ -994,7 +996,7 @@ gamblePlot(dhigh,orig=F,eb='sem',ylimit=c(40,60))
 #ignorePlot(dhigh,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(dhigh,eb='stderr',title="highMag")
 #ignoreRtPlot(dhigh,eb='stderr',title="all data")
-totalRTPlot(dhigh,line=T,ylimit=c(500,1000),title="high mag trials only")
+totalRTPlot(dhigh,line=T,ylimit=c(800,1200),title="high mag trials only")
 
 #Histogram of RTs and t test
 hist(dhigh$ignoreRT[dhigh$ignoreRT!=0],col=rgb(0,0,1,0.5), main='Reaction Times at gamble time high mag only', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
@@ -1038,7 +1040,7 @@ gamblePlot(dlowp,orig=T,eb='sem',ylimit=c(30,50))
 #ignorePlot(dlowp,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(dlowp,eb='stderr',title="all data")
 #ignoreRtPlot(dlowp,eb='stderr',title="all data")
-totalRTPlot(dlowp,line=T,ylimit=c(500,1000),title="low value trials only")
+totalRTPlot(dlowp,line=T,ylimit=c(800,1200),title="low value trials only")
 
 #Histogram of RTs and t test
 hist(dlowp$ignoreRT[dlowp$ignoreRT!=0],col=rgb(0,0,1,0.5), main='Reaction Times at gamble time low value only', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
@@ -1066,7 +1068,7 @@ gamblePlot(dmidp,orig=T,eb='sem',ylimit=c(40,60))
 #ignorePlot(dmidp,orig=T,eb='sem',ylimit=c(0,100))
 gambleRtPlot(dmidp,eb='stderr',title="Mid Value")
 #ignoreRtPlot(dmidp,eb='stderr',title="all data")
-totalRTPlot(dmidp,line=T,ylimit=c(500,1000),title="mid value trials only")
+totalRTPlot(dmidp,line=T,ylimit=c(800,1200),title="mid value trials only")
 
 #Histogram of RTs and t test
 hist(dmidp$ignoreRT[dmidp$ignoreRT!=0],col=rgb(0,0,1,0.5), main='Reaction Times at gamble time mid value only', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
@@ -1092,13 +1094,13 @@ dBehavioralHighp<-dhighp %>%
 #How much did each participant choose to gamble
 hist(dBehavioralHighp$percentageGambled,breaks=50,ylim=c(0,50),xlim=c(-5,100),main=paste("Propensity to gamble on high odds gambles; n =",toString(sum(dBehavioralHighp$trials))," possible trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 
-gamblePlot(dhighp,orig=T,eb='sem',ylimit=c(60,80))
+gamblePlot(dhighp,orig=T,eb='sem',ylimit=c(50,80))
 
 gamblePlot(dhighp,orig=F,eb='sem',ylimit=c(60,80))
 #ignorePlot(dhighp,orig=T,eb='sem',ylimit=c(0,100))
-gambleRtPlot(dhighp,eb='stderr',title="high value")
+gambleRtPlot(dhighp,eb='stderr',title="high value",ylimit=c(800,1000))
 #ignoreRtPlot(dhighp,eb='stderr',title="all data")
-totalRTPlot(dhighp,line=T,ylimit=c(500,1000),title="high value trials only")
+totalRTPlot(dhighp,line=T,ylimit=c(800,1100),title="high value trials only")
 
 #Histogram of RTs and t test
 hist(dhighp$ignoreRT[dhighp$ignoreRT!=0],col=rgb(0,0,1,0.5), main='Reaction Times at gamble time high value only', xlab='Reaction Time (ms)',breaks=70,xlim=c(0,1500))
@@ -1233,8 +1235,8 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
-plotRT=F
-plotGD=F
+plotRT=T
+plotGD=T
 #Add in knobs for different sub categories (though this number is very small....)
 
 #Participants is default (all participants)
@@ -1430,7 +1432,7 @@ t.test(slopeDF$rtSlopes)
 
 summaryMagFilter=F
   summaryMagCond='low'
-summaryOddsFilter=F
+summaryOddsFilter=T
   summaryOddsCond='midp'
   
 #New way which is better
@@ -1475,12 +1477,12 @@ d5Behavioral<-d5 %>%
 #How much did each participant choose to gamble
 hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(60,80),title='RTRampers')
-totalRTPlot(d5,line=F,title="p916")
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(30,50),title='MidValue,ResponsiveToValue')
+totalRTPlot(d5,line=T,title="GamblersAt~50%",ylimit=c(800,1000))
 
 #EV sensitivity early mid and late within subject
 compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
-compSds<-c(oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'),oddsScoreEb(d5,type='sem'))
+compSds<-c(oddsScoreEb(d5,type='sem',time='early'),oddsScoreEb(d5,type='sem',time='mid'),oddsScoreEb(d5,type='sem',time='late'))
 
 pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
              ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; Within-session all data")
@@ -1488,12 +1490,13 @@ arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 #EV sensitivity early mid and late 
 compMeans<-c(oddsScoreMean(d5,int='early'),oddsScoreMean(d5,int='mid'),oddsScoreMean(d5,int='late'))
-compSds<-c(oddsScoreEb(d5,type='sem',int='early'),oddsScoreEb(d5,type='sem',int='mid'),oddsScoreEb(d5,type='sem')
+compSds<-c(oddsScoreEb(d5,type='sem',int='early'),oddsScoreEb(d5,type='sem',int='mid'),oddsScoreEb(d5,type='sem',int='sem'))
 
 pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
              ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; When interruption happened ; all data")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
+totalRTPlot(dlow,line=T,ylimit=c(800,1100),title="rtRampers only; n=6")
 
 
 
