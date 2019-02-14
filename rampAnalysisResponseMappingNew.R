@@ -14,23 +14,23 @@
 require(mosaic)
 require(plotrix)
 require(VennDiagram)
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
+source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 source("/Users/Guillaume/Documents/GitHub/rampAnalysis/correctRThist.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/50rampRMNew",sep=",")
-d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/75rampRM.csv",sep=",")
+d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/75rampRM.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
@@ -1235,8 +1235,8 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
-plotRT=T
-plotGD=T
+plotRT=F
+plotGD=F
 #Add in knobs for different sub categories (though this number is very small....)
 
 #Participants is default (all participants)
@@ -1430,11 +1430,7 @@ t.test(slopeDF$rtSlopes)
 #SUMMARY GRAPHS
 #SUBGROUP 1 - excelsior
 
-summaryMagFilter=F
-  summaryMagCond='low'
-summaryOddsFilter=T
-  summaryOddsCond='midp'
-  
+
 #New way which is better
   d5<-dgamble
  d5<-dgamble[dgamble$uniqueid %in% rtn,]
@@ -1446,16 +1442,23 @@ summaryOddsFilter=T
 d5<-dgamble[dgamble$uniqueid %in% failCatchId,]
 d5<-dgamble[dgamble$uniqueid %in% imp,]
 d5<-dgamble[dgamble$uniqueid %in% ra,]
-d5<-dgamble[dgamble$uniqueid %in% oddsN,]
 d5<-dgamble[dgamble$uniqueid %in% highInterest,]
 d5<-dgamble[dgamble$uniqueid %in% reverseOddsN,]
 d5<-dgamble[dgamble$uniqueid %in% noProx,]
 d5<-dgamble[dgamble$uniqueid %in% dsub,]
-d5<-dgamble[dgamble$uniqueid %in% noIgnore,]
+d5<-dgamble[dgamble$uniqueid %in% g,]
+d5<-dgamble[dgamble$uniqueid %in% oddsN,]
 
 
 #This is if you want intersection of two groups
-d5<-dgamble[dgamble$uniqueid %in% intersect(highGamblers,noProx),]
+#d5<-dgamble[dgamble$uniqueid %in% intersect(highGamblers,noProx),]
+
+
+#This is if you want filters
+summaryMagFilter=T
+summaryMagCond='low'
+summaryOddsFilter=F
+summaryOddsCond='lowp'
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1475,10 +1478,10 @@ d5Behavioral<-d5 %>%
             didNotGamble=sum(response=="fail"|response=="success"),
             percentageGambled=round(gambleCount/trials*100))
 #How much did each participant choose to gamble
-hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
+#hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(30,50),title='MidValue,ResponsiveToValue')
-totalRTPlot(d5,line=T,title="GamblersAt~50%",ylimit=c(800,1000))
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(30,60),title='ValueSensitiveLowMag')
+totalRTPlot(d5,line=T,title="CatchSuccess",ylimit=c(800,1000))
 
 #EV sensitivity early mid and late within subject
 compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
@@ -1493,7 +1496,7 @@ compMeans<-c(oddsScoreMean(d5,int='early'),oddsScoreMean(d5,int='mid'),oddsScore
 compSds<-c(oddsScoreEb(d5,type='sem',int='early'),oddsScoreEb(d5,type='sem',int='mid'),oddsScoreEb(d5,type='sem',int='sem'))
 
 pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,80),
-             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; When interruption happened ; all data")
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; When interruption happened;catchSuccess")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 totalRTPlot(dlow,line=T,ylimit=c(800,1100),title="rtRampers only; n=6")
