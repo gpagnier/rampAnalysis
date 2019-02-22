@@ -14,23 +14,23 @@
 require(mosaic)
 require(plotrix)
 require(VennDiagram)
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
-source("C:/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/rtPlotFun.R")
 
 source("/Users/Guillaume/Documents/GitHub/rampAnalysis/correctRThist.R")
 
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/50rampRMNew",sep=",")
-d0<-read.csv(file="C:/Users/Guillaume/Documents/GitHub/rampAnalysis/75rampRM.csv",sep=",")
+d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/75rampRM.csv",sep=",")
 
 #d0<-read.csv(file="//files.brown.edu/Home/gpagnier/Documents/GitHub/rampAnalysis/Totalrampv03.csv",sep=",")
 
@@ -343,6 +343,7 @@ d$gamblePrevTrial=NULL
 d$gamblePrevTrial2=NULL
 d$gamblePrevTrial3=NULL
 
+
 #RT z score
 #Should I do z scores on speed or raw RT?
 d$ignoreRTz<-NULL
@@ -443,6 +444,8 @@ for (i in Participants){
       dsub[row,"rpe3"]=(dsub[row,"standardGamble"]-dsub[(row-1),"standardGamble"])
     }
   }
+  
+  
   #This is calculating normalized z score for dsub
   meanGambleZ=mean(dsub$ignoreRT[dsub$ignoreRT!=0])
   meanOutcomeZ=mean(dsub$outcomeRT[dsub$outcomeRT!=0])
@@ -660,13 +663,15 @@ boxplot(dBehavioral$percentageGambled,ylim=c(0,100),main=paste("Distribution of 
 
 #Adding propensity to gamble and propensity to press as possible predictors
 d$basePercentageGambled<-NULL
-
+d$EVdiff=NULL
 d2=d[0,]
-#Adding d column of number of failed trials
+#Adding d column of number of failed trials AND a column of EV difference
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
   tempdb<-filter(dBehavioral,uniqueid==i)
   dsub$basePercentageGambled<-tempdb$percentageGambled
+  dsub$EVdiff<-oddsScoreMean(dsub,int='early')-oddsScoreMean(dsub,int='late')
+  
   d2<-rbind(d2,dsub)
 }
 d<-d2
@@ -764,7 +769,7 @@ mlmerog<-glmer(gambled~scale(contOdds)+(scale(gambleDelay)+contOdds|uniqueid),
                data=dgamble,family="binomial");
 summary(mlmerog)
 
-mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+
+mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(condOdds):scale(gambleDelay)
                     (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
                 data=dgamble,family="binomial");
 summary(mlmerog1)
@@ -1235,8 +1240,11 @@ rtSlopes<-NULL
 gambleSlopes<-NULL
 run<-NULL
 slopeDF<-NULL
+EVdiffs<-NULL
 plotRT=F
 plotGD=F
+
+
 #Add in knobs for different sub categories (though this number is very small....)
 
 #Participants is default (all participants)
@@ -1348,6 +1356,7 @@ for(i in Participants){
   
   rtSlopes<-c(rtSlopes,summary(mtempRT)$coefficients[2])
   gambleSlopes<-c(gambleSlopes,summary(mlogtemp)$coefficients[2])
+  EVdiffs<-c(EVdiffs,oddsScoreMean(dsub,int='early')-oddsScoreMean(dsub,int='late'))
   run<-c(run,i)
 }
 
@@ -1385,6 +1394,11 @@ ggExtra::ggMarginal(ap3,type='density')
 abline(m1)
 cor(slopeDF$rtSlopes~slopeDF$gambleSlopes)
 summary(m1)
+
+#Plot of gambleSlopes vs. EVdiffs
+plot(gambleSlopes~EVdiffs,xlab='Difference in EV sensitivity between late int. and early int.',ylab='Individual GambleSlopes (% change/second)',pch=16,cex=0.8,main=paste('Gamble slopes vs. EV SensitivityDifference'))
+abline(v=0,col="black")
+abline(h=0,col="black")
 
 #plot of gamble slopes histogram
 #POSTER graph
@@ -1446,8 +1460,8 @@ d5<-dgamble[dgamble$uniqueid %in% highInterest,]
 d5<-dgamble[dgamble$uniqueid %in% reverseOddsN,]
 d5<-dgamble[dgamble$uniqueid %in% noProx,]
 d5<-dgamble[dgamble$uniqueid %in% dsub,]
-d5<-dgamble[dgamble$uniqueid %in% g,]
 d5<-dgamble[dgamble$uniqueid %in% oddsN,]
+d5<-dgamble[dgamble$uniqueid %in% g,]
 
 
 #This is if you want intersection of two groups
@@ -1455,10 +1469,10 @@ d5<-dgamble[dgamble$uniqueid %in% oddsN,]
 
 
 #This is if you want filters
-summaryMagFilter=T
-summaryMagCond='low'
-summaryOddsFilter=F
-summaryOddsCond='lowp'
+summaryMagFilter=F
+summaryMagCond='high'
+summaryOddsFilter=T
+summaryOddsCond='highp'
 
 #This filters summary d5 by odds/mag if specified above via T/F
 if(summaryMagFilter){
@@ -1480,7 +1494,7 @@ d5Behavioral<-d5 %>%
 #How much did each participant choose to gamble
 #hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$trials)),"possible trials;"),xlab="Percentage of time gambled")
 
-gamblePlot(d5,orig=T,eb='sem',ylimit=c(30,60),title='ValueSensitiveLowMag')
+gamblePlot(d5,orig=T,eb='sem',ylimit=c(30,80),title='ValueSensitiveHighValue')
 totalRTPlot(d5,line=T,title="CatchSuccess",ylimit=c(800,1000))
 
 #EV sensitivity early mid and late within subject
