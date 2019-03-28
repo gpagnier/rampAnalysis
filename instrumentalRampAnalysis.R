@@ -291,7 +291,6 @@ d$gamblePrevTrial3=NULL
 
 #RT z score
 #Should I do z scores on speed or raw RT?
-d$ignoreRTz<-NULL
 d$outcomeRTz<-NULL
 
 #Length of totally unfiltered participants (minus debug)
@@ -308,7 +307,6 @@ for (i in Participants){
 #Adding vector to filter out fast RTers
 fastRTers<-NULL
 fewTrials<-NULL
-noIgnore<-NULL
 noSuccess<-NULL
 noGamble<-NULL
 failures<-NULL
@@ -321,18 +319,17 @@ dbackup<-d
 #d<-dbackup
 for (i in Participants){
   dsub<-filter(d,uniqueid==i)
-  
+
   kickOut=0
   if(nrow(dsub)<50){
     fewTrials<-c(fewTrials,unique(dsub$uniqueid))
     next()
   }
   
-  if(length(setdiff(dsub$ignoreRT,0))<10){
-    noIgnore<-c(noIgnore,unique(dsub$uniqueid))
-    kickOut=1
+  if(sum(dsub$response=='failOutcome'||dsub$response=='gambleFail')>30){
+    failures<-c(failures,unique(dsub$uniqueid))
+    next()
   }
-  
   if(sum(dsub$response=='success')<10){
     noSuccess<-c(noSuccess,unique(dsub$uniqueid))
     kickOut=1
@@ -341,35 +338,7 @@ for (i in Participants){
     noGamble<-c(noGamble,unique(dsub$uniqueid))
     kickOut=1
   }
-  if(kickOut==1){
-    next()
-  }
-  print(i)
-}
-
-
-for (i in Participants){
-  dsub<-filter(d,uniqueid==i)
-
-  kickOut=0
-  if(nrow(dsub)<50){
-    fewTrials<-c(fewTrials,unique(dsub$uniqueid))
-    next()
-  }
   
-  if(length(setdiff(dsub$ignoreRT,0))<10){
-    noIgnore<-c(noIgnore,unique(dsub$uniqueid))
-    kickOut=1
-  }
-  
-  if(sum(dsub$response=='success')<10){
-    noSuccess<-c(noSuccess,unique(dsub$uniqueid))
-    kickOut=1
-  }
-  if(sum(dsub$response=='gamble')<10){
-    noGamble<-c(noGamble,unique(dsub$uniqueid))
-    kickOut=1
-  }
   if(kickOut==1){
     next()
   }
@@ -422,17 +391,10 @@ for (i in Participants){
   
   
   #This is calculating normalized z score for dsub
-  meanGambleZ=mean(dsub$ignoreRT[dsub$ignoreRT!=0])
   meanOutcomeZ=mean(dsub$outcomeRT[dsub$outcomeRT!=0])
-  sdGambleZ=sd(dsub$ignoreRT[dsub$ignoreRT!=0])
   sdOutcomeZ=sd(dsub$outcomeRT[dsub$outcomeRT!=0])
   
   for(row in 1:length(dsub$Trialid)){
-    if(dsub[row,"ignoreRT"]!=0){
-      dsub[row,"ignoreRTz"]=(dsub[row,"ignoreRT"]-meanGambleZ)/sdGambleZ
-    } else if(dsub[row,"ignoreRT"]==0){
-      dsub[row,"ignoreRTz"]=0
-    }
     if(dsub[row,"outcomeRT"]!=0){
       dsub[row,"outcomeRTz"]=(dsub[row,"outcomeRT"]-meanOutcomeZ)/sdOutcomeZ
     } else if(dsub[row,"outcomeRT"]==0){
@@ -452,20 +414,89 @@ for (i in Participants){
 
 d=d2
 
-#Normalized RT log(1/RT) to get speed
-d$NignoreRT=0
-d$NoutcomeRT=0
+#If there were any trials were they gambled and it overlapped a little bit into the outcome, the outcome RT gets messed up
+nrow(d[which(d$outcomeRT>1500),])
+
+#########################################################################################################################################
+#This should be ready to run now without any artificial filtering of participants for low RT etc.
+
+nParticipants<- length(unique(d$uniqueid))
+nParticipants
+
+###Behavioral analyses
+##Reaction time
+#Whenever they gambled
+gambleRTs<-d$gambleRT[d$gambleRT!=0]
+hist(gambleRTs,main="Aggregated gamble RTs",breaks=70,xlim=c(0,1600))
+
+#Outcome of whenever they claimed 'boring' reward and didn't gamble
+successOutcomeRTs<-d$outcomeRT[d$response=='success']
+hist(successOutcomeRTs,main=c("Aggregated outcome RTs; number of responses:",length(successOutcomeRTs)),breaks=70)
+
+#Outcome of whenever they gambled and confirmed
+#Outcome of whenever they claimed 'boring' reward
+gambleOutcomeRTs<-d$outcomeRT[d$response=='gamble']
+hist(gambleOutcomeRTs,main=c("Aggregated outcome RTs; number of responses:",length(gambleOutcomeRTs)),breaks=70)
 
 
-#Dividing ignoreRT by (1/RT) on new column
-for(i in 1:length(d$response)){
-  if(d[i,"ignoreRT"]!=0){
-    d[i,"NignoreRT"]=(1/d[i,"ignoreRT"])
-  }
-}
-#Dividing OutcomeRT by 1/RT
-for(i in 1:length(d$response)){
-  if(d[i,"outcomeRT"]!=0){
-    d[i,"NoutcomeRT"]=(1/d[i,"outcomeRT"])
-  }
-}
+#Removing participants who gambled too much/not enough
+dgamble0<-filter(d,gambleDelay!=0,Trialid!=75|86)
+
+dBehavioralTotal<-dgamble0 %>% 
+  group_by(uniqueid) %>% 
+  summarise(trials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            successTrials=sum(response=="success"),
+            percentageGambled=round(gambleCount/trials*100),
+            failedTrials=sum(response=='gambleFail'|response=='failOutcome'))
+head(dBehavioralTotal)
+#Overall preference for gambling
+hist(dBehavioralTotal$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity(everyone) to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
+
+dlowg<-filter(dBehavioralTotal,percentageGambled<9)
+noGamblers<-dlowg$uniqueid
+dhighg<-filter(dBehavioralTotal,percentageGambled>95)
+allGamblers<-dhighg$uniqueid
+lowTrials<-filter(dBehavioralTotal,trials<50)$uniqueid
+failures<-filter(dBehavioralTotal,failedTrials>(round(15/trials*100)))$uniqueid
+
+removeIds<-c(noGamblers,allGamblers,lowTrials,fastRTers,failures)
+
+#Statistics
+#Resetting dgamble
+dgamble<-filter(d,gambleDelay!=0,Trialid!=75,Trialid!=86)
+#Logistic regression models to predict gambled
+#Recoding
+dgamble$contOdds<-recode(dgamble$oddsCond,lowp=1,midp=2,highp=3)
+dgamble$contMag<-recode(dgamble$magCond,low=1,mid=2,high=3)
+
+#Need to figure out which one to use
+mlog<-glm(gambled~contOdds,
+          data=dgamble,family="binomial");
+summary(mlog)
+
+mlog2<-glm(gambled~gambleDelay*contOdds+trialNumber+contMag+contMag:gambleDelay,
+           data=dgamble,family="binomial");
+summary(mlog2)
+
+#By GambleDelay
+d2<-filter(dgamble) %>% 
+  group_by(binsTime) %>% 
+  summarise(ntrials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            successTrials=sum(response=='success'),
+            failedTrials=sum(response=='gambleFail'|response=='failOutcome'),
+            percentageGambled=round(gambleCount/ntrials*100))
+
+d2$seconds<-d2$binsTime
+d2=filter(d2,binsTime!=0)
+d2
+
+
+#Interesting plot of gambleDelay vs propensity to gamble. 
+#Andrew1
+plot(d2$seconds,d2$percentageGambled,xlim = c(0,4),ylim = c(0,100),
+     main=paste("Total group data; Gamble propensity; n =",toString(sum(d2$ntrials)),
+                "trials;",toString(length(Participants)),"participants"),
+     xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
+abline(lm(d2$percentageGambled~d2$seconds))
