@@ -3,6 +3,11 @@
 
 
 #Things to do
+#unfactor, remove comma from d$switchTimes, d$recordedKeys, d$recordedPresses
+#does switch cost decrease as it goes on
+#Add new column of length of responseKeys (which should match length of responseTimes)
+#Correlate pbGamble with gambleDelay - should be close to exact match
+#
 
 ##Loading packages
 #install.packages('mosaic')
@@ -11,9 +16,8 @@
 
 require(mosaic)
 require(plotrix)
-#source("/Users/Guillaume/Documents/GitHub/rampAnalysis/reg_fns.R")
-#source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
-#source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gamblePlotFun.R")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 
 #source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignorePlotFun.R")
 #source("/Users/Guillaume/Documents/GitHub/rampAnalysis/ignoreRtPlotFun.R")
@@ -28,6 +32,7 @@ require(plotrix)
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 #d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
 d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
+d0<-read.csv(file="/Users/gpagn/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
 
 #Cleaning data
 d0<-d0[130:length(d0$viewTime),]
@@ -84,7 +89,7 @@ dsurvey$comments
 
 
 #Need to replace uniqueid with numbers and clean out columns that aren't useful
-d<-d0[,c("Trialid","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid","recordedPresses","recordedTimes","switchTimes")]
+d<-d0[,c("Trialid","gambleDelay","gambleRT","outcomeRT","response","standardGamble","trialNumber","uniqueid","recordedPresses","recordedTimes","switchTimes","pbGamble")]
 d<-subset(d,!grepl("debug",as.character(d$uniqueid)))
 d<-subset(d,d$response!="")
 d$engagement<-NULL
@@ -438,10 +443,19 @@ hist(successOutcomeRTs,main=c("Aggregated outcome RTs; number of responses:",len
 gambleOutcomeRTs<-d$outcomeRT[d$response=='gamble']
 hist(gambleOutcomeRTs,main=c("Aggregated outcome RTs; number of responses:",length(gambleOutcomeRTs)),breaks=70)
 
+dgamble0<-filter(d,gambleDelay!=0,Trialid!=75|86)#Number of gambled trials per participant 
+dTrials<-dgamble0 %>% 
+  group_by(uniqueid) %>% 
+  summarise(ntrials=length(trialNumber),
+            gambleCount=sum(response=="gamble"),
+            successTrials=sum(response=='success'),
+            failedTrials=sum(response=='fail'|response=='failOutcome'|response=='earlyFail'),
+            percentageGambled=round(gambleCount/ntrials*100))
+head(dTrials)
+#dTrials
+hist(dTrials$ntrials,breaks=50,xlim=c(0,140),main=paste("Number of trials per participant; ",nParticipants,"participants"),xlab="Number of Trials per participant")
 
 #Removing participants who gambled too much/not enough
-dgamble0<-filter(d,gambleDelay!=0,Trialid!=75|86)
-
 dBehavioralTotal<-dgamble0 %>% 
   group_by(uniqueid) %>% 
   summarise(trials=length(trialNumber),
@@ -462,6 +476,14 @@ failures<-filter(dBehavioralTotal,failedTrials>(round(15/trials*100)))$uniqueid
 
 removeIds<-c(noGamblers,allGamblers,lowTrials,fastRTers,failures)
 
+nParticipants<- length(unique(d$uniqueid))
+nParticipants
+
+#Check for any NA in any column
+apply(dgamble, 2, function(x) any(is.na(x)))
+
+
+################################################################################################
 #Statistics
 #Resetting dgamble
 dgamble<-filter(d,gambleDelay!=0,Trialid!=75,Trialid!=86)
@@ -479,6 +501,30 @@ mlog2<-glm(gambled~gambleDelay*contOdds+trialNumber+contMag+contMag:gambleDelay,
            data=dgamble,family="binomial");
 summary(mlog2)
 
+library(lme4)
+mlmerog<-glmer(gambled~scale(contOdds)+(scale(gambleDelay)+contOdds|uniqueid),
+               data=dgamble,family="binomial");
+summary(mlmerog)
+
+mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
+                  (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
+                data=dgamble,family="binomial");
+summary(mlmerog1)
+
+mlmerog3<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
+                  (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
+                data=dgamble,family="binomial");
+summary(mlmerog3)
+
+mlmerog2<-glmer(gambled~scale(contOdds)+scale(gambleDelay)*scale(contOdds)+scale(basePercentageGambled):scale(gambleDelay)+
+                  scale(contMag)+scale(contMag):scale(gambleDelay)+scale(failedTrials)+
+                  scale(failedTrials):scale(gambleDelay)+as.factor(trialType)+scale(trialNumber)+
+                  scale(trialNumber):scale(gambleDelay)+
+                  (scale(gambleDelay)+scale(contMag)+scale(trialNumber)+scale(trialNumber):scale(gambleDelay)+
+                     scale(contOdds)+1|uniqueid),
+                data=dgamble,family="binomial");
+
+summary(mlmerog2)
 #By GambleDelay
 d2<-filter(dgamble) %>% 
   group_by(binsTime) %>% 
@@ -500,3 +546,5 @@ plot(d2$seconds,d2$percentageGambled,xlim = c(0,4),ylim = c(0,100),
                 "trials;",toString(length(Participants)),"participants"),
      xlab="Seconds into trial",ylab="Percentage Gambled",pch=19)
 abline(lm(d2$percentageGambled~d2$seconds))
+
+gamblePlot(d,title="test",ylim=c(30,50))
