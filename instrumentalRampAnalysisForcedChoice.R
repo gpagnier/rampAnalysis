@@ -28,11 +28,11 @@ source("/Users/Guillaume/Documents/GitHub/rampAnalysis/switchPlot.R")
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 #d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
-d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/instrumentalRamp10.csv",sep=",")
+d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/forcedChoice10.csv",sep=",")
 d0<-read.csv(file="/Users/gpagn/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
 
 #Cleaning data
-d0<-d0[11116:length(d0$viewTime),]
+d0<-d0[12050:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -113,7 +113,7 @@ for(i in unique(d$uniqueid)){
 d<-d2
 #Adding col uniqueID uniqueid with numbers
 d$uniqueID=NA
-seed=201
+seed=301
 d[1,"uniqueID"]<-seed
 for (i in 2:nrow(d)){
   if(d[i,"uniqueid"]==d[i-1,"uniqueid"]){
@@ -148,7 +148,7 @@ unique(d$uniqueid)
 
 #Where did gambles interrupt
 hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the progress bar?",xlab="Seconds into trial gamble appeared",col='black',ylab="Total number of trials")
-hist(d$pbGamble,xlim=c(0,100),main="When did gambles interrupt the progress bar?",xlab="Seconds into trial gamble appeared",col='black',ylab="Total number of trials")
+hist(d$pbGamble,xlim=c(1,100),breaks=50,main="When did gambles interrupt the progress bar?",xlab="Percentage of progress bar that was present",col='black',ylab="Total number of trials")
 
 #For 4 bins #Use this for RM NEW
 a1head<-.5
