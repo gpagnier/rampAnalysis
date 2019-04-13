@@ -28,11 +28,11 @@ source("/Users/Guillaume/Documents/GitHub/rampAnalysis/switchPlot.R")
 ##Loading data
 #d0<-read.csv(file="C:/Users/lab/Documents/GitHub/rampAnalysis/Totalrampv02.csv",sep=",")
 #d0<-read.csv(file="C:/Users/gpagn/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
-d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/forcedChoice5.csv",sep=",")
+d0<-read.csv(file="/Users/Guillaume/Documents/GitHub/rampAnalysis/instrumentalRamp10.csv",sep=",")
 d0<-read.csv(file="/Users/gpagn/Documents/GitHub/rampAnalysis/instrumentalRamp50.csv",sep=",")
 
 #Cleaning data
-d0<-d0[10281:length(d0$viewTime),]
+d0<-d0[11116:length(d0$viewTime),]
 d0<-subset(d0,!grepl("debug",as.character(d0$uniqueid)))
 
 bonusAmountsTemp=data.frame(matrix(NA, ncol = 2, nrow =1))
@@ -148,6 +148,7 @@ unique(d$uniqueid)
 
 #Where did gambles interrupt
 hist(d$gambleDelay,breaks=50,xlim=c(0,8),main="When did gambles interrupt the progress bar?",xlab="Seconds into trial gamble appeared",col='black',ylab="Total number of trials")
+hist(d$pbGamble,xlim=c(0,100),main="When did gambles interrupt the progress bar?",xlab="Seconds into trial gamble appeared",col='black',ylab="Total number of trials")
 
 #For 4 bins #Use this for RM NEW
 a1head<-.5
@@ -212,7 +213,14 @@ dbins<-d %>%
 dbins
 
 d<-filter(d,binsTime<999)
-###################################################################################
+
+#pbGamble is more important than gambleDelay so doing that instead. 
+hist(d$pbGamble)
+
+
+
+
+###########################################################################################################################
 #Adding different factors
 
 #Adding which condition trial was in
@@ -304,6 +312,7 @@ fastRTers<-NULL
 fewTrials<-NULL
 noSuccess<-NULL
 noGamble<-NULL
+noIgnore<-NULL
 failures<-NULL
 #Adding RPE as a factor AND normalized RT z score
 #rpe1 is the sure thing of trial t- standard gamble of t-1
@@ -321,7 +330,7 @@ for (i in Participants){
     next()
   }
   
-  if(sum(dsub$response=='failOutcome'||dsub$response=='gambleFail')>30){
+  if(sum(dsub$response=='failOutcome'||dsub$response=='gambleFail')>40){
     failures<-c(failures,unique(dsub$uniqueid))
     next()
   }
@@ -331,6 +340,10 @@ for (i in Participants){
   }
   if(sum(dsub$response=='gamble')<10){
     noGamble<-c(noGamble,unique(dsub$uniqueid))
+    kickOut=1
+  }
+  if(nrow(dsub[dsub$ignoreRT!=0,])<10){
+    noIgnore<-c(noGamble,unique(dsub$uniqueid))
     kickOut=1
   }
   
@@ -385,7 +398,7 @@ for (i in Participants){
   }
   
   
-  #This is calculating normalized z score for dsub
+  #This is calculating normalized z score per dsub RT
   meanOutcomeZ=mean(dsub$outcomeRT[dsub$outcomeRT!=0])
   sdOutcomeZ=sd(dsub$outcomeRT[dsub$outcomeRT!=0])
   
@@ -406,6 +419,16 @@ for (i in Participants){
   d2=rbind(d2,dsub)
 }
 
+#Checking for kicked out participants
+print(paste("fastRTers (not kicked out):",fastRTers))
+print(paste("fewTrials (can not be associated with any other vector):",fewTrials))
+
+print(paste("noSuccess:",noSuccess))
+print(paste("noGamble:",noGamble))
+print(paste("noIgnore:",noIgnore))
+print(paste("failures:",failures))
+
+union(fastRTers,failures)
 
 d=d2
 
@@ -440,7 +463,7 @@ nParticipants
 gambleRTs<-d$gambleRT[d$gambleRT!=0]
 hist(gambleRTs,main="Aggregated gamble RTs",breaks=70,xlim=c(0,1600))
 
-#Whenever they ignoredx
+#Whenever they ignored
 ignoreRTs<-d$ignoreRT[d$ignoreRT!=0]
 hist(ignoreRTs,main="Aggregated ignore RTs",breaks=70,xlim=c(0,1600))
 
@@ -453,17 +476,23 @@ hist(successOutcomeRTs,main=c("Aggregated outcome RTs; number of responses:",len
 gambleOutcomeRTs<-d$outcomeRT[d$response=='gamble']
 hist(gambleOutcomeRTs,main=c("Aggregated outcome RTs when they ignored gamble; number of responses:",length(gambleOutcomeRTs)),breaks=70)
 
+#Comparison of gamble RT vs Ignore RT
+boxplot(gambleRTs,ignoreRTs,at=c(1,2),names=(c("gamble RT","ignoreRT")),main="RT at gamble presentation: gamble vs ignore")
+t.test(gambleRTs,ignoreRTs)
+
 #Comparison of outcome RTs when gambled vs no gambled
 boxplot(successOutcomeRTs,gambleOutcomeRTs,at=c(1,2),names=(c("outcome RT after ignoring","outcome RT after gambling")),main="outcomeRT at end of progress bar")
 t.test(gambleOutcomeRTs,successOutcomeRTs)
 
-dgamble0<-filter(d,gambleDelay!=0,Trialid!=75|86)#Number of gambled trials per participant 
+#Number of gambled trials per participant
+dgamble0<-filter(d,gambleDelay!=0,Trialid!=75|86) 
 dTrials<-dgamble0 %>% 
   group_by(uniqueid) %>% 
   summarise(ntrials=length(trialNumber),
             gambleCount=sum(response=="gamble"),
             successTrials=sum(response=='success'),
-            failedTrials=sum(response=='fail'|response=='failOutcome'|response=='earlyFail'),
+            ignoreTrials=sum(response=='ignore'),
+            failedTrials=sum(response=='fail'|response=='failOutcome'|response=='outcomeFail'),
             percentageGambled=round(gambleCount/ntrials*100),
             highKeys=sum(recordedNumber>20))
 head(dTrials)
@@ -480,6 +509,7 @@ dBehavioralTotal<-dgamble0 %>%
             percentageGambled=round(gambleCount/trials*100),
             failedTrials=sum(response=='gambleFail'|response=='failOutcome'))
 head(dBehavioralTotal)
+
 #Overall preference for gambling
 hist(dBehavioralTotal$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity(everyone) to gamble; n =",toString(sum(dBehavioralTotal$trials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled")
 
@@ -490,6 +520,8 @@ allGamblers<-dhighg$uniqueid
 lowTrials<-filter(dBehavioralTotal,trials<50)$uniqueid
 failures<-filter(dBehavioralTotal,failedTrials>(round(15/trials*100)))$uniqueid
 length(c(noGamblers,allGamblers,lowTrials,fastRTers,failures))
+
+
 removeIds<-c(noGamblers,allGamblers,lowTrials,fastRTers,failures)
 
 nParticipants<- length(unique(d$uniqueid))
@@ -518,7 +550,6 @@ mlog2<-glm(gambled~gambleDelay*contOdds+trialNumber+contMag+contMag:gambleDelay,
            data=dgamble,family="binomial");
 summary(mlog2)
 
-library(lme4)
 #mlmerog<-glmer(gambled~scale(contOdds)+(scale(gambleDelay)+contOdds|uniqueid),
 #               data=dgamble,family="binomial");
 #summary(mlmerog)
@@ -528,10 +559,10 @@ library(lme4)
 #                data=dgamble,family="binomial");
 #summary(mlmerog1)
 
-mlmerog3<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
-                  (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
-                data=dgamble,family="binomial");
-summary(mlmerog3)
+#mlmerog3<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
+#                  (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
+#                data=dgamble,family="binomial");
+#summary(mlmerog3)
 
 mlmerog2<-glmer(gambled~scale(contOdds)+scale(gambleDelay)*scale(contOdds)+
                   scale(contMag)+scale(contMag):scale(gambleDelay)+
