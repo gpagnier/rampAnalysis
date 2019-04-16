@@ -23,7 +23,7 @@ source("/Users/Guillaume/Documents/GitHub/rampAnalysis/gambleRtPlotFun.R")
 source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreMeanFun.R")
 source("/Users/Guillaume/Documents/GitHub/rampAnalysis/oddsScoreEbFun.R")
 source("/Users/Guillaume/Documents/GitHub/rampAnalysis/switchPlot.R")
-source("/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun")
+source("/Users/Guillaume/Documents/GitHub/rampAnalysis/totalPlotFun.R")
 
 
 ##Loading data
@@ -569,10 +569,10 @@ summary(mlog2)
 #               data=dgamble,family="binomial");
 #summary(mlmerog)
 
-#mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
-#                  (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
-#                data=dgamble,family="binomial");
-#summary(mlmerog1)
+mlmerog1<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
+                 (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
+                data=dgamble,family="binomial");
+summary(mlmerog1)
 
 #mlmerog3<-glmer(gambled~scale(contOdds)+scale(gambleDelay)+scale(contOdds):scale(gambleDelay)+
 #                  (scale(gambleDelay)+scale(contOdds)+1|uniqueid),
@@ -614,10 +614,13 @@ abline(lm(d2$percentageGambled~d2$seconds))
 
 
 #All data
-gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='sem',standardized=T)
+gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='',standardized=F)
+gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='',standardized=T)
 gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='sem',standardized=T)
 
 gambleRtPlot(d,xlimit=c(0,5),ylimit=c(500,1250))
+totalRTPlot(d,ylimit=c(500,1250))
+
 switchPlot(d,ylimit=c(0,1500))
 
 
@@ -654,8 +657,12 @@ dlowB<-dlow %>%
             highKeys=sum(recordedNumber>20))
 
 hist(dlowB$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,25),main=paste("Overall participant propensity(low mag only) to gamble; n =",toString(sum(dlowB$ntrials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
-gamblePlot(dlow,title="lowMag",ylim=c(0,50))
+gamblePlot(dlow,title="lowMag",ylim=c(30,60))
+gamblePlot(dlow,title="lowMag",ylim=c(30,60),standardized = T,orig=F)
+
 gambleRtPlot(dlow,xlimit=c(0,5),ylimit=c(700,1000))
+totalRTPlot(dlow,title='Low Mag')
+switchPlot(dmid,ylimit=c(100,200))
 
 hist(d$outcomeRT[d$response=='gamble'],col=rgb(1,0,0,0.5), main='RTs when accepting sure thing (after ignoring gamble)', xlab='RT',breaks=70,xlim=c(0,1300))
 abline(v=median(d$outcomeRT[d$response=='gamble']),col="red",lwd=2)
@@ -675,8 +682,12 @@ dmidB<-dmid %>%
             highKeys=sum(recordedNumber>20))
 
 hist(dmidB$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,35),main=paste("Overall participant propensity(mid mag only) to gamble; n =",toString(sum(dmidB$ntrials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
-gamblePlot(dmid,title="midMag",ylim=c(0,50))
+gamblePlot(dmid,title="midMag",ylim=c(30,80))
+gamblePlot(dmid,title="lowMag",ylim=c(30,80),standardized = T,orig=F)
+
 gambleRtPlot(dmid,xlimit=c(0,5),ylimit=c(800,1200))
+totalRTPlot(dmid,title='Mid Mag')
+switchPlot(dmid,ylimit=c(100,200))
 
 hist(d$outcomeRT[d$response=='gamble'],col=rgb(1,0,0,0.5), main='RTs when accepting sure thing (after ignoring gamble)', xlab='RT',breaks=70,xlim=c(0,1300))
 abline(v=median(d$outcomeRT[d$response=='gamble']),col="red",lwd=2)
@@ -696,8 +707,11 @@ dhighB<-dhigh %>%
             highKeys=sum(recordedNumber>20))
 
 hist(dhighB$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,40),main=paste("Overall participant propensity(high mag only) to gamble; n =",toString(sum(dhighB$ntrials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
-gamblePlot(dhigh,title="highMag",ylim=c(0,50))
+gamblePlot(dhigh,title="highMag",ylim=c(20,60))
+gamblePlot(dhigh,title="highMag",ylim=c(20,60),orig=F,standardized = T)
 gambleRtPlot(dhigh,xlimit=c(0,5),ylimit=c(800,1200))
+totalRTPlot(dhigh,title='High Mag')
+switchPlot(dhigh,ylimit=c(100,200))
 
 hist(d$outcomeRT[d$response=='gamble'],col=rgb(1,0,0,0.5), main='RTs when accepting sure thing (after ignoring gamble)', xlab='RT',breaks=70,xlim=c(0,1300))
 abline(v=median(d$outcomeRT[d$response=='gamble']),col="red",lwd=2)
@@ -720,7 +734,10 @@ dlowpB<-dlowp %>%
 
 hist(dlowpB$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,50),main=paste("Overall participant propensity(low value only) to gamble; n =",toString(sum(dlowpB$ntrials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
 gamblePlot(dlowp,title="lowValue",ylim=c(10,40))
-gambleRtPlot(dlowp,xlimit=c(0,5),ylimit=c(700,1000))
+gamblePlot(dlowp,title="lowValue",ylim=c(10,40),orig=F,standardized = T)
+#gambleRtPlot(dlowp,xlimit=c(0,5),ylimit=c(700,1000))
+totalRTPlot(dlowp,title='Low Value')
+switchPlot(dlowp,ylimit=c(100,200))
 
 hist(d$outcomeRT[d$response=='gamble'],col=rgb(1,0,0,0.5), main='RTs when accepting sure thing (after ignoring gamble)', xlab='RT',breaks=70,xlim=c(0,1300))
 abline(v=median(d$outcomeRT[d$response=='gamble']),col="red",lwd=2)
@@ -741,13 +758,17 @@ dmidpB<-dmidp %>%
 
 hist(dmidpB$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,50),main=paste("Overall participant propensity(mid value only) to gamble; n =",toString(sum(dmidpB$ntrials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
 gamblePlot(dmidp,title="midValue",ylim=c(30,50))
+gamblePlot(dmidp,title="midValue",ylim=c(30,50),standardized = T,orig=F)
+
 gambleRtPlot(dmidp,xlimit=c(0,5),ylimit=c(700,1000))
+totalRTPlot(dmidp,title='Mid Value')
 
 hist(d$outcomeRT[d$response=='gamble'],col=rgb(1,0,0,0.5), main='RTs when accepting sure thing (after ignoring gamble)', xlab='RT',breaks=70,xlim=c(0,1300))
 abline(v=median(d$outcomeRT[d$response=='gamble']),col="red",lwd=2)
 hist(dmidp$outcomeRT[dmidp$response=='gamble'],col=rgb(0,0,1,0.5), add=T,breaks=70)
 abline(v=median(dmidp$outcomeRT[dmidp$response=='gamble']),col="blue",lwd=2)
 legend(800,55,cex=.7, bty = "n",legend=c("All trials","midValue only"),col=c("red","blue"),title="",pch=16)
+switchPlot(dmidp,ylimit=c(100,200))
 
 #High value
 dhighp<-filter(d,oddsCond=='highp',gambleDelay!=0,Trialid!=75,Trialid!=86)
@@ -761,8 +782,11 @@ dhighpB<-dhighp %>%
             highKeys=sum(recordedNumber>20))
 
 hist(dhighpB$percentageGambled,breaks=50,xlim=c(-5,100),ylim=c(0,50),main=paste("Overall participant propensity(high value only) to gamble; n =",toString(sum(dhighpB$ntrials)),"trials;",nParticipants,"participants"),xlab="Percentage of time gambled",col='red')
-gamblePlot(dhighp,title="highValue",ylim=c(50,70))
+gamblePlot(dhighp,title="highValue",ylim=c(40,70))
+gamblePlot(dhighp,title="highValue",ylim=c(40,70),standardized = T,orig=F)
 gambleRtPlot(dhighp,xlimit=c(0,5),ylimit=c(800,1200))
+totalRTPlot(dhighp,title='High Value')
+switchPlot(dhighp,ylimit=c(100,200))
 
 hist(d$outcomeRT[d$response=='gamble'],col=rgb(1,0,0,0.5), main='RTs when accepting sure thing (after ignoring gamble)', xlab='RT',breaks=70,xlim=c(0,1300))
 abline(v=median(d$outcomeRT[d$response=='gamble']),col="red",lwd=2)
@@ -798,7 +822,7 @@ run<-NULL
 slopeDF<-NULL
 EVdiffs<-NULL
 plotRT=F
-plotGD=F
+plotGD=T
 
 
 #Add in knobs for different sub categories (though this number is very small....)
@@ -976,10 +1000,15 @@ d5Behavioral<-d5 %>%
             highKeys=sum(recordedNumber>20))
 #How much did each participant choose to gamble
 hist(d5Behavioral$percentageGambled,breaks=50,ylim=c(0,20),xlim=c(-5,100),main=paste("Propensity to gamble; n =",toString(sum(d5Behavioral$ntrials)),"possible trials;",toString(length(unique(d5Behavioral$uniqueid))),"participants"),xlab="Percentage of time gambled")
+gamblePlot(d5,title="respGamblers",ylim=c(30,80),standardized = T,orig=F)
+gamblePlot(d5,title="respGamblers",ylim=c(30,80),standardized = T,orig=T)
+
+gambleRtPlot(dmid,xlimit=c(0,5),ylimit=c(800,1200))
+totalRTPlot(dmid,title='respGamblers')
 
 gamblePlot(d5,orig=T,eb='sem',ylimit=c(40,60),title='midGamblers')
 gambleRtPlot(d5,line=F,title="midGamblers",ylimit=c(700,1200))
-switchPlot(d5,ylim=c(0,1500))
+switchPlot(d5,ylimit=c(100,200))
 #EV sensitivity early mid and late within subject
 compMeans<-c(oddsScoreMean(d5,time='early'),oddsScoreMean(d5,time='mid'),oddsScoreMean(d5,time='late'))
 compSds<-c(oddsScoreEb(d5,type='sem',time='early'),oddsScoreEb(d5,type='sem',time='mid'),oddsScoreEb(d5,type='sem',time='late'))
