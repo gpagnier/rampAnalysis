@@ -581,7 +581,7 @@ summary(mlmerog1)
 
 mlmerog2<-glmer(gambled~scale(contOdds)+scale(gambleDelay)*scale(contOdds)+
                   scale(contMag)+scale(contMag):scale(gambleDelay)+
-                  scale(trialNumber)+
+                  scale(trialNumber)+scale(outcomeRT)+
                   scale(trialNumber):scale(gambleDelay)+
                   (scale(gambleDelay)+scale(contMag)+scale(trialNumber)+scale(trialNumber):scale(gambleDelay)+
                   scale(contOdds)+1|uniqueid),
@@ -616,7 +616,7 @@ abline(lm(d2$percentageGambled~d2$seconds))
 #All data
 gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='',standardized=F)
 gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='',standardized=T)
-gamblePlot(d,title="All data",ylim=c(30,50),orig=F,eb='sem',standardized=T)
+gamblePlot(d,title="All data",ylim=c(-10,10),orig=F,eb='sem',standardized=T)
 
 gambleRtPlot(d,xlimit=c(0,5),ylimit=c(500,1250))
 totalRTPlot(d,ylimit=c(500,1250))
@@ -629,8 +629,8 @@ switchPlot(d,ylimit=c(0,1500))
 compMeans<-c(oddsScoreMean(d,time='early'),oddsScoreMean(d,time='mid'),oddsScoreMean(d,time='late'))
 compSds<-c(oddsScoreEb(d,type='sem',time='early'),oddsScoreEb(d,type='sem',time='mid'),oddsScoreEb(d,type='sem',time='late'))
 
-pg9<-barplot(compMeans,names.arg = c("Early","Mid","Late"),ylim=c(0,60),
-             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity; Within-session all data")
+pg9<-barplot(compMeans,names.arg = c("Early","Middle","Late"),ylim=c(0,60),
+             ylab="Proportion of high value trials - low value trials",main="Expected Value Sensitivity")
 arrows(pg9,compMeans-compSds,pg9,compMeans+compSds,lwd=2,angle=90,code=3)
 
 #EV sensitivity when did gamble interrupt: early mid and late 
@@ -822,7 +822,7 @@ run<-NULL
 slopeDF<-NULL
 EVdiffs<-NULL
 plotRT=F
-plotGD=T
+plotGD=F
 
 
 #Add in knobs for different sub categories (though this number is very small....)
@@ -1037,3 +1037,5 @@ dTrials<-dgamble %>%
 head(dTrials)
 respGamblers<-filter(dTrials,highKeys<50)$uniqueid
 midGamblers<-filter(dTrials,percentageGambled>40&percentageGambled<60)$uniqueid
+
+
