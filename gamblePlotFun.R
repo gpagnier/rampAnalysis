@@ -67,7 +67,7 @@ gamblePlot<-function(data,orig=TRUE,eb='',line=FALSE,ylimit=c(0,100),title="",tr
                 stdStandardizedGambled=std.error(standardizedGamblingPercentage))
     
     if(standardized){
-      plot(dTestfun$seconds,dTestfun$meanStandardizedGambled,xlim = c(0,5),
+      plot(dTestfun$seconds,dTestfun$meanStandardizedGambled,xlim = c(0,5),ylim=ylimit,
            main=paste("Standardized Gamble Propensity",";", "n =",toString(length(data$response[data$response=='gamble'])),
                       "gambled trials;",toString(length(unique(data$uniqueid))),"participants"),
            xlab="Seconds into trial",ylab="Percentage Gambled (standardized per subject)",pch=19,bty='l',col=color)

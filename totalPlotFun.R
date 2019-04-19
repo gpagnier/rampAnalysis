@@ -20,7 +20,7 @@ totalRTPlot<-function(data,line=FALSE,ylimit=c(700,1400),title=""){
        main=paste("GambleRT vs. gambleDelay;",title,";", "n =",toString(length(data$gambleRT[data$gambleRT!=0])),
                   "gambled;",toString(length(data$ignoreRT[data$ignoreRT!=0])),
                   "ignored"),xlab="Seconds into trial",ylab='RT (ms)',pch=19)
-  legend(2,1100,cex=.7, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("orange","blue"),title="",pch=15)
+  legend(3.2,700,cex=1, bty = "n",legend=c("IgnoreRTs","GambleRTs"),col=c("orange","blue"),title="",pch=15)
   for(i in 1:length(dgambleRT$seconds)){
     arrows(as.numeric(dgambleRT$seconds[i]),as.numeric(dgambleRT[i,'medianRT']+(as.numeric(dgambleRT[i,'stderrRT']))),as.numeric(dgambleRT$seconds[i]),as.numeric(dgambleRT[i,'medianRT']-(as.numeric(dgambleRT[i,'stderrRT']))),length=0.05, angle=90, code=3)
   }
