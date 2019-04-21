@@ -32,7 +32,7 @@ gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(300,1500),xl
     if(line){
       abline(lm(dRT$medianRT~dRT$seconds))
     }
-    summary(lm(dRT$medianRT~dRT$seconds)) 
+    return(summary(lm(dRT$medianRT~dRT$seconds)))
   }
   if(type=='speed'){
     plot(dRT$seconds,dRT$medianSpeed,xlim = c(0,8),ylim=c(0.0005,.0025),
@@ -52,7 +52,7 @@ gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(300,1500),xl
     if(line){
       abline(lm(dRT$medianSpeed~dRT$seconds))
     }
-   summary(lm(dRT$medianSpeed~dRT$seconds)) 
+   return(summary(lm(dRT$medianSpeed~dRT$seconds)) )
   }  
   
   
