@@ -7,7 +7,12 @@ mageb=c(.28,.36,.09,.08,.1,.12,.46,.11)
 rt=c(-20.7,-25.8,-11.9,-8.5,-30.3,-20.5,-30.2,-24.6)
 rteb=c(5.03,5.87,8.2,4.1,7.9,3.5,9.6,4.5)
 n=c(0,88,141,24,35,54,45,30,43)
+dy=c(46,51,52)
+dx=c(2,4,6)
+deb=c(1.3,.9,.6)
 
+dy2=c(780,700,680)
+rteb2=c(22,23,26)
 
 #GambleDelay
 barplot(0,xlim=c(0,10),ylim=c(-.5,.5),col='black',space=1.5,
@@ -22,7 +27,7 @@ for(i in gambleDelay){
 
 #Value
 v=barplot(value,xlim=c(0,10),ylim=c(-3,3),col='gray91',space=1.5,
-        width=.5,axes = T,main='Coefficient Estimate for Value',ylab="Coefficient Estimate for Value")
+        width=.5,axes = T,main='Effect of Value on Gamble Propensity',ylab="Coefficient Estimate for Value")
 abline(h=0)
 arrows(v,value-veb,v,value+veb,lwd=2,angle=90,code=3)
 
@@ -34,6 +39,21 @@ arrows(m,mag-mageb,m,mag+mageb,lwd=2,angle=90,code=3)
 
 #RT
 rt2=barplot(rt,xlim=c(0,10),ylim=c(-40,10),col='gray91',space=1.5,
-          width=.5,axes = T,main='Slope coefficient of best fit RT line',ylab="Estimate of slope coefficient (ms change / interruption sec)")
+          width=.5,axes = T,ylab="Estimate of slope coefficient (ms change / interruption sec)")
 abline(h=0)
 arrows(rt2,rt-rteb,rt2,rt+rteb,lwd=2,angle=90,code=3)
+
+#sfn poster remake gambleDelay
+plot(dy~dx,ylim=c(40,55),xlim=c(0,7),pch=16,cex=2,cex.axis=1.5)
+for(i in 1:length(dy)){
+  arrows(dx[i],dy[i]-deb[i],dx[i],dy[i]+deb[i],lwd=2,angle=90,code=3)
+}
+abline(lm(dy~dx),lwd=2)
+
+#sfn poster remake gambleDelay
+plot(dy2~dx,ylim=c(600,800),xlim=c(0,7),pch=16,cex=2,cex.axis=1.5)
+for(i in 1:length(dy)){
+  arrows(dx[i],dy2[i]-rteb[i],dx[i],dy2[i]+rteb[i],lwd=2,angle=90,code=3)
+}
+abline(lm(dy2~dx),lwd=2)
+
