@@ -1,3 +1,4 @@
+#This tracks gambleRT plot
 gambleRtPlot<-function(data,type='raw',eb=FALSE,line=FALSE,ylimit=c(300,1500),xlimit=c(0,5),title="",ylabel="Reaction Time (ms)"){
   data<-filter(data,Trialid!=75|86,gambleRT!=0)
   dRT<-data %>%
